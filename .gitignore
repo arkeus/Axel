@@ -1,0 +1,10 @@
+html-template
+bin-debug
+bin-release
+www
+air
+docs
+.settings
+.actionScriptProperties
+.project
+.git

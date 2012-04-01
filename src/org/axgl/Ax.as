@@ -1,0 +1,670 @@
+package org.axgl {
+	import flash.display.Sprite;
+	import flash.display.Stage;
+	import flash.display.Stage3D;
+	import flash.display.StageAlign;
+	import flash.display.StageScaleMode;
+	import flash.display3D.Context3D;
+	import flash.display3D.Context3DCompareMode;
+	import flash.display3D.Context3DRenderMode;
+	import flash.display3D.Context3DTriangleFace;
+	import flash.events.ErrorEvent;
+	import flash.events.Event;
+	import flash.events.KeyboardEvent;
+	import flash.events.MouseEvent;
+	import flash.events.TouchEvent;
+	import flash.system.ApplicationDomain;
+	import flash.ui.Multitouch;
+	import flash.ui.MultitouchInputMode;
+	import flash.utils.getTimer;
+	
+	import org.axgl.collision.AxCollider;
+	import org.axgl.collision.AxCollisionGroup;
+	import org.axgl.collision.AxGrid;
+	import org.axgl.input.AxKey;
+	import org.axgl.input.AxKeyboard;
+	import org.axgl.input.AxMouse;
+	import org.axgl.render.AxColor;
+	import org.axgl.sound.AxMusic;
+	import org.axgl.sound.AxSound;
+	import org.axgl.tilemap.AxTilemap;
+	import org.axgl.util.AxCamera;
+	import org.axgl.util.AxDebugger;
+
+	/**
+	 * The general game class that your base class should extends. Contains all the properties of the game,
+	 * including both the stage object and stage3d object. Also contains most of the generic game utilities.
+	 */
+	public class Ax extends Sprite {
+		public static const LIBRARY_NAME:String = "Axel";
+		public static const LIBRARY_VERSION:String = "0.9.0";
+		
+		/**
+		 * Whether or not the game is running is debug mode.
+		 */
+		public static var debug:Boolean;
+		/**
+		 * The initial state that your game should begin at once the stage
+		 * objects are ready.
+		 */
+		public static var initialState:AxState;
+		/**
+		 * The framerate requested when creating the game. This is the framerate that the game will try
+		 * to set the player to be.
+		 *
+		 * @default 60
+		 */
+		public static var requestedFramerate:uint;
+		/**
+		 * The framerate the game will be lowered to when your game loses focus, so when players are in
+		 * another window it doesn't use as many resources. Set this to the same value as the requested
+		 * framerate in order to disable lowering the framerate when losing focus.
+		 *
+		 * @default 20
+		 */
+		public static var unfocusedFramerate:uint;
+		/**
+		 * The stack of states in the game. The top state is always updated and drawn. States that are not
+		 * the top state will only be updated if persistantUpdate is true, and will only be drawn if
+		 * persistantDraw is true.
+		 */
+		public static var states:Vector.<AxState>;
+		/**
+		 * Read-only. The root flash Stage object.
+		 */
+		public static var stage2D:Stage;
+		/**
+		 * Read-only. The root flash Stage3D object.
+		 */
+		public static var stage3D:Stage3D;
+		/**
+		 * Read-only. The Stage3D context.
+		 */
+		public static var context:Context3D;
+		/**
+		 * The zoom level of the game. Manipulate this using Ax.zoom. Allows you to dynamically zoom in and out
+		 * during your game.
+		 *
+		 * @default 1
+		 */
+		private static var worldZoom:Number;
+
+		/**
+		 * Read-only. Internal timer to run internal heartbeat function about once a second.
+		 */
+		public static var heartbeatTimer:Number = 0;
+		/**
+		 * Read-only. The timestamp for the current frame. Use this instead of getTimer().
+		 */
+		public static var now:uint = 0;
+		/**
+		 * Read-only. The timestamp for the previous frame.
+		 */
+		public static var then:uint = 0;
+		/**
+		 * Read-only. The time when the current "second" began. Used to detect once 1 second worth of time has passed in order
+		 * to calculate frames per second.
+		 */
+		public static var frameStart:uint = 0;
+		/**
+		 * Read-only. The current fps rate.
+		 * @default
+		 */
+		public static var fps:uint = 0;
+		/**
+		 * Read-only. The amount of time that has passed between the last frame and the current frame. You should always multiply
+		 * by this when moving objects based on velocity. This way, even if the fps rate drops, your movement will still be consistent.
+		 * For example, rather than moving 2 pixels every frame (which is 120 pixels every second at 60fps, but only 60 pixels every
+		 * second at 30fps), you should move 120 * Ax.dt per frame, which will move you 120 pixels every second regardless of fps.
+		 */
+		public static var dt:Number = 0;
+		/**
+		 * Read-only. Counts the number of frames since the current "second" began in order to calculate fps.
+		 * @default
+		 */
+		public static var frames:uint = 0;
+
+		/**
+		 * Read-only. Width of the game, specified in the super of your main class.
+		 */
+		public static var width:uint;
+		/**
+		 * Read-only. Height of the game, specified in the super of your main class.
+		 */
+		public static var height:uint;
+
+		/**
+		 * Read-only. The keyboard object. Use this to figure out if specific keys were pressed, released, or being held.
+		 */
+		public static var keys:AxKeyboard;
+		/**
+		 * Read-only. The mouse object. Use this to figure out if mouse buttons were pressed, released, or being held.
+		 */
+		public static var mouse:AxMouse;
+		/**
+		 * Read-only. The camera object. Use this set the bounds where your camera can move, set it to follow objects, etc.
+		 */
+		public static var camera:AxCamera;
+
+		/**
+		 * Read-only. A group containing all the currently active sounds, including music.
+		 */
+		public static var sounds:AxGroup;
+		/**
+		 * The volume of music in the game. Use this to globally control the volume of all music in your game.
+		 *
+		 * @default 1
+		 */
+		public static var musicVolume:Number;
+		/**
+		 * The volume of sounds in the game. Use this to globally control the volume of all sounds in your game.
+		 *
+		 * @default 1
+		 */
+		public static var soundVolume:Number;
+		/**
+		 * A flag indicating whether music is muted. Set this to true to mute all music without losing the current
+		 * volume level of the music.
+		 *
+		 * @default false
+		 */
+		public static var musicMuted:Boolean;
+		/**
+		 * A flag indicating whether sounds are muted. Set this to true to mute all sounds without losing the current
+		 * volume level of the sounds.
+		 *
+		 * @default false
+		 */
+		public static var soundMuted:Boolean;
+		
+		/**
+		 * The background color of the game. The alpha component is ignored, as the background is always opaque.
+		 * 
+		 * @default (1, 1, 1)
+		 */
+		public static var background:AxColor;
+
+		/**
+		 * A debug flag. Set this to true to draw the bounding boxes of all objects.
+		 * TODO: Make this work again.
+		 *
+		 * @default false
+		 */
+		public static var showBounds:Boolean = false;
+
+		/**
+		 * Read-only. The render mode of the game, either "Software Mode" or "Hardware Mode" and is determined whether the
+		 * player's computer supports hardware rendering. If it is "Software Mode", all rendering will be done on the CPU
+		 * and will be very slow. This value can be read through <code>Ax.mode</code>.
+		 */
+		private static var renderMode:String;
+		
+		/**
+		 * Read-only. The game debugger. If open, this displays stats such as your current frames per second, how many
+		 * update/draws calls are being made per frame (and how long each takes). By default, you can open this using the
+		 * forward slash key '/'.
+		 */
+		public static var debugger:AxDebugger;
+		/**
+		 * Determines whether the debugger is enabled. By default, when running in debug mode, this is true. Otherwise, in release
+		 * mode, this is false. You can set it to always be enabled by setting this to true.
+		 */
+		public static var debuggerEnabled:Boolean;
+
+		/**
+		 * Creates your base game object with the given width and height. The width and height passed to this should match the
+		 * width and height in your [SWF] annotation in your main class. The initialState is the state that your game will jump
+		 * to as soon as everything is loaded. Zoom is the initial zoom level, and can be dynamically adjusted at any time via
+		 * Ax.zoom to zoom in and out. Framerate is the framerate you'd like the game to run at. Flash currently caps this at
+		 * 60.
+		 *
+		 * @param width The width of your game window.
+		 * @param height The height of your game window.
+		 * @param initialState The initial state of your game, a subclass of AxState.
+		 * @param zoom The initial zoom level of your game.
+		 * @param framerate The framerate your game should run at.
+		 */
+		public function Ax(width:uint, height:uint, initialState:AxState, zoom:Number = 1, framerate:uint = 60) {
+			Ax.width = width;
+			Ax.height = height;
+			Ax.states = new Vector.<AxState>;
+			Ax.initialState = initialState;
+			Ax.worldZoom = zoom;
+			Ax.requestedFramerate = framerate;
+			Ax.unfocusedFramerate = 20;
+			Ax.background = new AxColor(1, 1, 1);
+
+			Ax.sounds = new AxGroup;
+			Ax.musicVolume = 1;
+			Ax.soundVolume = 1;
+			Ax.musicMuted = false;
+			Ax.soundMuted = false;
+
+			var debugStacktrace:String = new Error().getStackTrace();
+			Ax.debug = debugStacktrace != null && debugStacktrace.search(/:[0-9]+]$/m) > -1;
+			Ax.debuggerEnabled = Ax.debug;
+
+			addEventListener(Event.ADDED_TO_STAGE, onStageInitialized);
+		}
+
+		/**
+		 * Callback once the game stage has been initialized. Sets up the stage and system on completion.
+		 *
+		 * @param event The ADDED_TO_STAGE event.
+		 */
+		private function onStageInitialized(event:Event):void {
+			removeEventListener(Event.ADDED_TO_STAGE, onStageInitialized);
+			stageSetup();
+			systemSetup();
+		}
+
+		/**
+		 * Sets up the stage properties. Also attempts to create the context for the stage3D object.
+		 *
+		 * @throws Error If stage3D is not available.
+		 * @throws Error If there is an error creating a stage3D object.
+		 */
+		private function stageSetup():void {
+			stage2D = stage;
+			stage.scaleMode = StageScaleMode.NO_SCALE;
+			stage.align = StageAlign.TOP_LEFT;
+			stage.frameRate = requestedFramerate;
+
+			if (!ApplicationDomain.currentDomain.hasDefinition("flash.display.Stage3D")) {
+				throw new Error("Stage3D is not available!");
+			}
+
+			var stage3D:Stage3D = stage.stage3Ds[0];
+			stage3D.addEventListener(Event.CONTEXT3D_CREATE, onStageCreate);
+			stage3D.addEventListener(ErrorEvent.ERROR, function(e:Event):void {
+				throw new Error("STUPID 3D IS NOT DIRECT: " + e);
+			});
+			stage3D.requestContext3D();
+		}
+
+		/**
+		 * Sets up listeners and global objects used by the game engine.
+		 */
+		private function systemSetup():void {
+			// Create keyboard and bind key events
+			keys = new AxKeyboard;
+			stage.addEventListener(KeyboardEvent.KEY_DOWN, keys.onKeyDown);
+			stage.addEventListener(KeyboardEvent.KEY_UP, keys.onKeyUp);
+
+			// Create mouse and bind mouse events
+			mouse = new AxMouse;
+			stage.addEventListener(MouseEvent.MOUSE_DOWN, mouse.onMouseDown);
+			stage.addEventListener(MouseEvent.MOUSE_UP, mouse.onMouseUp);
+
+			// Bind touch evenets
+			stage.addEventListener(TouchEvent.TOUCH_BEGIN, onTouchBegin);
+			stage.addEventListener(TouchEvent.TOUCH_MOVE, onTouchMove);
+			stage.addEventListener(TouchEvent.TOUCH_END, onTouchEnd);
+
+			// Create camera
+			camera = new AxCamera;
+
+			// Bind focus and unfocus events
+			stage.addEventListener(Event.DEACTIVATE, onFocusLost);
+			stage.addEventListener(Event.ACTIVATE, onFocusGained);
+		}
+
+		/**
+		 * Callback when a touch event begins.
+		 *
+		 * @param event The touch event.
+		 */
+		private function onTouchBegin(event:TouchEvent):void {
+			trace("TOUCH BEGIN");
+		}
+
+		/**
+		 * Callback when a touch event moves.
+		 *
+		 * @param event The touch event.
+		 */
+		private function onTouchMove(event:TouchEvent):void {
+			trace("TOUCH MOVE");
+		}
+
+		/**
+		 * Callback when a touch event ends.
+		 *
+		 * @param event The touch event.
+		 */
+		private function onTouchEnd(event:TouchEvent):void {
+			trace("TOUCH END");
+		}
+
+		/**
+		 * Callback when the game loses focus.
+		 *
+		 * @param event The focus event.
+		 */
+		private function onFocusLost(event:Event):void {
+			keys.releaseAll();
+			mouse.releaseAll();
+			stage.frameRate = unfocusedFramerate;
+		}
+
+		/**
+		 * Callback when the game gains focus.
+		 *
+		 * @param event The focus event.
+		 */
+		private function onFocusGained(event:Event):void {
+			stage.frameRate = requestedFramerate;
+		}
+
+		/**
+		 * Callback when the 3D context is created. Sets up the Stage3D object, configures the
+		 * backbuffer, creates the main frame listener, and pushes the initial state on the stack.
+		 *
+		 * @param event
+		 */
+		private function onStageCreate(event:Event):void {
+			removeEventListener(Event.CONTEXT3D_CREATE, onStageCreate);
+
+			stage3D = event.target as Stage3D;
+			context = stage3D.context3D;
+
+			if (context == null) {
+				return;
+			}
+
+			if (context.driverInfo == Context3DRenderMode.SOFTWARE || context.driverInfo.indexOf('oftware') > -1) {
+				renderMode = "Software Mode";
+			} else {
+				renderMode = "Hardware Mode";
+			}
+
+			context.enableErrorChecking = false;
+			context.configureBackBuffer(Ax.width, Ax.height, 0, false);
+
+			Multitouch.inputMode = MultitouchInputMode.TOUCH_POINT;
+
+			addEventListener(Event.ENTER_FRAME, onEnterFrame);
+			pushState(initialState);
+			initialState = null;
+			
+			// Create debugger
+			debugger = new AxDebugger;
+		}
+
+		/**
+		 * The current rendering mode ("Software Mode" or "Hardware Mode").
+		 *
+		 * @return The rendering mode.
+		 *
+		 * @see #renderMode
+		 */
+		public static function get mode():String {
+			return renderMode;
+		}
+
+		/**
+		 * The main game loop callback that is executed once per frame. Handles updating the
+		 * game logic.
+		 *
+		 * @param event The enter frame event.
+		 */
+		private function onEnterFrame(event:Event):void {
+			updateTimer();
+			debugger.resetStats();
+			
+			var timer:uint = getTimer();
+			update();
+			debugger.setUpdateTime(getTimer() - timer);
+			
+			timer = getTimer();
+			draw();	
+			debugger.setDrawTime(getTimer() - timer);
+			
+			heartbeatTimer -= dt;
+			if (heartbeatTimer <= 0) {
+				heartbeatTimer = 1;
+				heartbeat();
+			}
+			
+			if ((keys.pressed(AxKey.GRAVE) || keys.pressed(AxKey.BACKSLASH)) && debuggerEnabled) {
+				debugger.active = !debugger.active;
+			}
+		}
+		
+		/**
+		 * Internal heartbeat function executed about once a second.
+		 */
+		private function heartbeat():void {
+			debugger.heartbeat();
+		}
+
+		/**
+		 * Updates the timer and framerate.
+		 */
+		private function updateTimer():void {
+			then = now;
+			now = getTimer();
+			dt = then == 0 ? 0 : (now - then) / 1000;
+
+			frames++;
+			if (now - frameStart >= 1000) {
+				fps = frames;
+				frames = 0;
+				frameStart = now;
+			}
+		}
+
+		/**
+		 * Updates the active states, camera, mouse, and sounds.
+		 */
+		private function update():void {
+			for (var i:uint = 0; i < states.length; i++) {
+				var state:AxState = states[i];
+				if (i == states.length - 1 || state.persistantUpdate) {
+					state.update();
+				}
+			}
+
+			if (debugger.active) {
+				debugger.update();
+			}
+			
+			camera.update();
+			mouse.update(mouseX, mouseY);
+			sounds.update();
+		}
+
+		/**
+		 * Draws the active states.
+		 */
+		private function draw():void {
+			context.clear(background.r, background.g, background.b);
+			context.setCulling(Context3DTriangleFace.NONE);
+			context.setDepthTest(false, Context3DCompareMode.ALWAYS);
+
+			for (var i:uint = 0; i < states.length; i++) {
+				var state:AxState = states[i];
+				if (i == states.length - 1 || state.persistantDraw) {
+					state.draw();
+				}
+			}
+			
+			if (debugger.active) {
+				debugger.draw();
+			}
+			
+			context.present();
+		}
+
+		/**
+		 * Pushes a state on top of the state stack. This does not destroy the previous state. If you'd
+		 * like to return to the previous state, you can call popState to pop the new state off the top
+		 * of the stack.
+		 *
+		 * @param state The state you want to push onto the stack.
+		 *
+		 * @return The newly pushed state.
+		 */
+		public static function pushState(state:AxState):AxState {
+			camera.reset();
+			states.push(state);
+			state.create();
+			return state;
+		}
+
+		/**
+		 * Pops the current state off the top of the stack. This allows you to return to a previous state
+		 * exactly like it was when you left it.
+		 *
+		 * @return The newly popped state.
+		 */
+		public static function popState():AxState {
+			camera.reset();
+			return states.pop();
+		}
+
+		/**
+		 * Switches between two states. This will destroy the previous state, and replace it with the new
+		 * state. If you'd like to keep the current state allow in order to return to it later, use
+		 * <code>pushState</code> instead.
+		 *
+		 * @param state The new state to switch to.
+		 *
+		 * @return The new state.
+		 */
+		public static function switchState(state:AxState):AxState {
+			return pushState(state);
+		}
+		
+		/**
+		 * Returns the current state in the game.
+		 * 
+		 * @return The current state.
+		 */
+		public static function get state():AxState {
+			return states[states.length - 1];
+		}
+
+		/**
+		 * Sets the zoom level. This value can be any number greater than 0.
+		 *
+		 * @param worldZoom The new zoom level.
+		 */
+		public static function set zoom(worldZoom:Number):void {
+			Ax.worldZoom = worldZoom;
+			camera.calculateZoomMatrix();
+		}
+
+		/**
+		 * Gets the current zoom level.
+		 *
+		 * @return The zoom level.
+		 */
+		public static function get zoom():Number {
+			return Ax.worldZoom;
+		}
+
+		/**
+		 * Plays an embedded sound file.
+		 *
+		 * @param soundFile The embedded file to play.
+		 * @param volume The volume to play it at, 1 being the base (eg. 2 = double the global sound volume level).
+		 * @param loop Whether or not this sound should loop.
+		 * @param start The starting position (in ms) where the sound should begin playing at.
+		 *
+		 * @return The sound object.
+		 */
+		public static function sound(soundFile:Class, volume:Number = 1, loop:Boolean = false, start:Number = 0):AxSound {
+			var soundObject:AxSound = new AxSound(soundFile, Ax.soundMuted ? 0 : volume * Ax.soundVolume, loop, start);
+			soundObject.play();
+			sounds.add(soundObject);
+			return soundObject;
+		}
+
+		/**
+		 * Plays an embedded music file.
+		 *
+		 * @param soundFile The embedded file to play.
+		 * @param volume The volume to play it at, 1 being the base (eg. 2 = double the global music volume level).
+		 * @param loop Whether not this music should loop.
+		 * @param start The starting position (in ms) where the music should begin playing at.
+		 *
+		 * @return The sound object.
+		 */
+		public static function music(soundFile:Class, volume:Number = 1, loop:Boolean = true, start:Number = 0):AxSound {
+			var soundObject:AxSound = new AxMusic(soundFile, Ax.musicMuted ? 0 : volume * Ax.musicVolume, loop, start);
+			soundObject.play();
+			sounds.add(soundObject);
+			return soundObject;
+		}
+		
+		
+		/**
+		 * Overlaps all objects in source against all objects in target. Returns true if any of them overlap.
+		 * If you pass a callback function, calls that function passing the two overlapping objects every
+		 * time an overlap is found. The function definition should look as follows:
+		 *
+		 * <listing version="3.0">
+		 * function overlapCallback(source:AxEntity, target:AxEntity):void {
+		 * 		trace(source, "collided against", target);
+		 * }
+		 * </listing>
+		 *
+		 * For performance reasons, you should group as many things together because overlapping and colliding
+		 * are computationally expensive.
+		 *
+		 * @param source The source entity (eg. AxSprite, AxTilemap, AxGroup).
+		 * @param target The target entity (eg. AxSprite, AxTilemap, AxGroup).
+		 * @param callback The callback function to call on overlapping entities.
+		 *
+		 * @return Whether or not any pair of entities overlapped.
+		 */
+		public static function overlap(source:AxEntity, target:AxEntity, callback:Function = null, collision:AxCollisionGroup = null):Boolean {
+			return overlapOrCollide(source, target, callback, collision, false);
+		}
+		
+		/**
+		 * Collides all objects in source against all objects in target. Returns true if any of them overlap.
+		 * If you pass a callback function, calls that function passing the two overlapping objects every
+		 * time an overlap is found. In addition, if any two solid objects collide, this will separate them,
+		 * so that solid objects are not within other solid objects. Use this to make your entities collide
+		 * against walls/floors/etc.
+		 *
+		 * The callback function definition should look as follows:
+		 *
+		 * <listing version="3.0">
+		 * function overlapCallback(source:AxEntity, target:AxEntity):void {
+		 * 		trace(source, "collided against", target);
+		 * }
+		 * </listing>
+		 *
+		 * For performance reasons, you should group as many things together because overlapping and colliding
+		 * are computationally expensive.
+		 *
+		 * @param source The source entity (eg. AxSprite, AxTilemap, AxGroup).
+		 * @param target The target entity (eg. AxSprite, AxTilemap, AxGroup).
+		 * @param callback The callback function to call on overlapping entities.
+		 *
+		 * @return Whether or not any pair of entities overlapped.
+		 */
+		public static function collide(source:AxEntity, target:AxEntity, callback:Function = null, collision:AxCollisionGroup = null):Boolean {
+			return overlapOrCollide(source, target, callback, collision, true);
+		}
+		
+		private static function overlapOrCollide(source:AxEntity, target:AxEntity, callback:Function, collision:AxCollisionGroup, collide:Boolean):Boolean {
+			if (collision == null) {
+				if (source is AxTilemap || target is AxTilemap) {
+					collision = new AxCollider;
+				} else {
+					collision = new AxGrid(Ax.width, Ax.height) 
+				}
+			} else {
+				collision.reset();
+			}
+			
+			collision.setCallback(callback);
+			collision.build(source, target);
+			return collide ? collision.collide() : collision.overlap();
+		}
+	}
+}
