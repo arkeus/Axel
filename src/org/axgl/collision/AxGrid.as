@@ -1,6 +1,8 @@
 package org.axgl.collision {
+	import org.axgl.AxCloud;
 	import org.axgl.AxEntity;
 	import org.axgl.AxGroup;
+	import org.axgl.AxSprite;
 	import org.axgl.tilemap.AxTilemap;
 
 	/**
@@ -100,6 +102,13 @@ package org.axgl.collision {
 				for each (var o:AxEntity in members) {
 					if (o.active && o.exists) {
 						addToBucket(o);
+					}
+				}
+			} else if (object is AxCloud) {
+				var sprites:Vector.<AxSprite> = (object as AxCloud).members;
+				for each (var s:AxSprite in sprites) {
+					if (s.active && s.exists) {
+						addToBucket(s);
 					}
 				}
 			} else if (object != null) {

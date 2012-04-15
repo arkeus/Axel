@@ -58,7 +58,9 @@ package org.axgl {
 
 		/**
 		 * The direction this sprite is facing. If <code>facing</code> is equal to <code>flip</code>, the sprite
-		 * will be flipped horizontally. Set <code>flip</code> to <code>NONE</code> to disable this behavior.
+		 * will be flipped horizontally. Set <code>flip</code> to <code>NONE</code> to disable this behavior. If
+		 * facing is equal to flip, the origin of scaling will be overriden to be the center of your sprite, regardless
+		 * of the current value of origin.
 		 * 
 		 * @default RIGHT
 		 */
@@ -383,16 +385,20 @@ package org.axgl {
 
 			var sx:Number = x - offset.x;
 			var sy:Number = y - offset.y;
-			var scalex:Number = scale.x * facing == flip ? -1 : 1;
+			var scalex:Number = scale.x;
 			var scaley:Number = scale.y;
-			var cx:Number = Ax.camera.x // / Ax.scale;
-			var cy:Number = Ax.camera.y // / Ax.scale;
-			if (scalex != 1 || scaley != 1) {
-				matrix.appendTranslation(-pivot.x, -pivot.y, 0);
+			var cx:Number = Ax.camera.x * scroll.x;
+			var cy:Number = Ax.camera.y * scroll.y;
+			if (facing == flip) {
+				matrix.appendTranslation(-(center.x - x), -(center.y - y), 0);
+				matrix.appendScale(scalex * -1, scaley, 1);
+				matrix.appendTranslation(center.x - x + sx - cx, center.y - y + sy - cy, 0);
+			} else if (scalex != 1 || scaley != 1) {
+				matrix.appendTranslation(-origin.x, -origin.y, 0);
 				matrix.appendScale(scalex, scaley, 1);
-				matrix.appendTranslation(pivot.x + sx - cx * scroll.x, pivot.y + sy - cy * scroll.y, 0);
+				matrix.appendTranslation(origin.x + sx - cx, origin.y + sy - cy, 0);
 			} else {
-				matrix.appendTranslation(sx - cx * scroll.x, sy - cy * scroll.y, 0);
+				matrix.appendTranslation(sx - cx, sy - cy, 0);
 			}
 
 			matrix.append(zooms ? Ax.camera.projection : Ax.camera.baseProjection);

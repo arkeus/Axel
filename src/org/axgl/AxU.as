@@ -31,6 +31,25 @@ package org.axgl {
 		public static function rand(min:int, max:int):int {
 			return Math.floor(Math.random() * (max - min + 1)) + min;
 		}
+		
+		/**
+		 * Returns a random floating point number between min and max, inclusive. Use toPrecision() to round it
+		 * to a specific number of decimal places if needed.
+		 *
+		 * @example The follow code returns a Number between 3.5 and 7.165 (eg. 3.9, 5.4, 3.8, or 6.5):
+		 *
+		 * <listing version="3.0">
+		 * AxU.rand(3.5, 7.165);
+		 * </listing>
+		 *
+		 * @param min The minimum number to return.
+		 * @param max The maximum number to return.
+		 *
+		 * @return The randomly choosen number.
+		 */
+		public static function randf(min:Number, max:Number):Number {
+			return Math.random() * (max - min) + min;
+		}
 
 		/**
 		 * Returns the absolute value of the passed number.

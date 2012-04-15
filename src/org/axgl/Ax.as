@@ -37,7 +37,7 @@ package org.axgl {
 	 */
 	public class Ax extends Sprite {
 		public static const LIBRARY_NAME:String = "Axel";
-		public static const LIBRARY_VERSION:String = "0.9.1";
+		public static const LIBRARY_VERSION:String = "0.9.1a";
 		
 		/**
 		 * Whether or not the game is running is debug mode.
@@ -222,6 +222,11 @@ package org.axgl {
 		 * @default 0
 		 */
 		private static var requestedHeight:uint;
+		/**
+		 * When you pop off states, this holds those states until the end of the frame so that it can dispose of them cleanly
+		 * without affecting any currently executing code.
+		 */
+		private static var destroyedStates:Vector.<AxState>;
 
 		/**
 		 * Creates the game engine.
@@ -236,6 +241,7 @@ package org.axgl {
 			Ax.worldZoom = zoom;
 			Ax.unfocusedFramerate = 20;
 			Ax.background = new AxColor(1, 1, 1);
+			Ax.destroyedStates = new Vector.<AxState>;
 
 			Ax.sounds = new AxGroup;
 			Ax.musicVolume = 1;
@@ -464,6 +470,10 @@ package org.axgl {
 			draw();	
 			debugger.setDrawTime(getTimer() - timer);
 			
+			for (var i:uint = 0; i < destroyedStates.length; i++) {
+				destroyedStates.pop().dispose();
+			}
+			
 			heartbeatTimer -= dt;
 			if (heartbeatTimer <= 0) {
 				heartbeatTimer = 1;
@@ -561,7 +571,7 @@ package org.axgl {
 		 */
 		public static function popState():void {
 			camera.reset();
-			states.pop().dispose();
+			destroyedStates.push(states.pop());
 		}
 
 		/**

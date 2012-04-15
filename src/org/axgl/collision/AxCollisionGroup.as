@@ -1,7 +1,9 @@
 package org.axgl.collision {
+	import org.axgl.AxCloud;
 	import org.axgl.AxEntity;
 	import org.axgl.AxGroup;
 	import org.axgl.AxRect;
+	import org.axgl.AxSprite;
 	import org.axgl.AxU;
 	import org.axgl.tilemap.AxTilemap;
 
@@ -105,10 +107,17 @@ package org.axgl.collision {
 		 */
 		protected function addAll(object:AxEntity, group:Vector.<AxEntity>):void {
 			if (object is AxGroup) {
-				var members:Vector.<AxEntity> = (object as AxGroup).members;
-				for each (var o:AxEntity in members) {
+				var objects:Vector.<AxEntity> = (object as AxGroup).members;
+				for each (var o:AxEntity in objects) {
 					if (o.active && o.exists) {
 						addAll(o, group);
+					}
+				}
+			} else if (object is AxCloud) {
+				var sprites:Vector.<AxSprite> = (object as AxCloud).members;
+				for each (var s:AxSprite in sprites) {
+					if (s.active && s.exists) {
+						addAll(s, group);
 					}
 				}
 			} else if (object != null) {

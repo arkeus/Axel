@@ -1,3 +1,11 @@
+## 0.9.1a / 2012-04-15
+* You can now overlap and collide against AxClouds
+* AxU now has a randf function to give a random floating point Number between its parameters
+* Fixed a bug where popping a state during execution of that state could result in a crash
+* Fixed a bug where AxSprites were only scaling in the y direction when in an AxGroup
+* Fixed a bug where AxSprites in an AxCloud were being offset by their pivot
+* AxSprites now use origin to determine the origin of scaling, rather than pivot, except when flipped (at which point it will use the center)
+
 ## 0.9.1 / 2012-04-14
 * AxCloud is a new class that acts like an AxGroup, but batches all sprites into a single draw call
 * The parameter ordering has changed for the main super() call, initial state now comes before width and height
