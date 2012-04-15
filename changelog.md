@@ -1,4 +1,4 @@
-## 0.9.1 / 2012-04-??
+## 0.9.1 / 2012-04-14
 * AxCloud is a new class that acts like an AxGroup, but batches all sprites into a single draw call
 * The parameter ordering has changed for the main super() call, initial state now comes before width and height
 * You can now not pass width and height (or pass them as 0) in order to indicate the game size should be determined by the size of the stage
