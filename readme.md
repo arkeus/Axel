@@ -15,6 +15,6 @@ Note that Axel is currently in testing phases. While it contains all the basics 
 
 Demos, Tutorials, and Documentation
 -----------------------------------
-<http://axgl.org/demo.php>
-<http://axgl.org/tutorials.php>
-<http://axgl.org/docs/>
+* <http://axgl.org/demo.php>
+* <http://axgl.org/tutorials.php>
+* <http://axgl.org/docs/>
