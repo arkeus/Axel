@@ -108,7 +108,7 @@ package org.axgl.tilemap {
 			rows = rowArray.length;
 			for (var y:uint = 0; y < rows; y++) {
 				var row:Array = rowArray[y].split(",");
-				cols = row.length;
+				cols = Math.max(cols, row.length);
 				for (var x:uint = 0; x < cols; x++) {
 					var tid:uint = row[x];
 					if (tid == 0) {
@@ -126,9 +126,9 @@ package org.axgl.tilemap {
 					
 					indexData.push(index, index + 1, index + 2, index + 1, index + 2, index + 3);
 					vertexData.push(
-						tx + AxU.EPSILON, 				ty + AxU.EPSILON,					u,				v,
-						tx + tileWidth,		ty + AxU.EPSILON,					u + uvWidth,	v,
-						tx + AxU.EPSILON,					ty + tileHeight,	u,				v + uvHeight,
+						tx + AxU.EPSILON, 	ty + AxU.EPSILON,	u,				v,
+						tx + tileWidth,		ty + AxU.EPSILON,	u + uvWidth,	v,
+						tx + AxU.EPSILON,	ty + tileHeight,	u,				v + uvHeight,
 						tx + tileWidth,		ty + tileHeight,	u + uvWidth,	v + uvHeight
 					);
 					index += 4;
@@ -159,14 +159,19 @@ package org.axgl.tilemap {
 			matrix.identity();
 			//trace(1);
 			//matrix.appendTranslation(-Ax.camera.x, -Ax.camera.y, 0);
-			matrix.appendTranslation(-Math.round(Ax.camera.x), -Math.round(Ax.camera.y), 0);
+			matrix.appendTranslation(x - Math.round(Ax.camera.x), y - Math.round(Ax.camera.y), 0);
 			matrix.append(Ax.camera.projection);
+			
+			colorTransform[RED] = color.red;
+			colorTransform[GREEN] = color.green;
+			colorTransform[BLUE] = color.blue;
+			colorTransform[ALPHA] = color.alpha;
 
 			Ax.context.setProgram(shader.program);
 			Ax.context.setTextureAt(0, texture.texture);
 			Ax.context.setBlendFactors(Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA);
 			Ax.context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, matrix, true);
-			Ax.context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 0, Vector.<Number>([1, 1, 1, 1]));
+			Ax.context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 0, colorTransform);
 			Ax.context.setVertexBufferAt(0, vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_2);
 			Ax.context.setVertexBufferAt(1, vertexBuffer, 2, Context3DVertexBufferFormat.FLOAT_2);
 			Ax.context.drawTriangles(indexBuffer, 0, triangles);
@@ -186,18 +191,18 @@ package org.axgl.tilemap {
 		 *
 		 * @return Whether or not an overlap occured.
 		 */
-		public function overlap(target:AxEntity, callback:Function = null):Boolean {
+		public function overlap(target:AxEntity, callback:Function = null, collide:Boolean = false):Boolean {
 			var tdx:Number = target.x - target.previous.x;
 			var tdy:Number = target.y - target.previous.y;
-			frame.x = target.x < target.previous.x ? target.x : target.previous.x;
-			frame.y = target.y < target.previous.y ? target.y : target.previous.y;
-			frame.width = AxU.abs(tdx) + target.width;
-			frame.height = AxU.abs(tdy) + target.height;
+			frame.x = (target.x < target.previous.x ? target.x : target.previous.x);
+			frame.y = (target.y < target.previous.y ? target.y : target.previous.y);
+			frame.width = (AxU.abs(tdx) + target.width);
+			frame.height = (AxU.abs(tdy) + target.height);
 
-			var sx:int = Math.floor(frame.x / tileWidth);
-			var sy:int = Math.floor(frame.y / tileHeight);
-			var ex:int = Math.floor((frame.x + frame.width) / tileWidth);
-			var ey:int = Math.floor((frame.y + frame.height) / tileHeight);
+			var sx:int = Math.floor((frame.x - this.x) / tileWidth);
+			var sy:int = Math.floor((frame.y - this.y) / tileHeight);
+			var ex:int = Math.floor((frame.x + frame.width - this.x - AxU.EPSILON) / tileWidth);
+			var ey:int = Math.floor((frame.y + frame.height - this.y - AxU.EPSILON) / tileHeight);
 
 			if (sx < 0) {
 				sx = 0;
@@ -221,21 +226,27 @@ package org.axgl.tilemap {
 					}
 
 					var tile:AxTile = tiles[tid];
-					if (tile.collision == NONE) {
+					if (tile == null) {
 						continue;
 					}
 
-					tile.x = x * tileWidth;
-					tile.y = y * tileHeight;
+					tile.x = x * tileWidth + this.x;
+					tile.y = y * tileHeight + this.y;
 					tile.previous.x = tile.x;
 					tile.previous.y = tile.y;
-					if (tile != null && callback != null) {
-						if (callback(target, tile)) {
-							overlapped = true;
-							if (tile.callback != null) {
-								tile.callback(tile, target);
+					
+					if (collide) {
+						if (tile.collision != NONE && callback != null) {
+							if (callback(target, tile)) {
+								overlapped = true;
 							}
 						}
+					} else {
+						overlapped = true;
+					}
+					
+					if (tile.callback != null) {
+						tile.callback(tile, target);
 					}
 				}
 			}
@@ -251,7 +262,7 @@ package org.axgl.tilemap {
 		 *
 		 * @return The tile object, null if it isn't part of the tileset.
 		 */
-		public function tile(tileID:uint):AxTile {
+		public function getTile(tileID:uint):AxTile {
 			if (tileID < tiles.length) {
 				return tiles[tileID];
 			}
@@ -266,7 +277,7 @@ package org.axgl.tilemap {
 		 *
 		 * @return A vector containing all the corresponding tiles.
 		 */
-		public function tileset(tileIDs:Array):Vector.<AxTile> {
+		public function getTiles(tileIDs:Array):Vector.<AxTile> {
 			var result:Vector.<AxTile> = new Vector.<AxTile>;
 			for (var i:uint = 0; i < tileIDs.length; i++) {
 				result.push(tiles[tileIDs[i]]);

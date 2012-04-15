@@ -1,5 +1,6 @@
 package org.axgl.collision {
 	import org.axgl.AxEntity;
+	import org.axgl.tilemap.AxTilemap;
 
 	/**
 	 * An exponential implemention of a collision group. Adds the first entities to a source list, the second
@@ -71,10 +72,16 @@ package org.axgl.collision {
 					targetFrame.height = target.y + target.height - targetFrame.y;
 
 					if ((sourceFrame.x + sourceFrame.width > targetFrame.x) && (sourceFrame.x < targetFrame.x + targetFrame.width) && (sourceFrame.y + sourceFrame.height > targetFrame.y) && (sourceFrame.y < targetFrame.y + targetFrame.height)) {
-						if (callback != null) {
-							callback(source, target);
+						if (source is AxTilemap) {
+							overlapFound = (source as AxTilemap).overlap(target, null);
+						} else if (target is AxTilemap) {
+							overlapFound = (target as AxTilemap).overlap(source, null);
+						} else {
+							if (callback != null) {
+								callback(source, target);
+							}
+							overlapFound = true;
 						}
-						overlapFound = true;
 					}
 				}
 			}

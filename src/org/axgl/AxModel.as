@@ -4,6 +4,7 @@ package org.axgl {
 	import flash.geom.Matrix3D;
 	import flash.geom.Vector3D;
 	
+	import org.axgl.render.AxColor;
 	import org.axgl.render.AxShader;
 	import org.axgl.render.AxTexture;
 	import org.axgl.util.AxCache;
@@ -34,8 +35,10 @@ package org.axgl {
 		protected var matrix:Matrix3D;
 		/** A vector containing the red, green, blue, and alpha values to transform this model. */
 		protected var colorTransform:Vector.<Number>;
+		/** The color of this sprite, applied multiplicatively to the texture. */
+		public var color:AxColor;
 		/** The texture used to draw this model. */
-		protected var texture:AxTexture;
+		public var texture:AxTexture;
 		
 		/** Whether or not to count the tris of this model for display in the debugger */
 		public var countTris:Boolean;
@@ -62,11 +65,18 @@ package org.axgl {
 		/**
 		 * The scale of this model. A scale greater than 1 will increase the size, while a scale between 0 and 1 will
 		 * decrease the size.
+		 * TODO: Collision does not take into account scale.
 		 *
 		 * @default (1, 1)
 		 */
 		public var scale:AxPoint
-
+		/**
+		 * The original point of scaling. If this is set to 0, 0 the model will scale from the upper left corner, and if this
+		 * is set to the center of the object, it will scale from the center.
+		 *
+		 * @default (0, 0)
+		 */
+		public var origin:AxPoint
 		/**
 		 * The pivot point of rotation. When loading a graphic in AxSprite, the pivot point will be set to the center
 		 * of the entity (eg. the object will rotate around its center).
@@ -88,8 +98,11 @@ package org.axgl {
 
 			shader = AxCache.shader(shaderKey ? shaderKey : this, vertexShader, fragmentShader, rowSize);
 			matrix = new Matrix3D;
+			color = new AxColor;
 			colorTransform = new Vector.<Number>(4, true);
-			color(1, 1, 1, 1);
+			colorTransform[RED] = colorTransform[GREEN] = colorTransform[BLUE] = colorTransform[ALPHA] = 1;
+			setColor(1, 1, 1, 1);
+			origin = new AxPoint(0, 0);
 			scale = new AxPoint(1, 1);
 			pivot = new Vector3D;
 			scroll = new AxPoint(1, 1);
@@ -107,13 +120,33 @@ package org.axgl {
 		 * @param alpha The alpha to use, between 0 and 1.
 		 *
 		 */
-		public function color(red:Number, green:Number, blue:Number, alpha:Number = -1):void {
-			colorTransform[RED] = red;
-			colorTransform[GREEN] = green;
-			colorTransform[BLUE] = blue;
+		public function setColor(red:Number, green:Number, blue:Number, alpha:Number = -1):void {
+			color.red = red;
+			color.green = green;
+			color.blue = blue;
 			if (alpha != -1) {
-				colorTransform[ALPHA] = alpha;
+				color.alpha = alpha;
 			}
+		}
+		
+		/**
+		 * Sets the opacity value of this model. A value of 0 means it is completely see through, while a value
+		 * of 1 means it is completely opaque.
+		 * 
+		 * @param opacity The alpha value, between 0 and 1.
+		 */
+		public function set alpha(opacity:Number):void {
+			color.alpha = AxU.clamp(opacity, 0, 1);
+		}
+		
+		/**
+		 * Gets the opacity value of this model. A value of 0 means it is completely see through, while a value
+		 * of 1 means it is completely opaque.
+		 * 
+		 * @return The alpha value, between 0 and 1.
+		 */
+		public function get alpha():Number {
+			return color.alpha;
 		}
 		
 		override public function dispose():void {
@@ -125,6 +158,11 @@ package org.axgl {
 			vertexBuffer = null;
 			shader = null;
 			matrix = null;
+			origin = null;
+			pivot = null;
+			scroll = null;
+			scale = null;
+			color = null;
 			colorTransform = null;
 			texture = null;
 			super.dispose();

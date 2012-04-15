@@ -75,7 +75,7 @@ package org.axgl {
 
 			labelY = y + 10;
 			label = new AxText(x, labelY, font, str, 150, "center");
-			label.color(.113, .113, .113);
+			label.setColor(.113, .113, .113);
 
 			return this;
 		}

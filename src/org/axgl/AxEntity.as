@@ -78,7 +78,7 @@ package org.axgl {
 		 *
 		 * @default INFINITY
 		 */
-		public var terminal:AxVector;
+		public var maxVelocity:AxVector;
 		/**
 		 * Drag is the amount that the object will slow down when not accelerating. If an object is accelerating, drag will
 		 * have no effect on the object. However, once an object stops accelerating, drag will slow the velocity of an
@@ -158,7 +158,7 @@ package org.axgl {
 			velocity = new AxVector;
 			pvelocity = new AxVector;
 			acceleration = new AxVector;
-			terminal = new AxVector(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+			maxVelocity = new AxVector(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
 			angle = 0;
 			drag = new AxVector;
 			offset = new AxRect;
@@ -168,35 +168,29 @@ package org.axgl {
 		}
 
 		/**
-		 * Every frame update is called once on every object. This method should be override by your objects, and should
-		 * contain the game logic that the object should execute every frame.
+		 * Every frame update is called once on every object. This method should be overriden by your objects, and should
+		 * contain the game logic that the object should execute every frame. If you want the object to move and execute
+		 * its main game logic, *be sure* to call super.update(). When you call super.update(), the state of the object
+		 * flips (touching becomes touched, etc), so typically you should call super.update() at the *end* of your object's
+		 * update function.
 		 */
 		public function update():void {
-			// override as needed
-		}
-
-		/**
-		 * Every frame, systemUpdate is called once on every object immediately after update. This method handles updating
-		 * the motion and position for objects that are <code>active</code> and not <code>stationary</code>. If you override
-		 * this method, but want your object to still move, you must call <code>super.systemUpdate()</code>.
-		 */
-		public function systemUpdate():void {
 			touched = touching;
 			touching = NONE;
-
+			
 			previous.x = x;
 			previous.y = y;
 			pvelocity.x = velocity.x;
 			pvelocity.y = velocity.y;
-
+			
 			if (stationary || (velocity.x == 0 && velocity.y == 0 && velocity.a == 0 && acceleration.x == 0 && acceleration.y == 0 && acceleration.a == 0)) {
 				return;
 			}
 			
-			velocity.x = calculateVelocity(velocity.x, acceleration.x, drag.x, terminal.x);
-			velocity.y = calculateVelocity(velocity.y, acceleration.y, drag.y, terminal.y);
-			velocity.a = calculateVelocity(velocity.a, acceleration.a, drag.a, terminal.a);
-
+			velocity.x = calculateVelocity(velocity.x, acceleration.x, drag.x, maxVelocity.x);
+			velocity.y = calculateVelocity(velocity.y, acceleration.y, drag.y, maxVelocity.y);
+			velocity.a = calculateVelocity(velocity.a, acceleration.a, drag.a, maxVelocity.a);
+			
 			x += (velocity.x * Ax.dt) + ((pvelocity.x - velocity.x) * Ax.dt / 2);
 			y += (velocity.y * Ax.dt) + ((pvelocity.y - velocity.y) * Ax.dt / 2);
 			angle += velocity.a * Ax.dt;
@@ -312,7 +306,7 @@ package org.axgl {
 			velocity = null;
 			pvelocity = null;
 			acceleration = null;
-			terminal = null;
+			maxVelocity = null;
 			previous = null;
 			previous = null;
 			offset = null;

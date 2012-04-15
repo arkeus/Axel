@@ -37,17 +37,12 @@ package org.axgl {
 	 */
 	public class Ax extends Sprite {
 		public static const LIBRARY_NAME:String = "Axel";
-		public static const LIBRARY_VERSION:String = "0.9.0";
+		public static const LIBRARY_VERSION:String = "0.9.1";
 		
 		/**
 		 * Whether or not the game is running is debug mode.
 		 */
 		public static var debug:Boolean;
-		/**
-		 * The initial state that your game should begin at once the stage
-		 * objects are ready.
-		 */
-		public static var initialState:AxState;
 		/**
 		 * The framerate requested when creating the game. This is the framerate that the game will try
 		 * to set the player to be.
@@ -210,27 +205,35 @@ package org.axgl {
 		 * mode, this is false. You can set it to always be enabled by setting this to true.
 		 */
 		public static var debuggerEnabled:Boolean;
+		
+		/**
+		 * The initial state that the game will begin in.
+		 * */
+		private static var requestedState:Class;
+		/**
+		 * The initial width the game will start with, 0 meaning stage width.
+		 * 
+		 * @default 0
+		 */
+		private static var requestedWidth:uint;
+		/**
+		 * The initial height the game will start with, 0 meaning stage height.
+		 * 
+		 * @default 0
+		 */
+		private static var requestedHeight:uint;
 
 		/**
-		 * Creates your base game object with the given width and height. The width and height passed to this should match the
-		 * width and height in your [SWF] annotation in your main class. The initialState is the state that your game will jump
-		 * to as soon as everything is loaded. Zoom is the initial zoom level, and can be dynamically adjusted at any time via
-		 * Ax.zoom to zoom in and out. Framerate is the framerate you'd like the game to run at. Flash currently caps this at
-		 * 60.
-		 *
-		 * @param width The width of your game window.
-		 * @param height The height of your game window.
-		 * @param initialState The initial state of your game, a subclass of AxState.
-		 * @param zoom The initial zoom level of your game.
-		 * @param framerate The framerate your game should run at.
+		 * Creates the game engine.
 		 */
-		public function Ax(width:uint, height:uint, initialState:AxState, zoom:Number = 1, framerate:uint = 60) {
-			Ax.width = width;
-			Ax.height = height;
-			Ax.states = new Vector.<AxState>;
-			Ax.initialState = initialState;
-			Ax.worldZoom = zoom;
+		public function Ax(initialState:Class = null, width:uint = 0, height:uint = 0, zoom:Number = 1, framerate:uint = 60) {
+			Ax.requestedState = initialState;
+			Ax.requestedWidth = width;
+			Ax.requestedHeight = height;
 			Ax.requestedFramerate = framerate;
+			
+			Ax.states = new Vector.<AxState>;
+			Ax.worldZoom = zoom;
 			Ax.unfocusedFramerate = 20;
 			Ax.background = new AxColor(1, 1, 1);
 
@@ -266,9 +269,8 @@ package org.axgl {
 		 */
 		private function stageSetup():void {
 			stage2D = stage;
-			stage.scaleMode = StageScaleMode.NO_SCALE;
-			stage.align = StageAlign.TOP_LEFT;
-			stage.frameRate = requestedFramerate;
+			stage2D.scaleMode = StageScaleMode.NO_SCALE;
+			stage2D.align = StageAlign.TOP_LEFT;
 
 			if (!ApplicationDomain.currentDomain.hasDefinition("flash.display.Stage3D")) {
 				throw new Error("Stage3D is not available!");
@@ -301,9 +303,6 @@ package org.axgl {
 			stage.addEventListener(TouchEvent.TOUCH_MOVE, onTouchMove);
 			stage.addEventListener(TouchEvent.TOUCH_END, onTouchEnd);
 
-			// Create camera
-			camera = new AxCamera;
-
 			// Bind focus and unfocus events
 			stage.addEventListener(Event.DEACTIVATE, onFocusLost);
 			stage.addEventListener(Event.ACTIVATE, onFocusGained);
@@ -316,6 +315,9 @@ package org.axgl {
 		 */
 		private function onTouchBegin(event:TouchEvent):void {
 			trace("TOUCH BEGIN");
+			// TODO: Implement actual touch controls
+			// For now, touching controls mouse x/y
+			mouse.update(event.stageX, event.stageY);
 		}
 
 		/**
@@ -325,6 +327,9 @@ package org.axgl {
 		 */
 		private function onTouchMove(event:TouchEvent):void {
 			trace("TOUCH MOVE");
+			// TODO: Implement actual touch controls
+			// For now, touching controls mouse x/y
+			mouse.update(event.stageX, event.stageY);
 		}
 
 		/**
@@ -334,6 +339,9 @@ package org.axgl {
 		 */
 		private function onTouchEnd(event:TouchEvent):void {
 			trace("TOUCH END");
+			// TODO: Implement actual touch controls
+			// For now, touching controls mouse x/y
+			mouse.update(event.stageX, event.stageY);
 		}
 
 		/**
@@ -378,17 +386,53 @@ package org.axgl {
 				renderMode = "Hardware Mode";
 			}
 
-			context.enableErrorChecking = false;
-			context.configureBackBuffer(Ax.width, Ax.height, 0, false);
-
 			Multitouch.inputMode = MultitouchInputMode.TOUCH_POINT;
-
-			addEventListener(Event.ENTER_FRAME, onEnterFrame);
-			pushState(initialState);
-			initialState = null;
 			
-			// Create debugger
+			// Initialize the game based on requested parameters
+			initialize();
+			
+			// Handle game initialization
+			create();
+			
+			addEventListener(Event.ENTER_FRAME, onEnterFrame);
+		}
+		
+		/**
+		 * This function is called once the engine is completely set up.  Any initialization (such as initializing a dialog
+		 * system), should also occur in this function. This ensures that the stage is set up before any graphics are uploaded
+		 * to the GPU. 
+		 */
+		public function create():void {
+			// override as needed
+		}
+		
+		/**
+		 * Initializes your game and begins execution of initialState. If you leave width and height as 0, it will initialize
+		 * the width and height to be the stage width and height (usually the size of your embedded SWF). Zoom is the initial
+		 * zoom level, and can be dynamically adjusted at any time via Ax.zoom to zoom in and out. Framerate is the framerate
+		 * you'd like the game to run at. Flash currently caps this at 60.
+		 * 
+		 * TODO: zoom is not currently fully supported
+		 *
+		 * @param initialState The initial state that your game should start in, subclass of AxState.
+		 * @param width The width of your game window (0 to use stage width)
+		 * @param height The height of your game window (0 to use stage height)
+		 * @param zoom The initial zoom level of your game.
+		 * @param framerate The framerate your game should run at.
+		 */
+		private function initialize():void {
+			stage.frameRate = requestedFramerate;
+			
+			Ax.width = width == 0 ? stage.stageWidth : width;
+			Ax.height = height == 0 ? stage.stageHeight : height;
+			
+			context.configureBackBuffer(Ax.width, Ax.height, 0, false);
+			context.enableErrorChecking = false;
+			
+			camera = new AxCamera;
 			debugger = new AxDebugger;
+			
+			pushState(new requestedState());
 		}
 
 		/**
@@ -478,7 +522,7 @@ package org.axgl {
 		 * Draws the active states.
 		 */
 		private function draw():void {
-			context.clear(background.r, background.g, background.b);
+			context.clear(background.red, background.green, background.blue);
 			context.setCulling(Context3DTriangleFace.NONE);
 			context.setDepthTest(false, Context3DCompareMode.ALWAYS);
 
@@ -513,14 +557,11 @@ package org.axgl {
 		}
 
 		/**
-		 * Pops the current state off the top of the stack. This allows you to return to a previous state
-		 * exactly like it was when you left it.
-		 *
-		 * @return The newly popped state.
+		 * Pops the current state off the top of the stack and disposes it.
 		 */
-		public static function popState():AxState {
+		public static function popState():void {
 			camera.reset();
-			return states.pop();
+			states.pop().dispose();
 		}
 
 		/**
@@ -533,6 +574,7 @@ package org.axgl {
 		 * @return The new state.
 		 */
 		public static function switchState(state:AxState):AxState {
+			popState();
 			return pushState(state);
 		}
 		
@@ -542,6 +584,9 @@ package org.axgl {
 		 * @return The current state.
 		 */
 		public static function get state():AxState {
+			if (states.length <= 0) {
+				throw new Error("There are no states on the stack");
+			}
 			return states[states.length - 1];
 		}
 

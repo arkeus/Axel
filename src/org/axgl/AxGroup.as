@@ -3,7 +3,15 @@ package org.axgl {
 	/**
 	 * AxGroup is the basic container object. When building a world, you'll often want to group objects
 	 * together for more manageable code. With AxGroup, you can add any AxEntity into it, including other
-	 * AxGroups, allowing you to create a hierarchy of objects.
+	 * AxGroups, allowing you to create a hierarchy of objects. AxGroup is a simple group that will call
+	 * draw separately for each object added. If you have a large number of static objects, you should
+	 * consider using AxTilemap, AxMap, or AxCloud, as those will perform better. However, each of those
+	 * have their own limitations.
+	 * 
+	 * <p>AxGroup is also perfect for grouping up objects for collision. In this case, if you are not adding
+	 * them to your state, this is the best kind of group to use. However, if you add an object to multiple
+	 * groups, only one of those groups should be added to your state, otherwise the object will be updated
+	 * and drawn multiple times, causing unpredictable results.</p>
 	 */
 	public class AxGroup extends AxEntity {
 		/** The vector containing all the entities within this group. */
@@ -70,7 +78,6 @@ package org.axgl {
 				}
 
 				entity.update();
-				entity.systemUpdate();
 				Ax.debugger.updates++;
 			}
 		}

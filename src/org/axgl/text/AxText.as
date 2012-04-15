@@ -144,16 +144,16 @@ package org.axgl.text {
 						var closing:int = characters.indexOf("]", i + 1);
 						var colorCode:String = textLine.text.substring(i + 2, closing);
 						if (colorCode == "") {
-							color.r = color.g = color.b = color.a = 1;
+							color.red = color.green = color.blue = color.alpha = 1;
 						} else {
 							var colorPieces:Array = colorCode.split(",");
-							color.r = parseInt(colorPieces[0]) / 255;
-							color.g = parseInt(colorPieces[1]) / 255;
-							color.b = parseInt(colorPieces[2]) / 255;
+							color.red = parseInt(colorPieces[0]) / 255;
+							color.green = parseInt(colorPieces[1]) / 255;
+							color.blue = parseInt(colorPieces[2]) / 255;
 							if (colorPieces.length > 3) {
-								color.a = parseInt(colorPieces[3]) / 255;
+								color.alpha = parseInt(colorPieces[3]) / 255;
 							} else {
-								color.a = 1;
+								color.alpha = 1;
 							}
 						}
 						i = closing;
@@ -170,10 +170,10 @@ package org.axgl.text {
 					indexData.push(index, index + 1, index + 2, index + 1, index + 2, index + 3);
 					vertexData.push(
 						//  x 			y				u						v
-						x, 				y,				c.uv.x,					c.uv.y,					color.r, color.g, color.b, color.a,
-						x + c.width,	y,				c.uv.x + c.uv.width,	c.uv.y,					color.r, color.g, color.b, color.a,
-						x,				y + c.height,	c.uv.x,					c.uv.y + c.uv.height,	color.r, color.g, color.b, color.a,
-						x + c.width,	y + c.height,	c.uv.x + c.uv.width,	c.uv.y + c.uv.height,	color.r, color.g, color.b, color.a
+						x, 				y,				c.uv.x,					c.uv.y,					color.red, color.green, color.blue, color.alpha,
+						x + c.width,	y,				c.uv.x + c.uv.width,	c.uv.y,					color.red, color.green, color.blue, color.alpha,
+						x,				y + c.height,	c.uv.x,					c.uv.y + c.uv.height,	color.red, color.green, color.blue, color.alpha,
+						x + c.width,	y + c.height,	c.uv.x + c.uv.width,	c.uv.y + c.uv.height,	color.red, color.green, color.blue, color.alpha
 					);
 					index += 4;
 					x += c.width + font.spacing.x;
@@ -215,6 +215,11 @@ package org.axgl.text {
 			if (_text.length == 0) {
 				return;
 			}
+			
+			colorTransform[RED] = color.red;
+			colorTransform[GREEN] = color.green;
+			colorTransform[BLUE] = color.blue;
+			colorTransform[ALPHA] = color.alpha;
 			
 			matrix.identity();
 			if (angle != 0) {

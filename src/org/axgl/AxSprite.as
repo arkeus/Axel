@@ -48,9 +48,9 @@ package org.axgl {
 		protected var animationTimer:Number;
 
 		/** The current frame of the animation. If an animation is not currently playing, the currently showing frame. */
-		private var frame:uint = 0;
+		public var frame:uint = 0;
 		/** The number of frames per row in the loaded texture. */
-		protected var framesPerRow:uint;
+		public var framesPerRow:uint;
 		/** The width of the frame for this entity. Used for animation. */
 		public var frameWidth:Number;
 		/** The height of the frame for this entity. Used for animation. */
@@ -88,7 +88,6 @@ package org.axgl {
 
 			matrix = new Matrix3D;
 			scale = new AxPoint(1, 1);
-			colorTransform = Vector.<Number>([1, 1, 1, 1]);
 			debugColor = Vector.<Number>([1, 0, 0, 1]);
 			colorTransform.fixed = true;
 			uvOffset = new Vector.<Number>(4, true);
@@ -174,26 +173,6 @@ package org.axgl {
 				debugColor[BLUE] = 0;
 				debugColor[ALPHA] = 1;
 			}
-		}
-
-		/**
-		 * Sets the opacity value of this sprite. A value of 0 means it is completely see through, while a value
-		 * of 1 means it is completely opaque.
-		 * 
-		 * @param opacity The alpha value, between 0 and 1.
-		 */
-		public function set alpha(opacity:Number):void {
-			colorTransform[ALPHA] = AxU.clamp(opacity, 0, 1);
-		}
-
-		/**
-		 * Gets the opacity value of this sprite. A value of 0 means it is completely see through, while a value
-		 * of 1 means it is completely opaque.
-		 * 
-		 * @return The alpha value, between 0 and 1.
-		 */
-		public function get alpha():Number {
-			return colorTransform[ALPHA];
 		}
 
 		/**
@@ -352,11 +331,12 @@ package org.axgl {
 		/**
 		 * @inheritDoc
 		 */
-		override public function systemUpdate():void {
-			super.systemUpdate();
+		override public function update():void {
+			super.update();
 
 			screen.x = (x - Ax.camera.x) * scroll.x;
 			screen.y = (y - Ax.camera.y) * scroll.y;
+			calculateFrame();
 		}
 
 		/**
@@ -385,12 +365,15 @@ package org.axgl {
 				buildVertexBuffer(quad);
 				dirty = false;
 			}
-			
-			calculateFrame();
 
 			if (screen.x > Ax.width || screen.y > Ax.height || screen.x + frameWidth < 0 || screen.y + frameHeight < 0) {
 				return;
 			}
+			
+			colorTransform[RED] = color.red;
+			colorTransform[GREEN] = color.green;
+			colorTransform[BLUE] = color.blue;
+			colorTransform[ALPHA] = color.alpha;
 
 			matrix.identity();
 
@@ -464,9 +447,12 @@ package org.axgl {
 			screen = null;
 			uvOffset = null;
 			debugColor = null;
-			animation.dispose();
+			if (animation != null) {
+				animation.dispose();
+			}
 			animation = null;
 			animations = null;
+			color = null;
 		}
 
 		/**

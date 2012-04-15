@@ -127,9 +127,9 @@ package org.axgl.collision {
 		 */
 		protected function solveXCollision(source:AxEntity, target:AxEntity):Boolean {
 			if (source is AxTilemap) {
-				return (source as AxTilemap).overlap(target, solveXCollision);
+				return (source as AxTilemap).overlap(target, solveXCollision, true);
 			} else if (target is AxTilemap) {
-				return (target as AxTilemap).overlap(source, solveXCollision);
+				return (target as AxTilemap).overlap(source, solveXCollision, true);
 			}
 
 			var sfx:Number = source.x - source.previous.x;
@@ -180,9 +180,9 @@ package org.axgl.collision {
 		 */
 		protected function solveYCollision(source:AxEntity, target:AxEntity):Boolean {
 			if (source is AxTilemap) {
-				return (source as AxTilemap).overlap(target, solveYCollision);
+				return (source as AxTilemap).overlap(target, solveYCollision, true);
 			} else if (target is AxTilemap) {
-				return (target as AxTilemap).overlap(source, solveYCollision);
+				return (target as AxTilemap).overlap(source, solveYCollision, true);
 			}
 
 			var sfy:Number = source.y - source.previous.y;

@@ -43,7 +43,7 @@ package org.axgl.particle {
 			time = 0;
 			active = false;
 			visible = false;
-			colorTransform = Vector.<Number>([1, 1, 1, 0.5]);
+			scroll = effect.scroll;
 		}
 
 		/**
@@ -58,17 +58,20 @@ package org.axgl.particle {
 
 			indexData = new Vector.<uint>;
 			vertexData = new Vector.<Number>;
+			
+			var frameWidth:uint = effect.frameSize.x == 0 ? texture.rawWidth : effect.frameSize.x;
+			var frameHeight:uint = effect.frameSize.y == 0 ? texture.rawHeight : effect.frameSize.y;
+			var uvWidth:Number = frameWidth / texture.width;
+			var uvHeight:Number = frameHeight / texture.height;
+			var columns:uint = Math.floor(texture.rawWidth / frameWidth);
+			var rows:uint = Math.floor(texture.rawHeight / frameHeight);
+			var lastFrameIndex:uint = columns * rows - 1;
 
 			for (var i:uint = 0; i < effect.amount; i++) {
 				var index:uint = i * 4;
 				var tx:int = AxU.rand(effect.x.min, effect.x.max);
 				var ty:int = AxU.rand(effect.y.min, effect.y.max);
-				var w:Number = texture.rawWidth;
-				var h:Number = texture.rawHeight;
-				var u:Number = 0;
-				var v:Number = 0;
-				var uvWidth:Number = texture.rawWidth / texture.width;
-				var uvHeight:Number = texture.rawHeight / texture.height;
+				
 				var vx:Number = effect.xVelocity.randomNumber();
 				var vy:Number = effect.yVelocity.randomNumber();
 				var ax:Number = effect.xAcceleration.randomNumber();
@@ -85,12 +88,24 @@ package org.axgl.particle {
 				var ceb:Number = effect.endColorBlue.randomNumber();
 				var cea:Number = effect.endAlpha.randomNumber();
 				
+				var frame:uint;
+				if (effect.frameRange.min < 0 || effect.frameRange.max < 0) {
+					frame = AxU.rand(0, lastFrameIndex); 
+				} else {
+					frame = effect.frameRange.randomInt();
+				}
+				
+				var frameRow:uint = frame / columns;
+				var frameCol:uint = frame % columns;
+				var u:Number = frameCol * frameWidth / texture.width;
+				var v:Number = frameRow * frameHeight / texture.height;
+				
 				indexData.push(index, index + 1, index + 2, index + 1, index + 2, index + 3);
 				vertexData.push(
-					tx, 	ty, 	u,				v,				vx, vy, ax, ay, ssc, esc, life, csr, csg, csb, csa, cer, ceg, ceb, cea,
-					tx + w, ty, 	u + uvWidth,	v, 				vx, vy, ax, ay, ssc, esc, life, csr, csg, csb, csa, cer, ceg, ceb, cea,
-					tx, 	ty + h, u, 				v + uvHeight, 	vx, vy, ax, ay, ssc, esc, life, csr, csg, csb, csa, cer, ceg, ceb, cea,
-					tx + w, ty + h, u + uvWidth, 	v + uvHeight, 	vx, vy, ax, ay, ssc, esc, life, csr, csg, csb, csa, cer, ceg, ceb, cea
+					tx, 				ty, 				u,				v,				vx, vy, ax, ay, ssc, esc, life, csr, csg, csb, csa, cer, ceg, ceb, cea,
+					tx + frameWidth, 	ty, 				u + uvWidth,	v, 				vx, vy, ax, ay, ssc, esc, life, csr, csg, csb, csa, cer, ceg, ceb, cea,
+					tx, 				ty + frameHeight, 	u, 				v + uvHeight, 	vx, vy, ax, ay, ssc, esc, life, csr, csg, csb, csa, cer, ceg, ceb, cea,
+					tx + frameWidth, 	ty + frameHeight, 	u + uvWidth, 	v + uvHeight, 	vx, vy, ax, ay, ssc, esc, life, csr, csg, csb, csa, cer, ceg, ceb, cea
 				);
 			}
 
@@ -132,9 +147,14 @@ package org.axgl.particle {
 		}
 
 		override public function draw():void {
+			colorTransform[RED] = color.red;
+			colorTransform[GREEN] = color.green;
+			colorTransform[BLUE] = color.blue;
+			colorTransform[ALPHA] = color.alpha;
+			
 			matrix.identity();
 			matrix.appendRotation(angle, Vector3D.Z_AXIS, pivot);
-			matrix.appendTranslation(-Ax.camera.x + x, -Ax.camera.y + y, 0);
+			matrix.appendTranslation(x - Ax.camera.x * scroll.x, y - Ax.camera.y * scroll.y, 0);
 			matrix.append(zooms ? Ax.camera.projection : Ax.camera.baseProjection);
 
 			Ax.context.setProgram(shader.program);

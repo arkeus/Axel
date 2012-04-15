@@ -1,4 +1,5 @@
 package org.axgl.particle {
+	import org.axgl.AxPoint;
 	import org.axgl.render.AxBlendMode;
 	import org.axgl.render.AxColor;
 	import org.axgl.util.AxRange;
@@ -148,6 +149,20 @@ package org.axgl.particle {
 		 * @default 1 
 		 */
 		public var endColorBlue:AxRange;
+		/**
+		 * If using multiple particle types in your texture, this should represent the size of each particle
+		 * frame. Use frame() to set the frame size and range together.
+		 */ 
+		public var frameSize:AxPoint;
+		/**
+		 * If using multiple particle types in your texture, this is the range of possible particles that this
+		 * effect can have. Use frame() to set the frame size and range together.
+		 */
+		public var frameRange:AxRange;
+		/**
+		 * The scroll factor to use for this effect.
+		 */
+		public var scroll:AxPoint;
 
 		/**
 		 * The name of this particle effect. This is what you will use to emit particles of this type once
@@ -204,6 +219,9 @@ package org.axgl.particle {
 			endColorRed = new AxRange(1, 1);
 			endColorGreen = new AxRange(1, 1);
 			endColorBlue = new AxRange(1, 1);
+			frameSize = new AxPoint(0, 0);
+			frameRange = new AxRange(-1, -1);
+			scroll = new AxPoint(1, 1);
 		}
 
 		/**
@@ -215,33 +233,52 @@ package org.axgl.particle {
 		 * @param endMin The minimum ending value of each red/green/blue component of each particle.
 		 * @param endMax The maximum ending value of each red/green/blue component of each particle.
 		 *
-		 * @return 
+		 * @return The particle effect.
 		 */
 		public function color(startMin:AxColor = null, startMax:AxColor = null, endMin:AxColor = null, endMax:AxColor = null):AxParticleEffect {
 			if (startMin != null) {
-				startColorRed.min = startMin.r;
-				startColorGreen.min = startMin.g;
-				startColorBlue.min = startMin.b;
+				startColorRed.min = startMin.red;
+				startColorGreen.min = startMin.green;
+				startColorBlue.min = startMin.blue;
 			}
 
 			if (startMax != null) {
-				startColorRed.max = startMax.r;
-				startColorGreen.max = startMax.g;
-				startColorBlue.max = startMax.b;
+				startColorRed.max = startMax.red;
+				startColorGreen.max = startMax.green;
+				startColorBlue.max = startMax.blue;
 			}
 
 			if (endMin != null) {
-				endColorRed.min = endMin.r;
-				endColorGreen.min = endMin.g;
-				endColorBlue.min = endMin.b;
+				endColorRed.min = endMin.red;
+				endColorGreen.min = endMin.green;
+				endColorBlue.min = endMin.blue;
 			}
 
 			if (endMax != null) {
-				endColorRed.max = endMax.r;
-				endColorGreen.max = endMax.g;
-				endColorBlue.max = endMax.b;
+				endColorRed.max = endMax.red;
+				endColorGreen.max = endMax.green;
+				endColorBlue.max = endMax.blue;
 			}
 
+			return this;
+		}
+		
+		/**
+		 * Sets the possible frames this particle can use. You can put multiple particles in your image, and using this,
+		 * tell it to randomly use one of those particles. You must set the width and the height of each frame, otherwise
+		 * it will use the entire image for the particle. If you do not set frameMin and frameMin, it will assume that
+		 * it can be any possible particle in the spritesheet.
+		 * 
+		 * @param frameWidth The width of each frame in your particle sprite sheet.
+		 * @param frameHeight The height of each frame in your particle sprite sheet.
+		 * 
+		 * @return The particle effect.
+		 */
+		public function frame(frameWidth:uint, frameHeight:uint, frameMin:int = -1, frameMax:int = -1):AxParticleEffect {
+			frameSize.x = frameWidth;
+			frameSize.y = frameHeight;
+			frameRange.min = frameMin;
+			frameRange.max = frameMax;
 			return this;
 		}
 	}

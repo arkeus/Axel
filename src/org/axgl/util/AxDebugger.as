@@ -16,6 +16,7 @@ package org.axgl.util {
 		private var libraryText:AxText;
 		private var modeText:AxText;
 		private var timeText:AxText;
+		private var titleText:AxText;
 		
 		private var updateTime:uint = 0;
 		private var drawTime:uint = 0;
@@ -69,6 +70,11 @@ package org.axgl.util {
 			timeText.zooms = timeText.countTris = false;
 			this.add(timeText);
 			
+			titleText = new AxText(0, 3, AxResource.FONT, "", Ax.width, "center");
+			titleText.scroll.x = titleText.scroll.y = 0;
+			titleText.zooms = titleText.countTris = false;
+			this.add(titleText);
+			
 			active = false;
 		}
 		
@@ -106,6 +112,18 @@ package org.axgl.util {
 			
 			var renderMode:String = Ax.mode == "Software Mode" ? "@[255,0,0]Software Rendering" : "@[150,180,255]Hardware Rendering";
 			modeText.text = renderMode + " @[190,190,190]Tris: @[100,150,255]" + displayTris;
+			
+			if (title != null) {
+				titleText.text = title;
+			}
+		}
+		
+		public function set title(title:String):void {
+			titleText.text = title;
+		}
+		
+		public function get title():String {
+			return titleText.text;
 		}
 	}
 }

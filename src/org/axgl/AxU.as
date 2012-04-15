@@ -99,14 +99,40 @@ package org.axgl {
 			navigateToURL(new URLRequest(url), "_blank");
 		}
 
+		/**
+		 * Return the angle (in radians) between the source position and the target position.
+		 * 
+		 * @param sourceX The source x position.
+		 * @param sourceY The source y position.
+		 * @param targetX The target x position.
+		 * @param targetY The target y position.
+		 *
+		 * @return The angle in radians.
+		 */
 		public static function getAngle(sourceX:Number, sourceY:Number, targetX:Number, targetY:Number):Number {
 			return Math.atan2(targetY - sourceY, targetX - sourceX);
 		}
 		
+		/**
+		 * Return the angle (in radians) between the source position and the mouse.
+		 * 
+		 * @param sourceX The source x position.
+		 * @param sourceY The source y position.
+		 *
+		 * @return The angle in radians.
+		 */
 		public static function getAngleToMouse(sourceX:Number, sourceY:Number):Number {
 			return Math.atan2(Ax.mouse.y - sourceY, Ax.mouse.x - sourceX);
 		}
 		
+		/**
+		 * Returns the distance (in pixels) between the source position and the mouse position.
+		 * 
+		 * @param sourceX The source x position.
+		 * @param sourceY The source y position.
+		 *
+		 * @return The distance in pixels.
+		 */
 		public static function distanceToMouse(sourceX:Number, sourceY:Number):Number {
 			return Math.sqrt((Ax.mouse.x - sourceX) * (Ax.mouse.x - sourceX) + (Ax.mouse.y - sourceY) * (Ax.mouse.y - sourceY));
 		}

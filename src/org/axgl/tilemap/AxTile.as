@@ -12,6 +12,8 @@ package org.axgl.tilemap {
 		public var map:AxTilemap;
 		/**
 		 * The possible collision directions for this tile.
+		 * TODO: Currently if you set it to NONE it is not solid, anything else is fully solid. Must support partially solid
+		 * in the future.
 		 */
 		public var collision:uint;
 		/**
