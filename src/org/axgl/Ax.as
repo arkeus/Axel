@@ -37,7 +37,7 @@ package org.axgl {
 	 */
 	public class Ax extends Sprite {
 		public static const LIBRARY_NAME:String = "Axel";
-		public static const LIBRARY_VERSION:String = "0.9.1a";
+		public static const LIBRARY_VERSION:String = "0.9.1b";
 		
 		/**
 		 * Whether or not the game is running is debug mode.
@@ -87,7 +87,7 @@ package org.axgl {
 		/**
 		 * Read-only. Internal timer to run internal heartbeat function about once a second.
 		 */
-		public static var heartbeatTimer:Number = 0;
+		public static var heartbeatTimer:Number = 1;
 		/**
 		 * Read-only. The timestamp for the current frame. Use this instead of getTimer().
 		 */
@@ -482,6 +482,7 @@ package org.axgl {
 			
 			if ((keys.pressed(AxKey.GRAVE) || keys.pressed(AxKey.BACKSLASH)) && debuggerEnabled) {
 				debugger.active = !debugger.active;
+				debugger.heartbeat();
 			}
 		}
 		

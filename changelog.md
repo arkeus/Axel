@@ -1,3 +1,13 @@
+## 0.9.1b / 2012-04-16
+* AxColor.toHex() is now a getter, available via AxColor.hex (and works correctly now)
+* You can now set a color by doing color.hex = 0xAARRGGBB rather than always constructing one via AxColor.fromHex
+* AxFonts loaded from fonts now correctly default to white and can be color shifted via .color and @[] tags
+* The main heartbeat function is now delayed for 1 second to help prevent crashes on OSX debugger player using air 3.2+
+* The debugger heartbeat function no longer changes text when not active
+* Opening the debugger now triggers its heartbeat immediately.
+* Clouds and groups can now disable counting their updates/draws towards the debugger count
+* The debugger no longer counts towards its own stats
+
 ## 0.9.1a / 2012-04-15
 * You can now overlap and collide against AxClouds
 * AxU now has a randf function to give a random floating point Number between its parameters

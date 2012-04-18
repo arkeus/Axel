@@ -288,7 +288,9 @@ package org.axgl {
 				}
 				
 				entity.update();
-				Ax.debugger.updates++;
+				if (countUpdate) {
+					Ax.debugger.updates++;
+				}
 			}
 		}
 		

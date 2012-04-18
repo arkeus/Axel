@@ -28,20 +28,35 @@ package org.axgl.render {
 		}
 		
 		/**
+		 * Gets the hex value representing this color.
+		 *
+		 * @return The hex color, as an integer
+		 */
+		public function get hex():uint {
+			return ((int)(255 * alpha / 1) << 24) + ((int)(255 * red / 1) << 16) + ((int)(255 * green / 1) << 8) + (int)(255 * blue / 1);
+		}
+		
+		/**
+		 * Sets this color to the color represented by the passed hex value.
+		 * 
+		 * @param value The hex value to use, as 0xAARRGGBB
+		 */
+		public function set hex(value:uint):void {
+			alpha = ((value & 0xff000000) >> 24) / 0xff;
+			red = ((value & 0x00ff0000) >> 16) / 0xff;
+			green = ((value & 0x0000ff00) >> 8) / 0xff;
+			blue = (value & 0x000000ff) / 0xff;
+		}
+		
+		/**
 		 * Given a hex value in the form of 0xAARRGGBB, returns a new AxColor.
 		 * 
 		 * @param hex The hex color, as 0xAARRGGBB
 		 */
-		public static function fromHex(hex:uint):AxColor {
-			var alpha:Number = ((hex & 0xff000000) >> 24) / 0xff;
-			var red:Number = ((hex & 0x00ff0000) >> 16) / 0xff;
-			var green:Number = ((hex & 0x0000ff00) >> 8) / 0xff;
-			var blue:Number = (hex & 0x000000ff) / 0xff;
-			return new AxColor(red, green, blue, alpha);
-		}
-		
-		public function toHex():uint {
-			return (int)(255 * alpha / 1) << 24 + (int)(255 * red / 1) << 16 + (int)(255 * green / 1) << 8 + (int)(255 * blue / 1);
+		public static function fromHex(value:uint):AxColor {
+			var color:AxColor = new AxColor;
+			color.hex = value;
+			return color;
 		}
 	}
 }

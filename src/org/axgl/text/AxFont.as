@@ -192,6 +192,7 @@ package org.axgl.text {
 			format.size = size;
 			format.bold = bold;
 			format.italic = italic;
+			format.color = 0xffffff;
 			tf.defaultTextFormat = format;
 			tf.autoSize = TextFieldAutoSize.LEFT;
 			tf.border = false;

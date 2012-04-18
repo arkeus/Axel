@@ -60,7 +60,7 @@ package org.axgl.util {
 			memoryText.zooms = memoryText.countTris = false;
 			this.add(memoryText);
 			
-			modeText = new AxText(4, 3, AxResource.FONT, "asd", Ax.width - 3, "right");
+			modeText = new AxText(4, 3, AxResource.FONT, "---", Ax.width - 3, "right");
 			modeText.scroll.x = modeText.scroll.y = 0;
 			modeText.zooms = modeText.countTris = false;
 			this.add(modeText);
@@ -76,6 +76,7 @@ package org.axgl.util {
 			this.add(titleText);
 			
 			active = false;
+			countUpdate = countDraw = false;
 		}
 		
 		public function setUpdateTime(time:uint):void {
@@ -99,6 +100,10 @@ package org.axgl.util {
 		}
 		
 		public function heartbeat():void {
+			if (!active) {
+				return;
+			}
+			
 			displayUpdateTime = updateTime;
 			displayUpdates = updates;
 			displayDrawTime = drawTime;
