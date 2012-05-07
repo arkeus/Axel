@@ -125,6 +125,7 @@ package org.axgl {
 			pivot.y = height / 2;
 			quad = new AxQuad(this.frameWidth, this.frameHeight, this.frameWidth / texture.width, this.frameHeight / texture.height);
 			frame = 0;
+			dirty = true;
 			return this;
 		}
 		
