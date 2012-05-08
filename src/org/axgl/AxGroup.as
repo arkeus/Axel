@@ -67,6 +67,16 @@ package org.axgl {
 		}
 
 		/**
+		 * Removes all entities from the group.
+		 *
+		 * @return This group.
+		 */
+		public function clear():AxGroup {
+      members.length = 0;
+			return this;
+		}
+
+		/**
 		 * @inheritDoc
 		 */
 		override public function update():void {
