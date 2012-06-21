@@ -74,6 +74,12 @@ package org.axgl {
 		 */
 		public var flip:uint = LEFT;
 
+    /**
+     * Old school flickering, just as in Flixel.
+     */
+    protected var _flicker:Boolean = false;
+    protected var _flickerTimer:Number = 0;
+
 		/**
 		 * Creates a new sprite at the given position. Loads the image in graphic using the given frameWidth and frameHeight. If
 		 * frameWidth or frameHeight are 0, then the entire image is treated as a single frame. If you do not pass a graphic here,
@@ -282,6 +288,15 @@ package org.axgl {
 			return this;
 		}
 
+    /**
+     * Old school flickering.
+     *
+     * @param seconds How many seconds the sprite should flicker. Default is 2.
+     */
+    public function flicker(seconds:Number):void {
+      _flickerTimer = seconds;
+    }
+
 		/**
 		 * Calculates the helper variables required to draw the current frame of this sprite.
 		 */
@@ -336,6 +351,14 @@ package org.axgl {
 		override public function update():void {
 			super.update();
 
+      if(_flickerTimer > 0) {
+        _flickerTimer -= Ax.dt;
+        _flicker = !_flicker;
+        if(_flickerTimer <= 0){
+          _flicker = false;
+        }
+      }
+
 			screen.x = (x - Ax.camera.x) * scroll.x;
 			screen.y = (y - Ax.camera.y) * scroll.y;
 			calculateFrame();
@@ -368,7 +391,7 @@ package org.axgl {
 				dirty = false;
 			}
 
-			if (screen.x > Ax.width || screen.y > Ax.height || screen.x + frameWidth < 0 || screen.y + frameHeight < 0) {
+			if (_flicker || screen.x > Ax.width || screen.y > Ax.height || screen.x + frameWidth < 0 || screen.y + frameHeight < 0) {
 				return;
 			}
 			
