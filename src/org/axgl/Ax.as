@@ -456,8 +456,8 @@ package org.axgl {
 		protected function initialize():void {
 			stage.frameRate = requestedFramerate;
 			
-			Ax.width = width == 0 ? stage.stageWidth : width;
-			Ax.height = height == 0 ? stage.stageHeight : height;
+			Ax.width = requestedWidth == 0 ? stage.stageWidth : requestedWidth;
+			Ax.height = requestedHeight == 0 ? stage.stageHeight : requestedHeight;
 			
 			context.configureBackBuffer(Ax.width, Ax.height, 0, false);
 			context.enableErrorChecking = false;

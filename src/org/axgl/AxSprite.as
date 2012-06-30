@@ -367,7 +367,7 @@ package org.axgl {
 				dirty = false;
 			}
 
-			if (screen.x > Ax.width || screen.y > Ax.height || screen.x + frameWidth < 0 || screen.y + frameHeight < 0) {
+			if (screen.x > Ax.width || screen.y > Ax.height || screen.x + frameWidth < 0 || screen.y + frameHeight < 0 || scale.x == 0 || scale.y == 0) {
 				return;
 			}
 			
