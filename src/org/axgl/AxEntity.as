@@ -303,6 +303,16 @@ package org.axgl {
 		}
 		
 		/**
+		 * @inheritDoc
+		 */
+		override public function overlaps(other:AxRect):Boolean {
+			if (!exists || (other is AxEntity && !(other as AxEntity).exists)) {
+				return false;
+			}
+			return super.overlaps(other);
+		}
+		
+		/**
 		 * Any class that holds onto external resources that should be cleaned up upon deletion should delete those
 		 * resources in the dispose method. Be sure to call <code>super.dispose()</code> for parent classes to do their cleanup.
 		 */

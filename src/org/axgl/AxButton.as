@@ -123,6 +123,8 @@ package org.axgl {
 			super.draw();
 
 			if (label != null) {
+				label.scroll.x = scroll.x;
+				label.scroll.y = scroll.y;
 				label.draw();
 			}
 		}

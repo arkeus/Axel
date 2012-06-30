@@ -89,6 +89,8 @@ package org.axgl.util {
 		 */
 		public function calculateZoomMatrix():void {
 			calculateProjectionMatrix(projection, Ax.zoom);
+			Ax.viewWidth = Ax.width / Ax.zoom;
+			Ax.viewHeight = Ax.height / Ax.zoom;
 		}
 
 		/**

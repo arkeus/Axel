@@ -62,5 +62,14 @@ package org.axgl {
 			y = point.y;
 			return this;
 		}
+		
+		/**
+		 * Provides a more useful string representation when printing this object.
+		 * 
+		 * @return The string in the format (x,y)
+		 */
+		public function toString():String {
+			return "(" + x + "," + y + ")";
+		}
 	}
 }

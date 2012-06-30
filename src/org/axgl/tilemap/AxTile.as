@@ -23,7 +23,7 @@ package org.axgl.tilemap {
 		/**
 		 * The tile type index that this tile represents.
 		 */
-		private var index:uint;
+		public var index:uint;
 
 		/**
 		 * Creates a new AxTile.

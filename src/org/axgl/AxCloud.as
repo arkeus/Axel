@@ -314,7 +314,11 @@ package org.axgl {
 			matrix.appendTranslation(x - Math.round(Ax.camera.x), y - Math.round(Ax.camera.y), 0);
 			matrix.append(Ax.camera.projection);
 			
-			Ax.context.setProgram(shader.program);
+			if (shader != Ax.shader) {
+				Ax.context.setProgram(shader.program);
+				Ax.shader = shader;
+			}
+			
 			Ax.context.setTextureAt(0, texture.texture);
 			Ax.context.setBlendFactors(Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA);
 			Ax.context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, matrix, true);
@@ -333,6 +337,23 @@ package org.axgl {
 			if (countTris) {
 				Ax.debugger.tris += triangles;
 			}
+		}
+		
+		/**
+		 * @inheritDoc
+		 */
+		override public function overlaps(other:AxRect):Boolean {
+			if (!exists) {
+				return false;
+			}
+			
+			var overlapFound:Boolean = false;
+			for (var i:uint = 0; i < members.length; i++) {
+				if ((members[i] as AxSprite).exists && (members[i] as AxSprite).overlaps(other)) {
+					overlapFound = true;
+				}
+			}
+			return overlapFound;
 		}
 		
 		/**
@@ -359,6 +380,9 @@ package org.axgl {
 			tempMembers.length = 0;
 		}
 		
+		/**
+		 * @inheritDoc
+		 */
 		override public function dispose():void {
 			for (var i:uint = 0; i < members.length; i++) {
 				var entity:AxSprite = members[i];

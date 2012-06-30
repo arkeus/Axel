@@ -8,6 +8,7 @@ package org.axgl {
 	import flash.display3D.Context3DCompareMode;
 	import flash.display3D.Context3DRenderMode;
 	import flash.display3D.Context3DTriangleFace;
+	import flash.display3D.Program3D;
 	import flash.events.ErrorEvent;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
@@ -25,6 +26,7 @@ package org.axgl {
 	import org.axgl.input.AxKeyboard;
 	import org.axgl.input.AxMouse;
 	import org.axgl.render.AxColor;
+	import org.axgl.render.AxShader;
 	import org.axgl.sound.AxMusic;
 	import org.axgl.sound.AxSound;
 	import org.axgl.tilemap.AxTilemap;
@@ -37,7 +39,9 @@ package org.axgl {
 	 */
 	public class Ax extends Sprite {
 		public static const LIBRARY_NAME:String = "Axel";
-		public static const LIBRARY_VERSION:String = "0.9.1b";
+		public static const LIBRARY_VERSION:String = "0.9.2";
+		
+		public static var shader:AxShader;
 		
 		/**
 		 * Whether or not the game is running is debug mode.
@@ -82,7 +86,7 @@ package org.axgl {
 		 *
 		 * @default 1
 		 */
-		private static var worldZoom:Number;
+		protected static var worldZoom:Number;
 
 		/**
 		 * Read-only. Internal timer to run internal heartbeat function about once a second.
@@ -111,6 +115,7 @@ package org.axgl {
 		 * by this when moving objects based on velocity. This way, even if the fps rate drops, your movement will still be consistent.
 		 * For example, rather than moving 2 pixels every frame (which is 120 pixels every second at 60fps, but only 60 pixels every
 		 * second at 30fps), you should move 120 * Ax.dt per frame, which will move you 120 pixels every second regardless of fps.
+		 * If you set fixed framerate to true, this will always return 1/framerate.
 		 */
 		public static var dt:Number = 0;
 		/**
@@ -118,6 +123,11 @@ package org.axgl {
 		 * @default
 		 */
 		public static var frames:uint = 0;
+		/**
+		 * Whether or not we're operating in fixed framerate mode. This ensures that Ax.dt always returns 1/framerate. This allows you
+		 * to give the option of switching back and forth by fixed and variable by multiply by Ax.dt but toggling this flag.
+		 */
+		public static var fixedTimestep:Boolean;
 
 		/**
 		 * Read-only. Width of the game, specified in the super of your main class.
@@ -192,7 +202,7 @@ package org.axgl {
 		 * player's computer supports hardware rendering. If it is "Software Mode", all rendering will be done on the CPU
 		 * and will be very slow. This value can be read through <code>Ax.mode</code>.
 		 */
-		private static var renderMode:String;
+		protected static var renderMode:String;
 		
 		/**
 		 * Read-only. The game debugger. If open, this displays stats such as your current frames per second, how many
@@ -209,33 +219,50 @@ package org.axgl {
 		/**
 		 * The initial state that the game will begin in.
 		 * */
-		private static var requestedState:Class;
+		protected static var requestedState:Class;
 		/**
 		 * The initial width the game will start with, 0 meaning stage width.
 		 * 
 		 * @default 0
 		 */
-		private static var requestedWidth:uint;
+		protected static var requestedWidth:uint;
 		/**
 		 * The initial height the game will start with, 0 meaning stage height.
 		 * 
 		 * @default 0
 		 */
-		private static var requestedHeight:uint;
+		protected static var requestedHeight:uint;
 		/**
 		 * When you pop off states, this holds those states until the end of the frame so that it can dispose of them cleanly
 		 * without affecting any currently executing code.
 		 */
-		private static var destroyedStates:Vector.<AxState>;
+		protected static var destroyedStates:Vector.<AxState>;
+		
+		/**
+		 * The width of the visible area on the screen, affected by zoom. If your width is 400, and zoom is 2x, this will be 200.
+		 */
+		public static var viewWidth:uint;
+		/**
+		 * The height of the visible area on the screen, affected by zoom. If your height is 400, and zoom is 2x, this will be 200.
+		 */
+		public static var viewHeight:uint;
 
 		/**
 		 * Creates the game engine.
 		 */
-		public function Ax(initialState:Class = null, width:uint = 0, height:uint = 0, zoom:Number = 1, framerate:uint = 60) {
+		public function Ax(initialState:Class = null, width:uint = 0, height:uint = 0, zoom:uint = 1, framerate:uint = 60, fixedTimestep:Boolean = false) {
+			if (zoom < 1) {
+				throw new Error("Zoom level must be an integer greater than 0");
+			}
+			if (framerate > 60) {
+				throw new Error("Flash does not support framerates above 60");
+			}
+			
 			Ax.requestedState = initialState;
 			Ax.requestedWidth = width;
 			Ax.requestedHeight = height;
 			Ax.requestedFramerate = framerate;
+			Ax.fixedTimestep = fixedTimestep;
 			
 			Ax.states = new Vector.<AxState>;
 			Ax.worldZoom = zoom;
@@ -261,7 +288,7 @@ package org.axgl {
 		 *
 		 * @param event The ADDED_TO_STAGE event.
 		 */
-		private function onStageInitialized(event:Event):void {
+		protected function onStageInitialized(event:Event):void {
 			removeEventListener(Event.ADDED_TO_STAGE, onStageInitialized);
 			stageSetup();
 			systemSetup();
@@ -273,7 +300,7 @@ package org.axgl {
 		 * @throws Error If stage3D is not available.
 		 * @throws Error If there is an error creating a stage3D object.
 		 */
-		private function stageSetup():void {
+		protected function stageSetup():void {
 			stage2D = stage;
 			stage2D.scaleMode = StageScaleMode.NO_SCALE;
 			stage2D.align = StageAlign.TOP_LEFT;
@@ -285,7 +312,7 @@ package org.axgl {
 			var stage3D:Stage3D = stage.stage3Ds[0];
 			stage3D.addEventListener(Event.CONTEXT3D_CREATE, onStageCreate);
 			stage3D.addEventListener(ErrorEvent.ERROR, function(e:Event):void {
-				throw new Error("STUPID 3D IS NOT DIRECT: " + e);
+				throw new Error("Error encountered while setting up Stage3D: " + e);
 			});
 			stage3D.requestContext3D();
 		}
@@ -293,7 +320,7 @@ package org.axgl {
 		/**
 		 * Sets up listeners and global objects used by the game engine.
 		 */
-		private function systemSetup():void {
+		protected function systemSetup():void {
 			// Create keyboard and bind key events
 			keys = new AxKeyboard;
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, keys.onKeyDown);
@@ -303,7 +330,7 @@ package org.axgl {
 			mouse = new AxMouse;
 			stage.addEventListener(MouseEvent.MOUSE_DOWN, mouse.onMouseDown);
 			stage.addEventListener(MouseEvent.MOUSE_UP, mouse.onMouseUp);
-
+			
 			// Bind touch evenets
 			stage.addEventListener(TouchEvent.TOUCH_BEGIN, onTouchBegin);
 			stage.addEventListener(TouchEvent.TOUCH_MOVE, onTouchMove);
@@ -319,7 +346,7 @@ package org.axgl {
 		 *
 		 * @param event The touch event.
 		 */
-		private function onTouchBegin(event:TouchEvent):void {
+		protected function onTouchBegin(event:TouchEvent):void {
 			trace("TOUCH BEGIN");
 			// TODO: Implement actual touch controls
 			// For now, touching controls mouse x/y
@@ -331,7 +358,7 @@ package org.axgl {
 		 *
 		 * @param event The touch event.
 		 */
-		private function onTouchMove(event:TouchEvent):void {
+		protected function onTouchMove(event:TouchEvent):void {
 			trace("TOUCH MOVE");
 			// TODO: Implement actual touch controls
 			// For now, touching controls mouse x/y
@@ -343,7 +370,7 @@ package org.axgl {
 		 *
 		 * @param event The touch event.
 		 */
-		private function onTouchEnd(event:TouchEvent):void {
+		protected function onTouchEnd(event:TouchEvent):void {
 			trace("TOUCH END");
 			// TODO: Implement actual touch controls
 			// For now, touching controls mouse x/y
@@ -355,7 +382,7 @@ package org.axgl {
 		 *
 		 * @param event The focus event.
 		 */
-		private function onFocusLost(event:Event):void {
+		protected function onFocusLost(event:Event):void {
 			keys.releaseAll();
 			mouse.releaseAll();
 			stage.frameRate = unfocusedFramerate;
@@ -366,7 +393,7 @@ package org.axgl {
 		 *
 		 * @param event The focus event.
 		 */
-		private function onFocusGained(event:Event):void {
+		protected function onFocusGained(event:Event):void {
 			stage.frameRate = requestedFramerate;
 		}
 
@@ -376,7 +403,7 @@ package org.axgl {
 		 *
 		 * @param event
 		 */
-		private function onStageCreate(event:Event):void {
+		protected function onStageCreate(event:Event):void {
 			removeEventListener(Event.CONTEXT3D_CREATE, onStageCreate);
 
 			stage3D = event.target as Stage3D;
@@ -426,7 +453,7 @@ package org.axgl {
 		 * @param zoom The initial zoom level of your game.
 		 * @param framerate The framerate your game should run at.
 		 */
-		private function initialize():void {
+		protected function initialize():void {
 			stage.frameRate = requestedFramerate;
 			
 			Ax.width = width == 0 ? stage.stageWidth : width;
@@ -458,7 +485,7 @@ package org.axgl {
 		 *
 		 * @param event The enter frame event.
 		 */
-		private function onEnterFrame(event:Event):void {
+		protected function onEnterFrame(event:Event):void {
 			updateTimer();
 			debugger.resetStats();
 			
@@ -489,17 +516,20 @@ package org.axgl {
 		/**
 		 * Internal heartbeat function executed about once a second.
 		 */
-		private function heartbeat():void {
+		protected function heartbeat():void {
 			debugger.heartbeat();
 		}
 
 		/**
 		 * Updates the timer and framerate.
 		 */
-		private function updateTimer():void {
+		protected function updateTimer():void {
 			then = now;
 			now = getTimer();
 			dt = then == 0 ? 0 : (now - then) / 1000;
+			if (fixedTimestep) {
+				dt = 1 / requestedFramerate;
+			}
 
 			frames++;
 			if (now - frameStart >= 1000) {
@@ -512,7 +542,7 @@ package org.axgl {
 		/**
 		 * Updates the active states, camera, mouse, and sounds.
 		 */
-		private function update():void {
+		protected function update():void {
 			for (var i:uint = 0; i < states.length; i++) {
 				var state:AxState = states[i];
 				if (i == states.length - 1 || state.persistantUpdate) {
@@ -532,7 +562,7 @@ package org.axgl {
 		/**
 		 * Draws the active states.
 		 */
-		private function draw():void {
+		protected function draw():void {
 			context.clear(background.red, background.green, background.blue);
 			context.setCulling(Context3DTriangleFace.NONE);
 			context.setDepthTest(false, Context3DCompareMode.ALWAYS);
@@ -602,12 +632,16 @@ package org.axgl {
 		}
 
 		/**
-		 * Sets the zoom level. This value can be any number greater than 0.
+		 * Sets the zoom level. This value must be greater than zero, and must be and integer. Passing a
+		 * non-integer will cause it to set the zoom level to next largest integer.
 		 *
 		 * @param worldZoom The new zoom level.
 		 */
 		public static function set zoom(worldZoom:Number):void {
-			Ax.worldZoom = worldZoom;
+			if (worldZoom <= 0) {
+				throw new Error("Zoom level must be greater than 0");
+			}
+			Ax.worldZoom = Math.ceil(worldZoom);
 			camera.calculateZoomMatrix();
 		}
 
@@ -707,7 +741,7 @@ package org.axgl {
 			return overlapOrCollide(source, target, callback, collision, true);
 		}
 		
-		private static function overlapOrCollide(source:AxEntity, target:AxEntity, callback:Function, collision:AxCollisionGroup, collide:Boolean):Boolean {
+		protected static function overlapOrCollide(source:AxEntity, target:AxEntity, callback:Function, collision:AxCollisionGroup, collide:Boolean):Boolean {
 			if (collision == null) {
 				if (source is AxTilemap || target is AxTilemap) {
 					collision = new AxCollider;

@@ -32,9 +32,7 @@ package org.axgl {
 		public var screen:AxPoint;
 		
 		/**
-		 * TODO: after all this time?
-		 * 
-		 * @default "always"
+		 * TODO: Implement debug drawing
 		 */
 		protected var debugColor:Vector.<Number>;
 
@@ -125,6 +123,7 @@ package org.axgl {
 			pivot.y = height / 2;
 			quad = new AxQuad(this.frameWidth, this.frameHeight, this.frameWidth / texture.width, this.frameHeight / texture.height);
 			frame = 0;
+			dirty = true;
 			return this;
 		}
 		
@@ -144,7 +143,7 @@ package org.axgl {
 		}
 
 		/**
-		 * Snape kills dumbledore.
+		 * TODO: Implement
 		 * 
 		 * @param red
 		 * @param green
@@ -161,7 +160,7 @@ package org.axgl {
 		}
 
 		/**
-		 * Kills snape.
+		 * TODO: Implement
 		 */
 		public function resetDebugColor():void {
 			if (solid) {
@@ -390,20 +389,26 @@ package org.axgl {
 			var cx:Number = Ax.camera.x * scroll.x;
 			var cy:Number = Ax.camera.y * scroll.y;
 			if (facing == flip) {
-				matrix.appendTranslation(-(center.x - x), -(center.y - y), 0);
+				/*matrix.appendTranslation(-(center.x - x), -(center.y - y), 0);
 				matrix.appendScale(scalex * -1, scaley, 1);
-				matrix.appendTranslation(center.x - x + sx - cx, center.y - y + sy - cy, 0);
+				matrix.appendTranslation(center.x - x + sx - cx, center.y - y + sy - cy, 0);*/
+				matrix.appendScale(scalex * -1, scaley, 1);
+				matrix.appendTranslation(Math.round(sx - cx + AxU.EPSILON + frameWidth), Math.round(sy - cy + AxU.EPSILON), 0);
 			} else if (scalex != 1 || scaley != 1) {
 				matrix.appendTranslation(-origin.x, -origin.y, 0);
 				matrix.appendScale(scalex, scaley, 1);
 				matrix.appendTranslation(origin.x + sx - cx, origin.y + sy - cy, 0);
 			} else {
-				matrix.appendTranslation(sx - cx, sy - cy, 0);
+				matrix.appendTranslation(Math.round(sx - cx + AxU.EPSILON), Math.round(sy - cy + AxU.EPSILON), 0);
 			}
 
 			matrix.append(zooms ? Ax.camera.projection : Ax.camera.baseProjection);
 
-			Ax.context.setProgram(shader.program);
+			if (shader != Ax.shader) {
+				Ax.context.setProgram(shader.program);
+				Ax.shader = shader;
+			}
+			
 			Ax.context.setTextureAt(0, texture.texture);
 			Ax.context.setBlendFactors(Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA);
 			Ax.context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, matrix, true);
@@ -448,8 +453,36 @@ package org.axgl {
 			}*/
 		}
 		
+		/**
+		 * @inheritDoc
+		 */
+		override public function overlaps(other:AxRect):Boolean {
+			if (!exists) {
+				return false;
+			}
+			
+			var overlapFound:Boolean = false;
+			if (other is AxGroup) {
+				var objects:Vector.<AxEntity> = (other as AxGroup).members;
+				for each (var o:AxEntity in objects) {
+					if (o.exists && overlaps(o)) {
+						overlapFound = true;
+					}
+				}
+			} else if (other is AxCloud) {
+				var sprites:Vector.<AxSprite> = (other as AxCloud).members;
+				for each (var s:AxSprite in sprites) {
+					if (s.exists && overlaps(s)) {
+						overlapFound = true;
+					}
+				}
+			} else if (other != null) {
+				overlapFound = super.overlaps(other);
+			}
+			return overlapFound;
+		}
+		
 		override public function dispose():void {
-			//quad = null;
 			screen = null;
 			uvOffset = null;
 			debugColor = null;
@@ -459,6 +492,7 @@ package org.axgl {
 			animation = null;
 			animations = null;
 			color = null;
+			super.dispose();
 		}
 
 		/**

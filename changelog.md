@@ -1,3 +1,33 @@
+## 0.9.2 / 2012-06-30
+* You can now dynamically change tiles in a tilemap dynamically via AxTilemap.setTileAt()
+* You can now remove a tile in a tilemap via AxTilemap.removeTileAt()
+* You can now get the AxTile at a map coordinate using AxTilemap.getTileAt(x, y)
+* You can similar get the tile via pixel coordinates using AxTilemap.getTileAtPixelCoordinates(x, y)
+* The index property of AxTiles is now public
+* AxTilemap.tile() has been renamed AxTilemap.getTile()
+* AxTilemap.tiles() has been renamed AxTilemap.getTiles()
+* Tilemaps are now affected by scale (but scale will not affect collision/overlap, it is only for drawing)
+* Ax.as's private properties are now protected, for easier extending
+* Flipping sprites should now flip the graphic correctly, regardless of offsets
+* Zooming should now display consistently at zoom levels greater than 1
+* Zooming is now required to be at integer levels
+* You can now enable/disable a fixed timestep using Ax.fixedTimestep
+* You can access the size of the visible viewport via Ax.viewWidth and Ax.viewHeight
+* Drawing is now aligned on pixel levels, pre-zooming
+* Overlapping between sprites, groups, and clouds should work correctly, but Ax.overlap is still the preferred method
+* Hovering should work correctly on AxButtons that set their scroll factor to something other than 1 now
+* Button labels will now inherit the scroll factor of the button they are on
+* A bug has been fixed in AxGrid that prevented multiple sprites from overlapping in the same frame
+* Fixed a bug in AxColor when dealing with opaque colors that caused issues with the alpha
+* Shaders will no longer be changed for each object if it uses the same shader to improve performance
+* Added some minor error checking for parameters
+* Removed certain book spoilers from comments
+* Fixed erroneous comments
+* AxSprite's dispose will now call its parent
+* Fix crash when not putting a label on an AxButton (via rogerbraun)
+* Don't ignore requested width and height (via rogerbraun)
+* Don't draw a sprite if scale is set to zero (via rogerbraun)
+
 ## 0.9.1b / 2012-04-16
 * AxColor.toHex() is now a getter, available via AxColor.hex (and works correctly now)
 * You can now set a color by doing color.hex = 0xAARRGGBB rather than always constructing one via AxColor.fromHex

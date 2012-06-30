@@ -6,17 +6,23 @@ package org.axgl.tilemap {
 	import org.axgl.Ax;
 	import org.axgl.AxEntity;
 	import org.axgl.AxModel;
+	import org.axgl.AxPoint;
 	import org.axgl.AxRect;
 	import org.axgl.AxU;
 	import org.axgl.util.AxCache;
+	import org.axgl.util.AxProfiler;
 
 	/**
 	 * A tilemap class representing a set of tiles. A tilemap is much more much more efficient representation of a large
 	 * number of objects. Building a level is possible using a large number of AxSprites, but both drawing and colliding
 	 * against a tilemap is many times faster. Each tilemap has to be made up of tiles of a single image. Note that the
-	 * tiles in the tilemap are 1-based indexed; an index of 0 means no tile.
+	 * tiles in the tilemap are 1-based indexed; an index of 0 means no tile. Also, while tilemaps can be scaled for drawing,
+	 * their scale will not affect overlapping and collision.
 	 */
 	public class AxTilemap extends AxModel {
+		private static const INDEX_SET_LENGTH:uint = 6;
+		private static const VERTEX_SET_LENGTH:uint = 16;
+		
 		/**
 		 * The index of the first collideable tile in the tilemap. All tiles with an index below this will, by default,
 		 * not be solid. This allows you to easily mass define a set of non-solid tiles by making them the first set of
@@ -58,11 +64,62 @@ package org.axgl.tilemap {
 		 * The list of tiles in the map. Each one is an index into the tiles vector. 
 		 */
 		protected var data:Vector.<uint>;
+		/**
+		 * The offset into the buffers where this tile location maps to.
+		 */
+		protected var bufferOffsets:Vector.<int>;
+		/**
+		 * The number of sets of quad data stored in the buffers.
+		 */
+		protected var bufferSize:uint;
+		/**
+		 * The width of the uv box for each tile.
+		 */
+		protected var uvWidth:Number;
+		/**
+		 * The height of the uv box for each tile.
+		 */
+		protected var uvHeight:Number;
+		/**
+		 * Whether or not the buffers have changed and must be reuploaded.
+		 */
+		protected var dirty:Boolean;
 
 		/**
 		 * The frame used to calculate collisions against other objects.
 		 */
 		protected var frame:AxRect;
+		
+		/**
+		 * ID marking a path node as unvisited.
+		 */
+		protected static const PATH_NONE:uint = 0;
+		/**
+		 * ID marking a path node as in the open list.
+		 */
+		protected static const PATH_OPEN:uint = 1;
+		/**
+		 * ID marking a path node as in the closed list.
+		 */
+		protected static const PATH_CLOSED:uint = 2;
+		protected static const PATH_ADJACENT_LENGTH:uint = 10;
+		protected static const PATH_DIAGONAL_LENGTH:uint = 14;
+		/**
+		 * List of distances for pathfinding.
+		 */
+		protected var pathDistances:Vector.<uint>;
+		/**
+		 * List of distances to the target for pathfinding.
+		 */
+		protected var pathTargetDistances:Vector.<uint>;
+		/**
+		 * List of list ids for pathfinding.
+		 */
+		protected var pathVisited:Vector.<uint>;
+		/**
+		 * List of parents for pathfinding.
+		 */
+		protected var pathParents:Vector.<uint>;
 
 		/**
 		 * Creates a new tilemap at the location specified.
@@ -74,6 +131,8 @@ package org.axgl.tilemap {
 		public function AxTilemap(x:Number = 0, y:Number = 0) {
 			super(x, y, VERTEX_SHADER, FRAGMENT_SHADER, 4);
 			frame = new AxRect;
+			bufferSize = 0;
+			dirty = false;
 		}
 
 		/**
@@ -97,14 +156,17 @@ package org.axgl.tilemap {
 			this.tileRows = Math.floor(texture.rawHeight / tileHeight);
 			this.tiles = new Vector.<AxTile>;
 			this.data = new Vector.<uint>;
+			this.bufferOffsets = new Vector.<int>;
+			
+			this.uvWidth = 1 / (texture.width / tileWidth);
+			this.uvHeight = 1 / (texture.height / tileWidth);
 
 			indexData = new Vector.<uint>;
 			vertexData = new Vector.<Number>;
 
 			var rowArray:Array = mapString.split("\n");
 			var index:uint = 0;
-			var uvWidth:Number = 1 / (texture.width / tileWidth);
-			var uvHeight:Number = 1 / (texture.height / tileWidth);
+			
 			rows = rowArray.length;
 			for (var y:uint = 0; y < rows; y++) {
 				var row:Array = rowArray[y].split(",");
@@ -113,10 +175,12 @@ package org.axgl.tilemap {
 					var tid:uint = row[x];
 					if (tid == 0) {
 						data.push(0);
+						bufferOffsets.push(-1);
 						continue;
 					}
 					
 					data.push(tid);
+					bufferOffsets.push(bufferSize++);
 					tid -= 1;
 					
 					var tx:uint = x * tileWidth;
@@ -126,21 +190,14 @@ package org.axgl.tilemap {
 					
 					indexData.push(index, index + 1, index + 2, index + 1, index + 2, index + 3);
 					vertexData.push(
-						tx + AxU.EPSILON, 	ty + AxU.EPSILON,	u,				v,
-						tx + tileWidth,		ty + AxU.EPSILON,	u + uvWidth,	v,
-						tx + AxU.EPSILON,	ty + tileHeight,	u,				v + uvHeight,
+						tx, 				ty,					u,				v,
+						tx + tileWidth,		ty,					u + uvWidth,	v,
+						tx,					ty + tileHeight,	u,				v + uvHeight,
 						tx + tileWidth,		ty + tileHeight,	u + uvWidth,	v + uvHeight
 					);
 					index += 4;
 				}
 			}
-
-			var vertexLength:uint = vertexData.length / shader.rowSize;
-			indexBuffer = Ax.context.createIndexBuffer(indexData.length);
-			indexBuffer.uploadFromVector(indexData, 0, indexData.length);
-			vertexBuffer = Ax.context.createVertexBuffer(vertexLength, shader.rowSize);
-			vertexBuffer.uploadFromVector(vertexData, 0, vertexLength);
-			triangles = indexData.length / 3;
 
 			width = cols * tileWidth;
 			height = rows * tileHeight;
@@ -151,23 +208,41 @@ package org.axgl.tilemap {
 				tile.collision = index >= solidIndex ? ANY : NONE;
 				tiles.push(tile);
 			}
-
+			
+			dirty = true;
 			return this;
+		}
+		
+		private function upload():void {
+			var vertexLength:uint = vertexData.length / shader.rowSize;
+			indexBuffer = Ax.context.createIndexBuffer(indexData.length);
+			indexBuffer.uploadFromVector(indexData, 0, indexData.length);
+			vertexBuffer = Ax.context.createVertexBuffer(vertexLength, shader.rowSize);
+			vertexBuffer.uploadFromVector(vertexData, 0, vertexLength);
+			triangles = indexData.length / 3;
+			dirty = false;
 		}
 
 		override public function draw():void {
+			if (dirty) {
+				upload();
+			}
+			
 			matrix.identity();
-			//trace(1);
-			//matrix.appendTranslation(-Ax.camera.x, -Ax.camera.y, 0);
-			matrix.appendTranslation(x - Math.round(Ax.camera.x), y - Math.round(Ax.camera.y), 0);
-			matrix.append(Ax.camera.projection);
+			matrix.appendScale(scale.x, scale.y, 1);
+			matrix.appendTranslation(Math.round(x - Ax.camera.x * scroll.x + AxU.EPSILON), Math.round(y - Ax.camera.y * scroll.x + AxU.EPSILON), 0);
+			matrix.append(zooms ? Ax.camera.projection : Ax.camera.baseProjection);
 			
 			colorTransform[RED] = color.red;
 			colorTransform[GREEN] = color.green;
 			colorTransform[BLUE] = color.blue;
 			colorTransform[ALPHA] = color.alpha;
 
-			Ax.context.setProgram(shader.program);
+			if (shader != Ax.shader) {
+				Ax.context.setProgram(shader.program);
+				Ax.shader = shader;
+			}
+			
 			Ax.context.setTextureAt(0, texture.texture);
 			Ax.context.setBlendFactors(Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA);
 			Ax.context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, matrix, true);
@@ -283,6 +358,215 @@ package org.axgl.tilemap {
 				result.push(tiles[tileIDs[i]]);
 			}
 			return result;
+		}
+		
+		/**
+		 * Given a position on the map in tiles (0, 0 is the upper left), returns the AxTile representing
+		 * the tile at that position. If there is no tile, returns null.
+		 * 
+		 * @param x The x coordinate in tiles.
+		 * @param y The y coordinate in tiles.
+		 * 
+		 * @return The AxTile representing the tile at the position.
+		 */
+		public function getTileAt(x:uint, y:uint):AxTile {
+			if (x < 0 || x >= cols || y < 0 || y > rows) {
+				throw new Error("Tile location (" + x + "," + y + ") is out of bounds");
+			}
+			return tiles[data[y * cols + x]];
+		}
+		
+		/**
+		 * Given a pixel position, returns the AxTile representing the tile at that position. If your
+		 * tiles are 16x16, then calling this with 20, 20 is identical to calling getTileAt(1, 1).
+		 * 
+		 * @param x The x coordinate in pixels.
+		 * @param y The y coordinate in pixels.
+		 * 
+		 * @return The AxTile representing the tile at the position.
+		 */
+		public function getTileAtPixelCoordinates(x:uint, y:uint):AxTile {
+			return getTileAt(x / tileWidth, y / tileHeight);
+		}
+		
+		
+		/**
+		 * Given a location, changes the tile to the passed tile index.
+		 * 
+		 * @param x The x coordinate in tiles.
+		 * @param y The y coordinate in tiles.
+		 * @param index The index of the tile to change to.
+		 */
+		public function setTileAt(x:uint, y:uint, index:uint):void {
+			if (index == 0) {
+				removeTileAt(x, y);
+				return;
+			}
+			
+			var offset:uint = y * cols + x;
+			index--;
+			
+			var bufferOffset:int = bufferOffsets[y * cols + x];
+			var u:Number = (index % tileCols) * uvWidth;
+			var v:Number = Math.floor(index / tileCols) * uvHeight;
+			
+			if (bufferOffset == -1) {
+				data[offset] = index;
+				bufferOffsets[offset] = bufferSize++;
+				
+				var tx:uint = x * tileWidth;
+				var ty:uint = y * tileHeight;
+				
+				var idx:uint = vertexData.length / 4;
+				indexData.push(idx, idx + 1, idx + 2, idx + 1, idx + 2, idx + 3);
+				vertexData.push(
+					tx, 				ty,					u,				v,
+					tx + tileWidth,		ty,					u + uvWidth,	v,
+					tx,					ty + tileHeight,	u,				v + uvHeight,
+					tx + tileWidth,		ty + tileHeight,	u + uvWidth,	v + uvHeight
+				);
+			} else {
+				vertexData[bufferOffset * VERTEX_SET_LENGTH + 2]  = u;
+				vertexData[bufferOffset * VERTEX_SET_LENGTH + 3]  = v;
+				vertexData[bufferOffset * VERTEX_SET_LENGTH + 6]  = u + uvWidth;
+				vertexData[bufferOffset * VERTEX_SET_LENGTH + 7]  = v;
+				vertexData[bufferOffset * VERTEX_SET_LENGTH + 10] = u;
+				vertexData[bufferOffset * VERTEX_SET_LENGTH + 11] = v + uvHeight;
+				vertexData[bufferOffset * VERTEX_SET_LENGTH + 14] = u + uvWidth;
+				vertexData[bufferOffset * VERTEX_SET_LENGTH + 15] = v + uvHeight;
+			}
+			
+			dirty = true;
+		}
+		
+		/**
+		 * Given a coordinate on the map, completely removes the tile.
+		 * Note: It's more efficient to change the tile to a non-solid transparent tile if possible.
+		 * 
+		 * @param x The x coordinate in tiles.
+		 * @param y The y coordinate in tiles.
+		 *
+		 */
+		public function removeTileAt(x:uint, y:uint):void {
+			var index:uint = y * cols + x;
+			var bufferOffset:int = bufferOffsets[index];
+			if (bufferOffset == -1) {
+				return;
+			}
+			vertexData.splice(bufferOffset * VERTEX_SET_LENGTH, VERTEX_SET_LENGTH);
+			indexData.splice(bufferOffset * INDEX_SET_LENGTH, INDEX_SET_LENGTH);
+			for (var i:uint = 0; i < bufferOffsets.length; i++) {
+				if (bufferOffsets[i] > bufferOffset) {
+					bufferOffsets[i] = bufferOffsets[i] == -1 ? -1 : bufferOffsets[i] - 1;
+				}
+			}
+			for (i = bufferOffset * INDEX_SET_LENGTH; i < indexData.length; i++) {
+				indexData[i] -= 4;
+			}
+			bufferOffsets[index] = -1;
+			data[index] = 0;
+			bufferSize--;
+			dirty = true;
+		}
+		
+		/**
+		 * Warning, this implementation is incomplete and is thus set to private. Use at your own risk.
+		 */
+		public function findPath(sourceX:uint, sourceY:uint, targetX:uint, targetY:uint):AxPath {
+			var calls:uint = 0;
+			var sourceTileX:uint = sourceX / tileWidth;
+			var sourceTileY:uint = sourceY / tileHeight;
+			var targetTileX:uint = targetX / tileWidth;
+			var targetTileY:uint = targetY / tileHeight;
+			var sourceIndex:uint = sourceTileY * cols + sourceTileX;
+			var targetIndex:uint = targetTileY * cols + targetTileX;
+			
+			var numTiles:uint = cols * rows;
+			pathDistances = new Vector.<uint>(numTiles);
+			pathTargetDistances = new Vector.<uint>(numTiles);
+			pathVisited = new Vector.<uint>(numTiles);
+			pathParents = new Vector.<uint>(numTiles);
+			
+			var queue:Vector.<uint> = new Vector.<uint>;
+			queue.push(sourceIndex);
+			
+			var current:uint, currentIndex:uint, currentDistance:uint, distance:uint;
+			var up:int, down:int, right:int, left:int;
+			var tx:uint, ty:uint;
+			var i:uint;
+			var goalFound:Boolean = false;
+			while (queue.length > 0) {
+				currentDistance = uint.MAX_VALUE;
+				for (i = 0; i < queue.length; i++) {
+					if (pathTargetDistances[queue[i]] < currentDistance) {
+						currentIndex = i;
+						currentDistance = pathTargetDistances[queue[i]];
+					}
+				}
+				
+				current = queue[currentIndex];
+				queue.splice(currentIndex, 1);
+				if (current == targetIndex) {
+					goalFound = true;
+					break;
+				}
+				
+				up = current - cols;
+				down = current + cols;
+				right = current + 1;
+				left = current - 1;
+				
+				if (up > 0 && pathVisited[up] == 0) {calls++;
+					handlePathNode(queue, up, current, targetTileX, targetTileY);
+				}
+				if (down < numTiles && pathVisited[down] == 0) {calls++;
+					handlePathNode(queue, down, current, targetTileX, targetTileY);
+				}
+				if (current % cols > 0 && pathVisited[left] == 0) {calls++;
+					handlePathNode(queue, left, current, targetTileX, targetTileY);
+				}
+				if (current % cols < cols - 1 && pathVisited[right] == 0) {calls++;
+					handlePathNode(queue, right, current, targetTileX, targetTileY);
+				}
+				
+				pathVisited[current] = PATH_CLOSED;
+			}
+			
+			if (!goalFound) {
+				return null;
+			}
+			
+			var path:AxPath = new AxPath;
+			var node:uint = targetIndex;
+			while (node != sourceIndex) {
+				path.push(node % cols, Math.floor(node / cols));
+				node = pathParents[node];
+			}
+			path.push(node % cols, Math.floor(node / cols));
+			return path;
+		}
+		
+		/**
+		 * Warning, this implementation is incomplete and is thus set to private. Use at your own risk.
+		 */
+		protected function handlePathNode(queue:Vector.<uint>, index:uint, current:uint, targetTileX:uint, targetTileY:uint):void {
+			if (tiles[data[index]] != null && tiles[data[index]].collision != NONE) {
+				return;
+			}
+			
+			var tx:uint = index / cols;
+			var ty:uint = index % cols;
+			var distanceFromSource:uint = pathDistances[current] + PATH_ADJACENT_LENGTH;
+			var distanceToTarget:uint = pathDistances[index] + AxU.abs(tx - targetTileX) + AxU.abs(ty - targetTileY);
+			if (pathVisited[index] == PATH_NONE || distanceFromSource < pathDistances[index]) {
+				pathDistances[index] = distanceFromSource;
+				pathTargetDistances[index] = distanceToTarget;
+				pathParents[index] = current;
+				if (pathVisited[index] == PATH_NONE) {
+					queue.push(index);
+					pathVisited[index] = PATH_OPEN;
+				}
+			}
 		}
 		
 		/**

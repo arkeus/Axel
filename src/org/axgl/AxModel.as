@@ -149,6 +149,14 @@ package org.axgl {
 			return color.alpha;
 		}
 		
+		/**
+		 * @inheritDoc
+		 */
+		override public function hover():Boolean {
+			return contains(Ax.mouse.x - Ax.camera.x * (1 - scroll.x), Ax.mouse.y - Ax.camera.y * (1 - scroll.y));
+		}
+		
+		
 		override public function dispose():void {
 			vertexShader = null;
 			fragmentShader = null;

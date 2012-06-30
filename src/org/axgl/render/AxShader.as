@@ -1,9 +1,10 @@
 package org.axgl.render {
 	import com.adobe.utils.AGALMiniAssembler;
-
+	
 	import flash.display3D.Context3DProgramType;
 	import flash.display3D.Program3D;
-
+	import flash.utils.getTimer;
+	
 	import org.axgl.Ax;
 
 	/**

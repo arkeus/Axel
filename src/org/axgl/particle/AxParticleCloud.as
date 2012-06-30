@@ -157,7 +157,11 @@ package org.axgl.particle {
 			matrix.appendTranslation(x - Ax.camera.x * scroll.x, y - Ax.camera.y * scroll.y, 0);
 			matrix.append(zooms ? Ax.camera.projection : Ax.camera.baseProjection);
 
-			Ax.context.setProgram(shader.program);
+			if (shader != Ax.shader) {
+				Ax.context.setProgram(shader.program);
+				Ax.shader = shader;
+			}
+			
 			Ax.context.setTextureAt(0, texture.texture);
 			Ax.context.setBlendFactors(effect.blend.source, effect.blend.destination);
 			Ax.context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, matrix, true);

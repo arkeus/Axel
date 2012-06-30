@@ -33,7 +33,7 @@ package org.axgl.render {
 		 * @return The hex color, as an integer
 		 */
 		public function get hex():uint {
-			return ((int)(255 * alpha / 1) << 24) + ((int)(255 * red / 1) << 16) + ((int)(255 * green / 1) << 8) + (int)(255 * blue / 1);
+			return ((int)(0xff * alpha) << 24) + ((int)(0xff * red) << 16) + ((int)(0xff * green) << 8) + (int)(0xff * blue);
 		}
 		
 		/**
@@ -42,7 +42,7 @@ package org.axgl.render {
 		 * @param value The hex value to use, as 0xAARRGGBB
 		 */
 		public function set hex(value:uint):void {
-			alpha = ((value & 0xff000000) >> 24) / 0xff;
+			alpha = ((value >> 24) & 0xff) / 0xff;
 			red = ((value & 0x00ff0000) >> 16) / 0xff;
 			green = ((value & 0x0000ff00) >> 8) / 0xff;
 			blue = (value & 0x000000ff) / 0xff;
