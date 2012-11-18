@@ -1,23 +1,18 @@
 package org.axgl {
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
-	import flash.display.Sprite;
 	import flash.display3D.Context3DBlendFactor;
 	import flash.display3D.Context3DProgramType;
 	import flash.display3D.Context3DVertexBufferFormat;
 	import flash.display3D.IndexBuffer3D;
 	import flash.geom.Matrix3D;
 	import flash.geom.Vector3D;
-	import flash.sensors.Accelerometer;
 	
-	import org.axgl.effect.sprite.AxAlphaSpriteEffect;
-	import org.axgl.effect.sprite.AxFlickerSpriteEffect;
-	import org.axgl.effect.sprite.AxSpriteEffect;
 	import org.axgl.render.AxQuad;
 	import org.axgl.resource.AxResource;
 	import org.axgl.util.AxAnimation;
 	import org.axgl.util.AxCache;
-
+	
 	/**
 	 * An <code>AxSprite</code> is the entity that makes up most game objects. You can load an image, rotate it, change
 	 * the color, move it, and more. Game objects that will be visible on screen should extend this class.
@@ -40,7 +35,7 @@ package org.axgl {
 		 * TODO: Implement debug drawing
 		 */
 		protected var debugColor:Vector.<Number>;
-
+		
 		/** The current animation this sprite is playing. */
 		public var animation:AxAnimation;
 		/** All registered animations of this sprite. This is a map from animation name to animation. */
@@ -49,7 +44,7 @@ package org.axgl {
 		protected var animationDelay:Number;
 		/** Read-only. The timer for playing the current animation. */
 		protected var animationTimer:Number;
-
+		
 		/** The current frame of the animation. If an animation is not currently playing, the currently showing frame. */
 		public var frame:uint = 0;
 		/** The number of frames per row in the loaded texture. */
@@ -58,7 +53,7 @@ package org.axgl {
 		public var frameWidth:Number;
 		/** The height of the frame for this entity. Used for animation. */
 		public var frameHeight:Number;
-
+		
 		/**
 		 * The direction this sprite is facing. If <code>facing</code> is equal to <code>flip</code>, the sprite
 		 * will be flipped horizontally. Set <code>flip</code> to <code>NONE</code> to disable this behavior. If
@@ -77,13 +72,6 @@ package org.axgl {
 		 */
 		public var flip:uint = LEFT;
 		
-		/** The list of effects currently active for this sprite. Will be null if no effects have been added. */
-		public var effects:Vector.<AxSpriteEffect>;
-		/** The internal flicker effect used for the startFlicker and stopFlicker functions. */
-		private var flickerEffect:AxFlickerSpriteEffect;
-		/** The internal alpha effect used for the fadeIn and fadeOut functions. */
-		private var fadeEffect:AxAlphaSpriteEffect;
-
 		/**
 		 * Creates a new sprite at the given position. Loads the image in graphic using the given frameWidth and frameHeight. If
 		 * frameWidth or frameHeight are 0, then the entire image is treated as a single frame. If you do not pass a graphic here,
@@ -97,27 +85,24 @@ package org.axgl {
 		 */
 		public function AxSprite(x:Number, y:Number, graphic:Class = null, frameWidth:uint = 0, frameHeight:uint = 0) {
 			super(x, y, VERTEX_SHADER, FRAGMENT_SHADER, 4, "AxSprite");
-
+			
 			matrix = new Matrix3D;
 			scale = new AxPoint(1, 1);
 			debugColor = Vector.<Number>([1, 0, 0, 1]);
 			colorTransform.fixed = true;
 			uvOffset = new Vector.<Number>(4, true);
 			screen = new AxPoint;
-
+			
 			quad = null;
 			dirty = true;
-
+			
 			animations = new Object;
 			
-			effects = null;
-			flickerEffect = null;
-
 			if (graphic != null) {
 				load(graphic, frameWidth, frameHeight);
 			}
 		}
-
+		
 		/**
 		 * Loads a new graphic for this sprite with the specified frame width and height.
 		 * 
@@ -156,7 +141,7 @@ package org.axgl {
 			var bitmap:BitmapData = new BitmapData(width, height, true, color);
 			return load(bitmap, width, height);
 		}
-
+		
 		/**
 		 * TODO: Implement
 		 * 
@@ -173,7 +158,7 @@ package org.axgl {
 				debugColor[ALPHA] = alpha;
 			}
 		}
-
+		
 		/**
 		 * TODO: Implement
 		 */
@@ -190,7 +175,7 @@ package org.axgl {
 				debugColor[ALPHA] = 1;
 			}
 		}
-
+		
 		/**
 		 * Sets the bounding box for this sprite. This is a helpfer method to set the width, height, and offset values
 		 * all at once.
@@ -213,21 +198,21 @@ package org.axgl {
 			this.offset.y = offsetY;
 			return this;
 		}
-
+		
 		/**
 		 * Calculates the vertex buffer for this sprite, using the cached version if another identical vertex buffer exists.
 		 */
 		private function calculateVertexBuffer():void {
 			vertexBuffer = AxCache.vertexBuffer(frameWidth, frameHeight, 1, 1);
 		}
-
+		
 		/**
 		 * Calculates the debug vertex buffer for this sprite, using the cached version if another identical vertex buffer exists.
 		 */
 		private function calculateDebugVertexBuffer():void {
 			//debugVertexBuffer = AxCache.debugVertexBuffer(width, height, 1, 1);//uvSize.x, uvSize.y);
 		}
-
+		
 		/**
 		 * Calculates the texture for the passed graphic. If the same graphic was used to create a texture, pulls it from the
 		 * cache. Otherwise, creates a new texture and uploads it to the GPU. Note that that performance reasons, you should
@@ -243,7 +228,7 @@ package org.axgl {
 				frameHeight = texture.rawHeight;
 			}
 		}
-
+		
 		/**
 		 * Adds a new animation to this sprite. The <code>name</code> of the animation is what you will use to access it via the <code>animate</code>
 		 * function. The <code>frames</code> is an array that lists the frames of the animation in the order they will play. <code>Framerate</code> is
@@ -262,7 +247,7 @@ package org.axgl {
 			animations[name] = new AxAnimation(name, frames, framerate < 1 ? 15 : framerate, looped);
 			return this;
 		}
-
+		
 		/**
 		 * Tells this sprite to immediately start playing the animation that you passed. If that animation is already playing,
 		 * this call will do nothing. If you want to stop the animation and instead show a static frame, use the <code>show</code>
@@ -295,7 +280,7 @@ package org.axgl {
 			this.frame = frame;
 			return this;
 		}
-
+		
 		/**
 		 * Calculates the helper variables required to draw the current frame of this sprite.
 		 */
@@ -315,54 +300,46 @@ package org.axgl {
 				uvOffset[1] = Math.floor(frame / framesPerRow) * quad.uvHeight;
 			}
 		}
-
+		
 		/**
 		 * @inheritDoc
 		 */
 		override public function get left():Number {
 			return x;
 		}
-
+		
 		/**
 		 * @inheritDoc
 		 */
 		override public function get top():Number {
 			return y;
 		}
-
+		
 		/**
 		 * @inheritDoc
 		 */
 		override public function get right():Number {
 			return x + width * scale.x;
 		}
-
+		
 		/**
 		 * @inheritDoc
 		 */
 		override public function get bottom():Number {
 			return y + height * scale.y;
 		}
-
+		
 		/**
 		 * @inheritDoc
 		 */
 		override public function update():void {
 			super.update();
-
+			
 			screen.x = (x - Ax.camera.x) * scroll.x;
 			screen.y = (y - Ax.camera.y) * scroll.y;
 			calculateFrame();
-			
-			if (effects != null) {
-				for each(var effect:AxSpriteEffect in effects) {
-					if (effect.active) {
-						effect.update();
-					}
-				}
-			}
 		}
-
+		
 		/**
 		 * Builds a vertex buffer for the given quad.
 		 * 
@@ -372,11 +349,11 @@ package org.axgl {
 			if (indexBuffer == null) {
 				indexBuffer = SPRITE_INDEX_BUFFER;
 			}
-
+			
 			vertexBuffer = AxCache.vertexBuffer(quad.width, quad.height, quad.uvWidth, quad.uvHeight);
 			triangles = 2;
 		}
-
+		
 		/**
 		 * @inheritDoc
 		 */
@@ -389,7 +366,7 @@ package org.axgl {
 				buildVertexBuffer(quad);
 				dirty = false;
 			}
-
+			
 			if (screen.x > Ax.width || screen.y > Ax.height || screen.x + frameWidth < 0 || screen.y + frameHeight < 0 || scale.x == 0 || scale.y == 0) {
 				return;
 			}
@@ -398,13 +375,13 @@ package org.axgl {
 			colorTransform[GREEN] = color.green;
 			colorTransform[BLUE] = color.blue;
 			colorTransform[ALPHA] = color.alpha;
-
+			
 			matrix.identity();
-
+			
 			if (angle != 0) {
 				matrix.appendRotation(angle, Vector3D.Z_AXIS, pivot);
 			}
-
+			
 			var sx:Number = x - offset.x;
 			var sy:Number = y - offset.y;
 			var scalex:Number = scale.x;
@@ -424,9 +401,9 @@ package org.axgl {
 			} else {
 				matrix.appendTranslation(Math.round(sx - cx + AxU.EPSILON), Math.round(sy - cy + AxU.EPSILON), 0);
 			}
-
+			
 			matrix.append(zooms ? Ax.camera.projection : Ax.camera.baseProjection);
-
+			
 			if (shader != Ax.shader) {
 				Ax.context.setProgram(shader.program);
 				Ax.shader = shader;
@@ -447,7 +424,7 @@ package org.axgl {
 			if (countTris) {
 				Ax.debugger.tris += triangles;
 			}
-
+			
 			/*Ax.context.setProgram(AxRenderer.spriteShader);
 			Ax.context.setTextureAt(0, texture.texture);
 			Ax.context.setBlendFactors(Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA);
@@ -457,78 +434,23 @@ package org.axgl {
 			Ax.context.setVertexBufferAt(0, vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_3);
 			Ax.context.setVertexBufferAt(1, vertexBuffer, 3, Context3DVertexBufferFormat.FLOAT_2);
 			Ax.context.drawTriangles(AxRenderer.indexBuffer, 0, AxRenderer.indexData.length / 3);
-	
+			
 			if (Ax.showBounds) {
-				if (debugVertexBuffer == null) {
-					calculateDebugVertexBuffer();
-				}
-	
-				matrix.prependTranslation(Math.round(bounds.x), Math.round(bounds.y), 0);
-	
-				Ax.context.setProgram(AxRenderer.debugShader);
-				Ax.context.setTextureAt(0, null);
-				Ax.context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 5, matrix, true);
-				Ax.context.setVertexBufferAt(0, debugVertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_3);
-				Ax.context.setVertexBufferAt(1, null, 3, Context3DVertexBufferFormat.FLOAT_2);
-				Ax.context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 1, debugColor);
-				Ax.context.drawTriangles(AxRenderer.debugIndexBuffer, 0, AxRenderer.debugIndexData.length / 3);
-				resetDebugColor();
-			}*/
-		}
-		
-		public function addEffect(effect:AxSpriteEffect):AxSprite {
-			if (effects == null) {
-				effects = new Vector.<AxSpriteEffect>;
+			if (debugVertexBuffer == null) {
+			calculateDebugVertexBuffer();
 			}
 			
-			effect.setSprite(this);
-			effect.create();
-			effects.push(effect);
-			return this;
-		}
-		
-		public function clearEffects():AxSprite {
-			for each(var effect:AxSpriteEffect in effects) {
-				if (effect.active) {
-					effect.destroy();
-				}
-			}
-			effects.length = 0;
-			return this;
-		}
-		
-		public function startFlicker(duration:Number = 0, callback:Function = null, rate:uint = 1, type:uint = AxFlickerSpriteEffect.BLINK):AxSprite {
-			if (flickerEffect != null && flickerEffect.active) {
-				flickerEffect.destroy();
-			}
-			flickerEffect = new AxFlickerSpriteEffect(duration, callback, rate, type);
-			addEffect(flickerEffect);
-			return this;
-		}
-		
-		public function stopFlicker():AxSprite {
-			if (flickerEffect != null) {
-				flickerEffect.destroy();
-			}
-			return this;
-		}
-		
-		public function fadeOut(duration:Number = 1, callback:Function = null, targetAlpha:Number = 0):AxSprite {
-			if (fadeEffect != null && fadeEffect.active) {
-				fadeEffect.destroy();
-			}
-			fadeEffect = new AxAlphaSpriteEffect(duration, callback, targetAlpha);
-			addEffect(fadeEffect);
-			return this;
-		}
-		
-		public function fadeIn(duration:Number = 1, callback:Function = null, targetAlpha:Number = 1):AxSprite {
-			if (fadeEffect != null && fadeEffect.active) {
-				fadeEffect.destroy();
-			}
-			fadeEffect = new AxAlphaSpriteEffect(duration, callback, targetAlpha);
-			addEffect(fadeEffect);
-			return this;
+			matrix.prependTranslation(Math.round(bounds.x), Math.round(bounds.y), 0);
+			
+			Ax.context.setProgram(AxRenderer.debugShader);
+			Ax.context.setTextureAt(0, null);
+			Ax.context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 5, matrix, true);
+			Ax.context.setVertexBufferAt(0, debugVertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_3);
+			Ax.context.setVertexBufferAt(1, null, 3, Context3DVertexBufferFormat.FLOAT_2);
+			Ax.context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 1, debugColor);
+			Ax.context.drawTriangles(AxRenderer.debugIndexBuffer, 0, AxRenderer.debugIndexData.length / 3);
+			resetDebugColor();
+			}*/
 		}
 		
 		/**
@@ -560,9 +482,6 @@ package org.axgl {
 			return overlapFound;
 		}
 		
-		/**
-		 * @inheritDoc
-		 */
 		override public function dispose():void {
 			screen = null;
 			uvOffset = null;
@@ -575,7 +494,7 @@ package org.axgl {
 			color = null;
 			super.dispose();
 		}
-
+		
 		/**
 		 * The vertex shader for this sprite.
 		 */
@@ -584,7 +503,7 @@ package org.axgl {
 			"add v1, va1, vc4",
 			"mov op, vt0"
 		];
-
+		
 		/**
 		 * The fragment shader for this sprite.
 		 */
@@ -592,12 +511,12 @@ package org.axgl {
 			"tex ft0, v1, fs0 <2d,nearest,mipnone>",
 			"mul oc, fc0, ft0"
 		];
-
+		
 		/**
 		 * A static sprite index buffer that all AxSprites will use.
 		 */
 		public static var SPRITE_INDEX_BUFFER:IndexBuffer3D;
-
+		
 		{
 			SPRITE_INDEX_BUFFER = Ax.context.createIndexBuffer(6);
 			SPRITE_INDEX_BUFFER.uploadFromVector(Vector.<uint>([0, 1, 2, 1, 2, 3]), 0, 6);
