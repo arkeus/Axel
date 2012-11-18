@@ -1,3 +1,9 @@
+## 0.9.3 / 2012-??-??
+* Simple animation set has been added to AxSprite, accessible via addEffect() and clearEffects()
+* AxSprites now implement the following effects:
+** sprite.startFlicker() and sprite.stopFlicker()
+** sprite.fadeIn() and sprite.fadeOut()
+
 ## 0.9.2 / 2012-06-30
 * You can now dynamically change tiles in a tilemap dynamically via AxTilemap.setTileAt()
 * You can now remove a tile in a tilemap via AxTilemap.removeTileAt()

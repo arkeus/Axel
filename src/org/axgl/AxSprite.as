@@ -1,13 +1,18 @@
 package org.axgl {
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
+	import flash.display.Sprite;
 	import flash.display3D.Context3DBlendFactor;
 	import flash.display3D.Context3DProgramType;
 	import flash.display3D.Context3DVertexBufferFormat;
 	import flash.display3D.IndexBuffer3D;
 	import flash.geom.Matrix3D;
 	import flash.geom.Vector3D;
+	import flash.sensors.Accelerometer;
 	
+	import org.axgl.effect.sprite.AxAlphaSpriteEffect;
+	import org.axgl.effect.sprite.AxFlickerSpriteEffect;
+	import org.axgl.effect.sprite.AxSpriteEffect;
 	import org.axgl.render.AxQuad;
 	import org.axgl.resource.AxResource;
 	import org.axgl.util.AxAnimation;
@@ -71,6 +76,13 @@ package org.axgl {
 		 * @see #facing
 		 */
 		public var flip:uint = LEFT;
+		
+		/** The list of effects currently active for this sprite. Will be null if no effects have been added. */
+		public var effects:Vector.<AxSpriteEffect>;
+		/** The internal flicker effect used for the startFlicker and stopFlicker functions. */
+		private var flickerEffect:AxFlickerSpriteEffect;
+		/** The internal alpha effect used for the fadeIn and fadeOut functions. */
+		private var fadeEffect:AxAlphaSpriteEffect;
 
 		/**
 		 * Creates a new sprite at the given position. Loads the image in graphic using the given frameWidth and frameHeight. If
@@ -97,6 +109,9 @@ package org.axgl {
 			dirty = true;
 
 			animations = new Object;
+			
+			effects = null;
+			flickerEffect = null;
 
 			if (graphic != null) {
 				load(graphic, frameWidth, frameHeight);
@@ -338,6 +353,14 @@ package org.axgl {
 			screen.x = (x - Ax.camera.x) * scroll.x;
 			screen.y = (y - Ax.camera.y) * scroll.y;
 			calculateFrame();
+			
+			if (effects != null) {
+				for each(var effect:AxSpriteEffect in effects) {
+					if (effect.active) {
+						effect.update();
+					}
+				}
+			}
 		}
 
 		/**
@@ -453,6 +476,61 @@ package org.axgl {
 			}*/
 		}
 		
+		public function addEffect(effect:AxSpriteEffect):AxSprite {
+			if (effects == null) {
+				effects = new Vector.<AxSpriteEffect>;
+			}
+			
+			effect.setSprite(this);
+			effect.create();
+			effects.push(effect);
+			return this;
+		}
+		
+		public function clearEffects():AxSprite {
+			for each(var effect:AxSpriteEffect in effects) {
+				if (effect.active) {
+					effect.destroy();
+				}
+			}
+			effects.length = 0;
+			return this;
+		}
+		
+		public function startFlicker(duration:Number = 0, callback:Function = null, rate:uint = 1, type:uint = AxFlickerSpriteEffect.BLINK):AxSprite {
+			if (flickerEffect != null && flickerEffect.active) {
+				flickerEffect.destroy();
+			}
+			flickerEffect = new AxFlickerSpriteEffect(duration, callback, rate, type);
+			addEffect(flickerEffect);
+			return this;
+		}
+		
+		public function stopFlicker():AxSprite {
+			if (flickerEffect != null) {
+				flickerEffect.destroy();
+			}
+			return this;
+		}
+		
+		public function fadeOut(duration:Number = 1, callback:Function = null, targetAlpha:Number = 0):AxSprite {
+			if (fadeEffect != null && fadeEffect.active) {
+				fadeEffect.destroy();
+			}
+			fadeEffect = new AxAlphaSpriteEffect(duration, callback, targetAlpha);
+			addEffect(fadeEffect);
+			return this;
+		}
+		
+		public function fadeIn(duration:Number = 1, callback:Function = null, targetAlpha:Number = 1):AxSprite {
+			if (fadeEffect != null && fadeEffect.active) {
+				fadeEffect.destroy();
+			}
+			fadeEffect = new AxAlphaSpriteEffect(duration, callback, targetAlpha);
+			addEffect(fadeEffect);
+			return this;
+		}
+		
 		/**
 		 * @inheritDoc
 		 */
@@ -482,6 +560,9 @@ package org.axgl {
 			return overlapFound;
 		}
 		
+		/**
+		 * @inheritDoc
+		 */
 		override public function dispose():void {
 			screen = null;
 			uvOffset = null;
