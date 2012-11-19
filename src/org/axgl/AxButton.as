@@ -73,9 +73,10 @@ package org.axgl {
 				font = AxResource.FONT;
 			}
 
-			labelY = y + 10;
+			labelY = 10;
 			label = new AxText(x, labelY, font, str, 150, "center");
 			label.setColor(.113, .113, .113);
+			label.setParent(this);
 
 			return this;
 		}

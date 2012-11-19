@@ -165,11 +165,9 @@ package org.axgl.text {
 						continue;
 					}
 					
-					//trace("building", c.width, c.height);
-					
 					indexData.push(index, index + 1, index + 2, index + 1, index + 2, index + 3);
 					vertexData.push(
-						//  x 			y				u						v
+						//  x 			y				u						v						r			g			b			a
 						x, 				y,				c.uv.x,					c.uv.y,					color.red, color.green, color.blue, color.alpha,
 						x + c.width,	y,				c.uv.x + c.uv.width,	c.uv.y,					color.red, color.green, color.blue, color.alpha,
 						x,				y + c.height,	c.uv.x,					c.uv.y + c.uv.height,	color.red, color.green, color.blue, color.alpha,
@@ -226,7 +224,7 @@ package org.axgl.text {
 				matrix.appendRotation(angle, Vector3D.Z_AXIS, pivot);
 			}
 			matrix.appendScale(scale.x, scale.y, 1);
-			matrix.appendTranslation(x - Ax.camera.x * scroll.x, y - Ax.camera.y * scroll.y, 0);
+			matrix.appendTranslation(x - Ax.camera.x * scroll.x + parentOffset.x, y - Ax.camera.y * scroll.y + parentOffset.y, 0);
 			matrix.append(zooms ? Ax.camera.projection : Ax.camera.baseProjection);
 
 			if (shader != Ax.shader) {

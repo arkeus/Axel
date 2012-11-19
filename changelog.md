@@ -1,8 +1,16 @@
 ## 0.9.3 / 2012-??-??
+* Entities now have a simple parenting system. When adding to groups, its parent will be set and position based off of the parent
+* To support parenting, entities now have setParent and removeParent functionality
+* Positions on entities with parents are now relative to the parent, to support this, globalX and globalY setters have been added to AxEntity
+* AxClouds now update their position based on acceleration, velocity, and drag, affecting all children positions
 * Simple animation set has been added to AxSprite, accessible via addEffect() and clearEffects()
 * AxSprites now implement the following effects:
 ** sprite.startFlicker() and sprite.stopFlicker()
 ** sprite.fadeIn() and sprite.fadeOut()
+** sprite.grow() for scaling up and down over time
+* AxClouds now have freeze() and unfreeze() methods to alias settings actions to NONE and ALL, respectively
+* AxClouds and AxGroups now have a clear() method that will clear the group of all members, optionally disposing them 
+* AxEntitys now have a revive() function that mirrors the destroy() functionality by setting exists to true
 
 ## 0.9.2 / 2012-06-30
 * You can now dynamically change tiles in a tilemap dynamically via AxTilemap.setTileAt()

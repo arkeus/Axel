@@ -12,6 +12,7 @@ package org.axgl {
 	
 	import org.axgl.effect.sprite.AxAlphaSpriteEffect;
 	import org.axgl.effect.sprite.AxFlickerSpriteEffect;
+	import org.axgl.effect.sprite.AxScaleSpriteEffect;
 	import org.axgl.effect.sprite.AxSpriteEffect;
 	import org.axgl.render.AxQuad;
 	import org.axgl.resource.AxResource;
@@ -83,6 +84,8 @@ package org.axgl {
 		private var flickerEffect:AxFlickerSpriteEffect;
 		/** The internal alpha effect used for the fadeIn and fadeOut functions. */
 		private var fadeEffect:AxAlphaSpriteEffect;
+		/** The internal scale effect used for the grow function. */
+		private var growEffect:AxScaleSpriteEffect;
 
 		/**
 		 * Creates a new sprite at the given position. Loads the image in graphic using the given frameWidth and frameHeight. If
@@ -405,8 +408,8 @@ package org.axgl {
 				matrix.appendRotation(angle, Vector3D.Z_AXIS, pivot);
 			}
 
-			var sx:Number = x - offset.x;
-			var sy:Number = y - offset.y;
+			var sx:Number = x - offset.x + parentOffset.x;
+			var sy:Number = y - offset.y + parentOffset.y;
 			var scalex:Number = scale.x;
 			var scaley:Number = scale.y;
 			var cx:Number = Ax.camera.x * scroll.x;
@@ -501,8 +504,7 @@ package org.axgl {
 			if (flickerEffect != null && flickerEffect.active) {
 				flickerEffect.destroy();
 			}
-			flickerEffect = new AxFlickerSpriteEffect(duration, callback, rate, type);
-			addEffect(flickerEffect);
+			addEffect(flickerEffect = new AxFlickerSpriteEffect(duration, callback, rate, type));
 			return this;
 		}
 		
@@ -513,21 +515,27 @@ package org.axgl {
 			return this;
 		}
 		
-		public function fadeOut(duration:Number = 1, callback:Function = null, targetAlpha:Number = 0):AxSprite {
+		public function fadeOut(duration:Number = 1, targetAlpha:Number = 0, callback:Function = null):AxSprite {
 			if (fadeEffect != null && fadeEffect.active) {
 				fadeEffect.destroy();
 			}
-			fadeEffect = new AxAlphaSpriteEffect(duration, callback, targetAlpha);
-			addEffect(fadeEffect);
+			addEffect(fadeEffect = new AxAlphaSpriteEffect(duration, callback, targetAlpha));
 			return this;
 		}
 		
-		public function fadeIn(duration:Number = 1, callback:Function = null, targetAlpha:Number = 1):AxSprite {
+		public function fadeIn(duration:Number = 1, targetAlpha:Number = 1, callback:Function = null):AxSprite {
 			if (fadeEffect != null && fadeEffect.active) {
 				fadeEffect.destroy();
 			}
-			fadeEffect = new AxAlphaSpriteEffect(duration, callback, targetAlpha);
-			addEffect(fadeEffect);
+			addEffect(fadeEffect = new AxAlphaSpriteEffect(duration, callback, targetAlpha));
+			return this;
+		}
+		
+		public function grow(duration:Number = 1, targetXScale:Number = 2, targetYScale:Number = 2, callback:Function = null):AxSprite {
+			if (growEffect != null && growEffect.active) {
+				growEffect.destroy();
+			}
+			addEffect(growEffect = new AxScaleSpriteEffect(duration, callback, targetXScale, targetYScale));
 			return this;
 		}
 		
@@ -601,6 +609,14 @@ package org.axgl {
 		{
 			SPRITE_INDEX_BUFFER = Ax.context.createIndexBuffer(6);
 			SPRITE_INDEX_BUFFER.uploadFromVector(Vector.<uint>([0, 1, 2, 1, 2, 3]), 0, 6);
+		}
+		
+		public var test:Number = 5;
+		public function get testF():Number {
+			return test;
+		}
+		public function get testF2():Number {
+			return test;
 		}
 	}
 }

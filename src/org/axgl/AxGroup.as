@@ -46,8 +46,15 @@ package org.axgl {
 		 *
 		 * @return This group.
 		 */
-		public function add(entity:AxEntity):AxGroup {
+		public function add(entity:AxEntity, linkParent:Boolean = true):AxGroup {
+			if (entity == null) {
+				throw new ArgumentError("Cannot add a null object to a group.");
+			}
+			
 			members.push(entity);
+			if (linkParent) {
+				entity.setParent(this);
+			}
 			return this;
 		}
 
@@ -58,9 +65,12 @@ package org.axgl {
 		 *
 		 * @return This group.
 		 */
-		public function remove(entity:AxEntity):AxGroup {
+		public function remove(entity:AxEntity, unlinkParent:Boolean = true):AxGroup {
 			var index:uint = members.indexOf(entity);
 			if (index >= 0) {
+				if (unlinkParent) {
+					(members[index] as AxEntity).removeParent();
+				}
 				members.splice(index, 1);
 			}
 			return this;
@@ -70,6 +80,8 @@ package org.axgl {
 		 * @inheritDoc
 		 */
 		override public function update():void {
+			super.update();
+			
 			for (var i:uint = 0; i < members.length; i++) {
 				var entity:AxEntity = members[i];
 

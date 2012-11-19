@@ -39,7 +39,7 @@ package org.axgl {
 	 */
 	public class Ax extends Sprite {
 		public static const LIBRARY_NAME:String = "Axel";
-		public static const LIBRARY_VERSION:String = "0.9.2";
+		public static const LIBRARY_VERSION:String = "0.9.3";
 		
 		public static var shader:AxShader;
 		

@@ -104,7 +104,11 @@ package org.axgl {
 		 *
 		 * @return This map.
 		 */
-		public function add(entity:AxSprite):AxCloud {
+		public function add(entity:AxSprite, linkParent:Boolean = true):AxCloud {
+			if (entity == null) {
+				throw new ArgumentError("Cannot add a null object to a cloud.");
+			}
+			
 			if (members.length >= capacity) {
 				full = true;
 				return this;
@@ -115,7 +119,33 @@ package org.axgl {
 			}
 			
 			members.push(entity);
+			if (linkParent) {
+				entity.setParent(this);
+			}
+			
 			dirty = true;
+			return this;
+		}
+		
+		/**
+		 * An alias for settings actions to AxCloud.NONE in order for this group to stop updating its members.
+		 * This increases the performance by orders of magnitude, and draws much more efficient if all of its
+		 * members are frozen.
+		 * 
+		 * @return This map.
+		 */
+		public function freeze():AxCloud {
+			actions = NONE;
+			return this;
+		}
+		
+		/**
+		 * Unfreezes this group and sets actions to AxCloud.ALL.
+		 * 
+		 * @return This map.
+		 */
+		public function unfreeze():AxCloud {
+			actions = ALL;
 			return this;
 		}
 		
@@ -280,6 +310,8 @@ package org.axgl {
 				return;
 			}
 			
+			super.update();
+			
 			for (var i:uint = 0; i < members.length; i++) {
 				var entity:AxSprite = members[i];
 				
@@ -311,7 +343,7 @@ package org.axgl {
 			}
 			
 			matrix.identity();
-			matrix.appendTranslation(x - Math.round(Ax.camera.x), y - Math.round(Ax.camera.y), 0);
+			matrix.appendTranslation(x - Math.round(Ax.camera.x) + parentOffset.x, y - Math.round(Ax.camera.y) + parentOffset.y, 0);
 			matrix.append(Ax.camera.projection);
 			
 			if (shader != Ax.shader) {
@@ -378,6 +410,24 @@ package org.axgl {
 			members = tempMembers;
 			tempMembers = temp;
 			tempMembers.length = 0;
+		}
+		
+		/**
+		 * Clears out all members of the group. If <code>disposeMembers</code> is set to true, will call dispose on each
+		 * member before removing all the members.
+		 * 
+		 * @param disposeMembers Whether or not to dispose all the members before removing them.
+		 */
+		public function clear(disposeMembers:Boolean = true):void {
+			if (disposeMembers) {
+				for (var i:uint = 0; i < members.length; i++) {
+					var entity:AxSprite = members[i];
+					entity.dispose();
+				}
+			}
+			tempMembers.length = 0;
+			members.length = 0;
+			dirty = true;
 		}
 		
 		/**

@@ -1,4 +1,6 @@
 package org.axgl {
+	import avmplus.getQualifiedClassName;
+
 	/**
 	 * A basic game entity. AxEntities do not render on the screen, but they can have velocities, accelerations, etc.
 	 * Most classes extend this class, as only instances of this class can be collided and added to groups.
@@ -46,6 +48,18 @@ package org.axgl {
 		 * to false.
 		 */
 		public var exists:Boolean;
+		/**
+		 * The parents of this entity. An entity's position will be relative to its parent, unless it does not have a parent.
+		 * When adding an entity to a group, by default it's parent will be set to the group, and it's position will become
+		 * relative to that group. You can also manually set the parent on any entity to any other entity.
+		 */
+		public var parent:AxEntity;
+		/**
+		 * The position of the parent entity. Each frame this is propagated down by every entity setting it based on its
+		 * parents properties. This allows an entity to keep separate its own local position and the position it is relative
+		 * to.
+		 */
+		public var parentOffset:AxPoint;
 
 		/**
 		 * The velocity of this object. Contains the x, y, and angular velocities. Every frame, if this entity
@@ -156,6 +170,8 @@ package org.axgl {
 			active = true;
 			solid = true;
 			exists = true;
+			parent = null;
+			parentOffset = new AxPoint;
 			
 			center = new AxPoint(x + width / 2, y + height / 2);
 			previous = new AxPoint(x, y);
@@ -179,6 +195,11 @@ package org.axgl {
 		 * update function.
 		 */
 		public function update():void {
+			if (parent != null) {
+				parentOffset.x = parent.x + parent.parentOffset.x;
+				parentOffset.y = parent.y + parent.parentOffset.y;
+			}
+			
 			touched = touching;
 			touching = NONE;
 			
@@ -273,6 +294,13 @@ package org.axgl {
 		public function destroy():void {
 			exists = false;
 		}
+		
+		/**
+		 * Revives this object, setting it to be updated and drawn.
+		 */
+		public function revive():void {
+			exists = true;
+		}
 
 		/**
 		 * Returns whether or not this object is touching a solid object in the direction(s) passed. You can test
@@ -305,11 +333,68 @@ package org.axgl {
 		/**
 		 * @inheritDoc
 		 */
+		override public function contains(x:Number, y:Number):Boolean {
+			return x >= this.x + parentOffset.x &&
+				   y >= this.y + parentOffset.y &&
+				   x <= this.right + parentOffset.x &&
+				   y <= this.bottom + parentOffset.y;
+		}
+		
+		/**
+		 * @inheritDoc
+		 */
 		override public function overlaps(other:AxRect):Boolean {
-			if (!exists || (other is AxEntity && !(other as AxEntity).exists)) {
+			var o:AxEntity = other as AxEntity;
+			if (!exists || !o.exists) {
 				return false;
 			}
-			return super.overlaps(other);
+			return x + parentOffset.x + AxU.EPSILON < o.x + o.width + o.parentOffset.x &&
+				   y + parentOffset.y + AxU.EPSILON < o.y + o.height + o.parentOffset.y &&
+				   x + width + parentOffset.x - AxU.EPSILON > o.x + o.parentOffset.x &&
+				   y + height + parentOffset.y - AxU.EPSILON > o.y + o.parentOffset.y;
+		}
+		
+		/**
+		 * Sets the parent of this entity to another entity.
+		 * 
+		 * @return This entity.
+		 */
+		public function setParent(parent:AxEntity):AxEntity {
+			this.parent = parent;
+			parentOffset.x = parent.x + parent.parentOffset.x;
+			parentOffset.y = parent.y + parent.parentOffset.y;
+			return this;
+		}
+		
+		/**
+		 * Unlinks this object from its parent. If the parent's position was non-zero, this will cause
+		 * the object to appear to move, as its position will no longer be relative to the parent.
+		 */
+		public function removeParent():AxEntity {
+			parent = null;
+			parentOffset.x = parentOffset.y = 0;
+			return this;
+		}
+		
+		/**
+		 * Returns the global x position of this entity. While the x value is relative to the parent
+		 * entity, the global x is where the entity will be drawn in world space.
+		 * 
+		 * @return The global x position of this entity.
+		 */
+		public function get globalX():Number {
+			return x + parentOffset.x;
+			return this;
+		}
+		
+		/**
+		 * Returns the global y position of this entity. While the y value is relative to the parent
+		 * entity, the global y is where the entity will be drawn in world space.
+		 * 
+		 * @return The global y position of this entity.
+		 */
+		public function get globalY():Number {
+			return y + parentOffset.y;
 		}
 		
 		/**
@@ -326,6 +411,13 @@ package org.axgl {
 			offset = null;
 			drag = null;
 			worldBounds = null;
+		}
+		
+		/**
+		 * @inheritDoc
+		 */
+		override public function toString():String {
+			return getQualifiedClassName(this) + " @ " + super.toString();
 		}
 	}
 }
