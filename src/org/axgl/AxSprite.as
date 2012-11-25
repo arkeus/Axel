@@ -98,7 +98,7 @@ package org.axgl {
 		 * @param frameWidth The width of each frame in the embedded graphic.
 		 * @param frameHeight The height of each frame in the embedded graphic.
 		 */
-		public function AxSprite(x:Number, y:Number, graphic:Class = null, frameWidth:uint = 0, frameHeight:uint = 0) {
+		public function AxSprite(x:Number = 0, y:Number = 0, graphic:Class = null, frameWidth:uint = 0, frameHeight:uint = 0) {
 			super(x, y, VERTEX_SHADER, FRAGMENT_SHADER, 4, "AxSprite");
 
 			matrix = new Matrix3D;
@@ -218,13 +218,6 @@ package org.axgl {
 		}
 
 		/**
-		 * Calculates the vertex buffer for this sprite, using the cached version if another identical vertex buffer exists.
-		 */
-		private function calculateVertexBuffer():void {
-			vertexBuffer = AxCache.vertexBuffer(frameWidth, frameHeight, 1, 1);
-		}
-
-		/**
 		 * Calculates the debug vertex buffer for this sprite, using the cached version if another identical vertex buffer exists.
 		 */
 		private function calculateDebugVertexBuffer():void {
@@ -261,8 +254,8 @@ package org.axgl {
 		 *
 		 * @return The sprite instance.
 		 */
-		public function addAnimation(name:String, frames:Array, framerate:uint = 15, looped:Boolean = true):AxSprite {
-			animations[name] = new AxAnimation(name, frames, framerate < 1 ? 15 : framerate, looped);
+		public function addAnimation(name:String, frames:Array, framerate:uint = 15, looped:Boolean = true, callback:Function = null):AxSprite {
+			animations[name] = new AxAnimation(name, frames, framerate < 1 ? 15 : framerate, looped, callback);
 			return this;
 		}
 
@@ -272,11 +265,12 @@ package org.axgl {
 		 * method instead.
 		 * 
 		 * @param name The name of the animation to play.
+		 * @param reset Whether or not to force reset the animation from scratch.
 		 *
 		 * @return The sprite instance.
 		 */
-		public function animate(name:String):AxSprite {
-			if ((animation == null || (animation != null && animation.name != name)) && animations[name] != null) {
+		public function animate(name:String, reset:Boolean = false):AxSprite {
+			if ((reset || animation == null || (animation != null && animation.name != name)) && animations[name] != null) {
 				animation = animations[name];
 				animationDelay = 1 / animation.framerate;
 				animationTimer = animationDelay;
@@ -309,6 +303,9 @@ package org.axgl {
 					animationTimer -= animationDelay;
 					if (frame + 1 < animation.frames.length || animation.looped) {
 						frame = (frame + 1) % animation.frames.length;
+					}
+					if (frame + 1 == animation.frames.length && animation.callback != null) {
+						animation.callback();
 					}
 					uvOffset[0] = (animation.frames[frame] % framesPerRow) * quad.uvWidth;
 					uvOffset[1] = Math.floor(animation.frames[frame] / framesPerRow) * quad.uvHeight;
@@ -353,8 +350,12 @@ package org.axgl {
 		override public function update():void {
 			super.update();
 
-			screen.x = (x - Ax.camera.x) * scroll.x;
-			screen.y = (y - Ax.camera.y) * scroll.y;
+			screen.x = x - Ax.camera.x * scroll.x;
+			screen.y = y - Ax.camera.y * scroll.y;
+			
+			if (texture == null) {
+				load(AxResource.ICON);
+			}
 			calculateFrame();
 			
 			if (effects != null) {
@@ -384,10 +385,6 @@ package org.axgl {
 		 * @inheritDoc
 		 */
 		override public function draw():void {
-			if (texture == null) {
-				load(AxResource.ICON);
-			}
-			
 			if (dirty) {
 				buildVertexBuffer(quad);
 				dirty = false;
@@ -400,7 +397,7 @@ package org.axgl {
 			colorTransform[RED] = color.red;
 			colorTransform[GREEN] = color.green;
 			colorTransform[BLUE] = color.blue;
-			colorTransform[ALPHA] = color.alpha;
+			colorTransform[ALPHA] = color.alpha * parentEntityAlpha;
 
 			matrix.identity();
 
@@ -415,9 +412,6 @@ package org.axgl {
 			var cx:Number = Ax.camera.x * scroll.x;
 			var cy:Number = Ax.camera.y * scroll.y;
 			if (facing == flip) {
-				/*matrix.appendTranslation(-(center.x - x), -(center.y - y), 0);
-				matrix.appendScale(scalex * -1, scaley, 1);
-				matrix.appendTranslation(center.x - x + sx - cx, center.y - y + sy - cy, 0);*/
 				matrix.appendScale(scalex * -1, scaley, 1);
 				matrix.appendTranslation(Math.round(sx - cx + AxU.EPSILON + frameWidth), Math.round(sy - cy + AxU.EPSILON), 0);
 			} else if (scalex != 1 || scaley != 1) {
@@ -435,8 +429,13 @@ package org.axgl {
 				Ax.shader = shader;
 			}
 			
+			if (blend == null) {
+				Ax.context.setBlendFactors(Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA);
+			} else {
+				Ax.context.setBlendFactors(blend.source, blend.destination);
+			}
+			
 			Ax.context.setTextureAt(0, texture.texture);
-			Ax.context.setBlendFactors(Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA);
 			Ax.context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, matrix, true);
 			Ax.context.setProgramConstantsFromVector(Context3DProgramType.VERTEX, 4, uvOffset);
 			Ax.context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 0, colorTransform);
@@ -589,7 +588,7 @@ package org.axgl {
 		 */
 		private static const VERTEX_SHADER:Array = [
 			"m44 vt0, va0, vc0",
-			"add v1, va1, vc4",
+			"add v0, va1, vc4",
 			"mov op, vt0"
 		];
 
@@ -597,7 +596,7 @@ package org.axgl {
 		 * The fragment shader for this sprite.
 		 */
 		private static const FRAGMENT_SHADER:Array = [
-			"tex ft0, v1, fs0 <2d,nearest,mipnone>",
+			"tex ft0, v0, fs0 <2d,nearest,mipnone>",
 			"mul oc, fc0, ft0"
 		];
 
@@ -609,14 +608,6 @@ package org.axgl {
 		{
 			SPRITE_INDEX_BUFFER = Ax.context.createIndexBuffer(6);
 			SPRITE_INDEX_BUFFER.uploadFromVector(Vector.<uint>([0, 1, 2, 1, 2, 3]), 0, 6);
-		}
-		
-		public var test:Number = 5;
-		public function get testF():Number {
-			return test;
-		}
-		public function get testF2():Number {
-			return test;
 		}
 	}
 }

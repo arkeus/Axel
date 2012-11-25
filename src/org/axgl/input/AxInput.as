@@ -22,12 +22,25 @@ package org.axgl.input {
 
 		/**
 		 * Returns whether or not the passed key or button is currently being held down.
+		 * This method is identical to AxInput.held().
 		 * 
 		 * @param key The key to test.
 		 *
 		 * @return Whether or not it is being held down.
 		 */
 		public function down(key:uint):Boolean {
+			return keys[key] > 0;
+		}
+		
+		/**
+		 * Returns whether or not the passed key or button is currently being held down.
+		 * This method is identical to AxInput.down().
+		 * 
+		 * @param key The key to test.
+		 *
+		 * @return Whether or not it is being held down.
+		 */
+		public function held(key:uint):Boolean {
 			return keys[key] > 0;
 		}
 

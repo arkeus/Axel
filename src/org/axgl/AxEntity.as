@@ -1,5 +1,7 @@
 package org.axgl {
 	import avmplus.getQualifiedClassName;
+	
+	import org.axgl.util.AxTimer;
 
 	/**
 	 * A basic game entity. AxEntities do not render on the screen, but they can have velocities, accelerations, etc.
@@ -60,6 +62,16 @@ package org.axgl {
 		 * to.
 		 */
 		public var parentOffset:AxPoint;
+		/**
+		 * The alpha value of this entity. This value is used for parenting. Any objects whose parents is this object will
+		 * take into account the entityAlpha, as it will be propagated to all children.
+		 */
+		public var entityAlpha:Number;
+		/**
+		 * The entityAlpha value of the parent entity. Each frame this is propagated down by every entity setting it based on its
+		 * parents properties. This allows an entity to keep separate its own local alpha and the alpha it has inherited.
+		 */
+		public var parentEntityAlpha:Number;
 
 		/**
 		 * The velocity of this object. Contains the x, y, and angular velocities. Every frame, if this entity
@@ -156,6 +168,10 @@ package org.axgl {
 		public var countUpdate:Boolean = true;
 		/** Counter that allow you to disable counting this function's draw for the debugger */
 		public var countDraw:Boolean = true;
+		/** List of timers active on this entity. */
+		public var timers:Vector.<AxTimer>;
+		/** Temporary timer list used to clean up dead timers. */
+		public var timersTemp:Vector.<AxTimer>;
 
 		/**
 		 * Creates a new AxEntity at the position passed.
@@ -172,6 +188,8 @@ package org.axgl {
 			exists = true;
 			parent = null;
 			parentOffset = new AxPoint;
+			entityAlpha = 1;
+			parentEntityAlpha = 1;
 			
 			center = new AxPoint(x + width / 2, y + height / 2);
 			previous = new AxPoint(x, y);
@@ -185,6 +203,7 @@ package org.axgl {
 			phased = false;
 			stationary = false;
 			worldBounds = null;
+			timers = null;
 		}
 
 		/**
@@ -195,9 +214,45 @@ package org.axgl {
 		 * update function.
 		 */
 		public function update():void {
+			var i:uint;
+			
 			if (parent != null) {
 				parentOffset.x = parent.x + parent.parentOffset.x;
 				parentOffset.y = parent.y + parent.parentOffset.y;
+				parentEntityAlpha = parent.entityAlpha * parent.parentEntityAlpha;
+			}
+			
+			if (timers != null) {
+				var deadTimers:uint = 0;
+				for (i = 0; i < timers.length; i++) {
+					if (!timers[i].alive) {
+						deadTimers++;
+						continue;
+					} else if (!timers[i].active) {
+						continue;
+					}
+					timers[i].timer -= Ax.dt;
+					while (timers[i].timer <= 0) {
+						timers[i].timer += timers[i].delay;
+						timers[i].repeat--;
+						timers[i].callback();
+						if (timers[i].repeat <= 0) {
+							timers[i].stop();
+							break;
+						}
+					}
+				}
+				if (deadTimers >= 5) {
+					var temp:Vector.<AxTimer> = timersTemp;
+					temp.length = 0;
+					for (i = 0; i < timers.length; i++) {
+						if (timers[i].alive) {
+							temp.push(timers[i]);
+						}
+					}
+					timersTemp = timers;
+					timers = temp;
+				}
 			}
 			
 			touched = touching;
@@ -207,6 +262,9 @@ package org.axgl {
 			previous.y = y;
 			pvelocity.x = velocity.x;
 			pvelocity.y = velocity.y;
+			
+			center.x = x + width / 2;
+			center.y = y + height / 2;
 			
 			if (stationary || (velocity.x == 0 && velocity.y == 0 && velocity.a == 0 && acceleration.x == 0 && acceleration.y == 0 && acceleration.a == 0)) {
 				return;
@@ -219,9 +277,6 @@ package org.axgl {
 			x += (velocity.x * Ax.dt) + ((pvelocity.x - velocity.x) * Ax.dt / 2);
 			y += (velocity.y * Ax.dt) + ((pvelocity.y - velocity.y) * Ax.dt / 2);
 			angle += velocity.a * Ax.dt;
-			
-			center.x = x + width / 2;
-			center.y = y + height / 2;
 			
 			if (worldBounds != null) {
 				if (x < worldBounds.x) {
@@ -395,6 +450,57 @@ package org.axgl {
 		 */
 		public function get globalY():Number {
 			return y + parentOffset.y;
+		}
+		
+		/**
+		 * Sets the opacity value of this entity. A value of 0 means it is completely see through, while a value
+		 * of 1 means it is completely opaque.
+		 * 
+		 * @param opacity The alpha value, between 0 and 1.
+		 */
+		public function set alpha(opacity:Number):void {
+			entityAlpha = opacity;
+		}
+		
+		/**
+		 * Gets the opacity value of this entity. A value of 0 means it is completely see through, while a value
+		 * of 1 means it is completely opaque.
+		 * 
+		 * @return The alpha value, between 0 and 1.
+		 */
+		public function get alpha():Number {
+			return entityAlpha;
+		}
+		
+		/**
+		 * Timers are repeatable functions that can be bound to any AxEntity. Take, for example,
+		 * the following:
+		 * 
+		 * <code>sprite.addTimer(5, destroy);</code>
+		 * 
+		 * This would destroy the sprite after 5 seconds. You can also use timers to register repeating
+		 * events. For example:
+		 * 
+		 * <code>sprite.addTimer(1, function():void { sprite.visible = !sprite.visible; }, 5, 3);</code>
+		 * 
+		 * This would cause the sprite to flicker visible/invisible 5 times, once per second. The 3 indicates
+		 * that the first occurrence would not occur until after 3 seconds, and the following ones would be
+		 * spaced 1 second apart.
+		 * 
+		 * @param delay The delay before this fires, or the delay between firing if set to repeat.
+		 * @param callback The function called when the timer fires.
+		 * @param repeat The number of times to repeat the timer. 0 indiciates repeat forever.
+		 * @param start How long to delay the first execution if repeatable.
+		 */
+		public function addTimer(delay:Number, callback:Function, repeat:uint = 1, start:Number = -1):AxTimer {
+			if (timers == null) {
+				timers = new Vector.<AxTimer>;
+				timersTemp = new Vector.<AxTimer>;
+			}
+			
+			var timer:AxTimer = new AxTimer(delay, callback, repeat, start);
+			timers.push(timer);
+			return timer;
 		}
 		
 		/**

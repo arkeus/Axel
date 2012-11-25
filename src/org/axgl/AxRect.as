@@ -125,5 +125,9 @@ package org.axgl {
 		public function get bottom():Number {
 			return y + height;
 		}
+		
+		override public function toString():String {
+			return "(" + x + "," + y + "," + width + "," + height + ")";
+		}
 	}
 }

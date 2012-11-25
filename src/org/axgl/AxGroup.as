@@ -19,6 +19,8 @@ package org.axgl {
 		public var tempMembers:Vector.<AxEntity>;
 		/** Keeps track of current position for recycling, for improved performance. */
 		private var recyclePosition:uint = 0;
+		/** Global scroll factor for the group. */
+		public var scrollFactor:AxPoint;
 
 		/**
 		 * Creates a new empty group object with the specified position and size. Note: The position and size
@@ -33,6 +35,7 @@ package org.axgl {
 		public function AxGroup(x:Number = 0, y:Number = 0, width:Number = 0, height:Number = 0) {
 			members = new Vector.<AxEntity>;
 			tempMembers = new Vector.<AxEntity>;
+			scrollFactor = new AxPoint(-1, -1);
 			this.x = x;
 			this.y = y;
 			this.width = width;
@@ -55,6 +58,20 @@ package org.axgl {
 			if (linkParent) {
 				entity.setParent(this);
 			}
+			
+			if (entity is AxModel) {
+				if (scroll.x != -1) {
+					(entity as AxModel).scroll.x = scroll.x;
+				}
+				if (scroll.y != -1) {
+					(entity as AxModel).scroll.y = scroll.y;
+				}
+			} else if (entity is AxGroup) {
+				if (scroll.x != -1 || scroll.y != -1) {
+					(entity as AxGroup).scroll = new AxPoint(scroll.x, scroll.y);
+				}
+			}
+			
 			return this;
 		}
 
@@ -129,6 +146,49 @@ package org.axgl {
 				}
 			}
 			return overlapFound;
+		}
+		
+		/**
+		 * Returns the scroll factor for this group.
+		 * 
+		 * @return The scroll factor for this group.
+		 */
+		public function get scroll():AxPoint {
+			return scrollFactor;
+		}
+		
+		/**
+		 * Sets the scroll factor for the group. Once you change this, all future objects added to
+		 * the group will have their scroll factors inherited from this. If you change this after
+		 * objects have been added, it will only affect the objects if you set it as a whole (set
+		 * it to a new AxPoint). If you set the x and y separately it will not affect current items,
+		 * only new items added to the group.
+		 * 
+		 * @param factor The new scroll factor.
+		 */
+		public function set scroll(scrollFactor:AxPoint):void {
+			this.scrollFactor = scrollFactor;
+			
+			var member:AxEntity;
+			for (var i:uint = 0; i < members.length; i++) {
+				member = members[i];
+				if (member is AxGroup) {
+					(member as AxGroup).scroll = scrollFactor;
+				} else if (member is AxModel) {
+					(member as AxModel).scroll.x = scrollFactor.x;
+					(member as AxModel).scroll.y= scrollFactor.y;
+				}
+			}
+		}
+		
+		/**
+		 * Shortcut to set this group's scroll factor in both directions to be 0.
+		 * 
+		 * @return This group.
+		 */
+		public function noScroll():AxGroup {
+			scroll = new AxPoint(0, 0);
+			return this;
 		}
 		
 		/**

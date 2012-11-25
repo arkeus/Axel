@@ -1,8 +1,8 @@
 package org.axgl.util {
 	import com.adobe.utils.PerspectiveMatrix3D;
-
+	
 	import flash.geom.Matrix3D;
-
+	
 	import org.axgl.Ax;
 	import org.axgl.AxEntity;
 	import org.axgl.AxRect;
@@ -20,6 +20,12 @@ package org.axgl.util {
 		 * The bounds determining where the camera can move in the world.
 		 */
 		public var bounds:AxRect;
+		/**
+		 * Padding to be used when following an object. The padding defines a rectangle where the
+		 * followed target is allowed to move without affecting the camera. Once the target moves out
+		 * of the padded zone, the camera will follow it.
+		 */
+		public var padding:AxRect;
 
 		/**
 		 * A temporary world view matrix.
@@ -58,8 +64,9 @@ package org.axgl.util {
 		 * 
 		 * @param target The entity to follow.
 		 */
-		public function follow(target:AxEntity):void {
+		public function follow(target:AxEntity, padding:AxRect = null):void {
 			this.target = target;
+			this.padding = padding;
 		}
 
 		/**
@@ -67,12 +74,25 @@ package org.axgl.util {
 		 */
 		override public function update():void {
 			if (target != null) {
-				x = (target.x + target.width / 2 - Ax.width / (2 * Ax.zoom));
-				y = (target.y + target.height / 2 - Ax.height / (2 * Ax.zoom));
-
-				x = AxU.clamp(x, bounds.x, bounds.width - Ax.width / Ax.zoom);
-				y = AxU.clamp(y, bounds.y, bounds.height - Ax.height / Ax.zoom);
+				if (padding == null) {
+					x = (target.x + (target.width - Ax.viewWidth) / 2);
+					y = (target.y + (target.height - Ax.viewHeight) / 2);
+				} else {
+					if (x + padding.x > target.x) {
+						x = target.x - padding.x;
+					} else if (x + padding.x + padding.width < target.x + target.width) {
+						x = target.x + target.width - padding.x - padding.width;
+					}
+					if (y + padding.y > target.y) {
+						y = target.y - padding.y;
+					} else if (y + padding.y + padding.height < target.y + target.height) {
+						y = target.y + target.height - padding.y - padding.height;
+					}
+				}
 			}
+			
+			x = AxU.clamp(x, bounds.x, bounds.width - Ax.viewWidth);
+			y = AxU.clamp(y, bounds.y, bounds.height - Ax.viewHeight);
 		}
 		
 		/**

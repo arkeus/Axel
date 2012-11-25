@@ -32,6 +32,7 @@ package org.axgl {
 	import org.axgl.tilemap.AxTilemap;
 	import org.axgl.util.AxCamera;
 	import org.axgl.util.AxDebugger;
+	import org.axgl.util.AxPauseState;
 
 	/**
 	 * The general game class that your base class should extends. Contains all the properties of the game,
@@ -246,6 +247,16 @@ package org.axgl {
 		 * The height of the visible area on the screen, affected by zoom. If your height is 400, and zoom is 2x, this will be 200.
 		 */
 		public static var viewHeight:uint;
+		
+		/**
+		 * The state that the game pushes when paused (eg. when the game loses focus). If null, will not push any state. If you change
+		 * this, you should <strong>always</strong> set it to a class that extends org.axgl.util.AxPauseState.
+		 */
+		public static var pauseState:Class;
+		/**
+		 * Boolean indicating whether all library initialization has completed.
+		 */
+		public static var initialized:Boolean;
 
 		/**
 		 * Creates the game engine.
@@ -279,6 +290,9 @@ package org.axgl {
 			var debugStacktrace:String = new Error().getStackTrace();
 			Ax.debug = debugStacktrace != null && debugStacktrace.search(/:[0-9]+]$/m) > -1;
 			Ax.debuggerEnabled = Ax.debug;
+			
+			Ax.pauseState = AxPauseState;
+			Ax.initialized = false;
 
 			addEventListener(Event.ADDED_TO_STAGE, onStageInitialized);
 		}
@@ -386,6 +400,9 @@ package org.axgl {
 			keys.releaseAll();
 			mouse.releaseAll();
 			stage.frameRate = unfocusedFramerate;
+			if (initialized && pauseState != null) {
+				pushState(new pauseState);
+			}
 		}
 
 		/**
@@ -395,6 +412,9 @@ package org.axgl {
 		 */
 		protected function onFocusGained(event:Event):void {
 			stage.frameRate = requestedFramerate;
+			if (initialized && pauseState != null && state is AxPauseState) {
+				popState();
+			}
 		}
 
 		/**
@@ -460,12 +480,13 @@ package org.axgl {
 			Ax.height = requestedHeight == 0 ? stage.stageHeight : requestedHeight;
 			
 			context.configureBackBuffer(Ax.width, Ax.height, 0, false);
-			context.enableErrorChecking = false;
+			context.enableErrorChecking = true;
 			
 			camera = new AxCamera;
 			debugger = new AxDebugger;
 			
 			pushState(new requestedState());
+			initialized = true;
 		}
 
 		/**
@@ -591,7 +612,13 @@ package org.axgl {
 		 * @return The newly pushed state.
 		 */
 		public static function pushState(state:AxState):AxState {
-			camera.reset();
+			if (states.length > 0) {
+				states[states.length - 1].onPause(Object(state).constructor);
+			}
+			//camera.reset();
+			keys.releaseAll();
+			mouse.releaseAll();
+			
 			states.push(state);
 			state.create();
 			return state;
@@ -601,8 +628,16 @@ package org.axgl {
 		 * Pops the current state off the top of the stack and disposes it.
 		 */
 		public static function popState():void {
-			camera.reset();
-			destroyedStates.push(states.pop());
+			//camera.reset();
+			keys.releaseAll();
+			mouse.releaseAll();
+			
+			var previousState:AxState = states.pop();
+			destroyedStates.push(previousState);
+			
+			if (states.length > 0) {
+				state.onResume(Object(previousState).constructor);
+			}
 		}
 
 		/**

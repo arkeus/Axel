@@ -4,6 +4,7 @@ package org.axgl {
 	import flash.geom.Matrix3D;
 	import flash.geom.Vector3D;
 	
+	import org.axgl.render.AxBlendMode;
 	import org.axgl.render.AxColor;
 	import org.axgl.render.AxShader;
 	import org.axgl.render.AxTexture;
@@ -39,6 +40,8 @@ package org.axgl {
 		public var color:AxColor;
 		/** The texture used to draw this model. */
 		public var texture:AxTexture;
+		/** The blend mode used for drawing this model. */
+		public var blend:AxBlendMode;
 		
 		/** Whether or not to count the tris of this model for display in the debugger */
 		public var countTris:Boolean;
@@ -135,7 +138,7 @@ package org.axgl {
 		 * 
 		 * @param opacity The alpha value, between 0 and 1.
 		 */
-		public function set alpha(opacity:Number):void {
+		override public function set alpha(opacity:Number):void {
 			color.alpha = AxU.clamp(opacity, 0, 1);
 		}
 		
@@ -145,8 +148,18 @@ package org.axgl {
 		 * 
 		 * @return The alpha value, between 0 and 1.
 		 */
-		public function get alpha():Number {
+		override public function get alpha():Number {
 			return color.alpha;
+		}
+		
+		/**
+		 * Alias to set this object's scroll factor in both directions to be 0.
+		 * 
+		 * @return This object.
+		 */
+		public function noScroll():AxModel {
+			scroll.x = scroll.y = 0;
+			return this;
 		}
 		
 		/**

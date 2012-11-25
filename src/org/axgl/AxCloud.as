@@ -101,10 +101,12 @@ package org.axgl {
 		 * Adds a new entity to this cloud. Sets the dirty flag to true and all members will be fully updated.
 		 *
 		 * @param entity The entity to add.
+		 * @param linkParent Whether or not to set the parent of the entity to this cloud.
+		 * @param prepend Whether or not to prepend the object to the start, rather than the end. Prepending is slower.
 		 *
 		 * @return This map.
 		 */
-		public function add(entity:AxSprite, linkParent:Boolean = true):AxCloud {
+		public function add(entity:AxSprite, linkParent:Boolean = true, prepend:Boolean = false):AxCloud {
 			if (entity == null) {
 				throw new ArgumentError("Cannot add a null object to a cloud.");
 			}
@@ -118,7 +120,12 @@ package org.axgl {
 				texture = entity.texture;
 			}
 			
-			members.push(entity);
+			if (prepend) {
+				members.unshift(entity);
+			} else {
+				members.push(entity);
+			}
+			
 			if (linkParent) {
 				entity.setParent(this);
 			}
@@ -342,6 +349,11 @@ package org.axgl {
 				return;
 			}
 			
+			colorTransform[RED] = color.red;
+			colorTransform[GREEN] = color.green;
+			colorTransform[BLUE] = color.blue;
+			colorTransform[ALPHA] = color.alpha * parentEntityAlpha;
+			
 			matrix.identity();
 			matrix.appendTranslation(x - Math.round(Ax.camera.x) + parentOffset.x, y - Math.round(Ax.camera.y) + parentOffset.y, 0);
 			matrix.append(Ax.camera.projection);
@@ -351,8 +363,13 @@ package org.axgl {
 				Ax.shader = shader;
 			}
 			
+			if (blend == null) {
+				Ax.context.setBlendFactors(Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA);
+			} else {
+				Ax.context.setBlendFactors(blend.source, blend.destination);
+			}
+			
 			Ax.context.setTextureAt(0, texture.texture);
-			Ax.context.setBlendFactors(Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA);
 			Ax.context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, matrix, true);
 			Ax.context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 0, colorTransform);
 			Ax.context.setVertexBufferAt(0, vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_2); // x, y
