@@ -1,6 +1,6 @@
-## 0.9.3 / 2012-??-??
+## 0.9.3 r1 / 2012-??-??
 * Entities now have a simple parenting system. When adding to groups, its parent will be set and position based off of the parent
-* To support parenting, entities now have setParent and removeParent functionality
+* To support parenting, entities now have setParent and removeParent functionality (note: collision does not support parent offsets yet)
 * Positions on entities with parents are now relative to the parent, to support this, globalX and globalY setters have been added to AxEntity
 * When the game loses focus it now switched to a default pause screen. This can be changed via Ax.pauseState
 * You can now define a callback for animations that is called when (and every time) the animation completes
@@ -19,12 +19,27 @@
 * You can now set the scroll on an AxGroup and have it affect all entities current and future (with some caveats, see documentation)
 * Added helper functions noScroll() to AxGroup and AxModel to cover the common use case of setting scroll.x and scroll.y to 0
 * AxStates now include an onPause() and onResume() that fire when they lose/gain focus from adding/popping states
+* AxEntity now have a stop() function that sets horizontal, vertical, and angular components of velocity to 0
+* When setting a color using @[] notation in AxText, you can use html codes as rrggbb or aarrggbb (eg. @[ff0000] instead of @[255,0,0] for red)
+* You can now pass a vertical offset for the label when calling text() on an AxButton
+* You can now set the offset property of the camera to offset the camera by a fixed amount
+* The camera now has the following effects available:
+** Ax.camera.shake - shakes the camera
+** Ax.camera.fade/fadeOut/fadeIn - fades the camera in/out to a color
+* AxGroup constructor no longer takes a width and height
+* The debugger menu now displays the size of the state stack in brackets on the bottom right
 * Fixed an issue with AxSprite when you do not load a resource
-* Fixed an issue where the center of sprites was not being updated if you moved manually rather than using velocity
+* Fixed an issue where the center of sprites were not being updated if you moved manually rather than using velocity
 * Fixed an issue where screen coordinates were incorrect at non-default scroll values
 * Fixed incorrect positions of AxText objects with scale != 1 when alignment was "center" or "right"
 * Fixed an issue with AxText not properly getting width and height set
 * Fixed an issue where the screen coordinates of the mouse weren't correctly taking into account the zoom level
+* Fixed an issue where releaseAll on an input would cause everything to be justReleased rather than resetting the input
+* Fixed an AxText width issue where the width is equal to the greatest width since creation
+* Fixed an issue where destroy events on sounds/music were attached to the wrong object
+* Fixed an issue where the sounds group would never be cleaned up, using unnecessary memory
+* Fixed an issue where the centers of objects weren't being updated for stationary objects
+* Fixed an issue where the center of an object recently affected by a world bound check would be incorrect
 
 ## 0.9.2 / 2012-06-30
 * You can now dynamically change tiles in a tilemap dynamically via AxTilemap.setTileAt()

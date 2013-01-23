@@ -65,17 +65,21 @@ package org.axgl {
 		 *
 		 * @param str The string that should appear.
 		 * @param font The font to use (by default uses the system font).
+		 * @param verticalOffset The vertical position to place the text label.
+		 * @param horizontalOffset The horizontal position to place the text label.
 		 *
 		 * @return This button.
 		 */
-		public function text(str:String, font:AxFont = null):AxButton {
+		public function text(str:String, font:AxFont = null, verticalOffset:uint = 10, horizontalOffset:uint = 0):AxButton {
 			if (font == null) {
 				font = AxResource.FONT;
 			}
 
-			labelY = 10;
-			label = new AxText(x, labelY, font, str, 150, "center");
-			label.setColor(.113, .113, .113);
+			labelY = verticalOffset;
+			label = new AxText(horizontalOffset, labelY, font, str, frameWidth, "center");
+			if (font == null) {
+				label.setColor(.113, .113, .113);
+			}
 			label.setParent(this);
 
 			return this;
@@ -107,14 +111,13 @@ package org.axgl {
 				animate("idle");
 				labelOffset = 0;
 			}
-			
 
+			super.update();
+			
 			if (label != null) {
 				label.y = labelY + labelOffset;
 				label.update();
 			}
-
-			super.update();
 		}
 
 		/**

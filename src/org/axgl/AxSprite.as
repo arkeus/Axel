@@ -350,8 +350,8 @@ package org.axgl {
 		override public function update():void {
 			super.update();
 
-			screen.x = x - Ax.camera.x * scroll.x;
-			screen.y = y - Ax.camera.y * scroll.y;
+			screen.x = x - (Ax.camera.x + Ax.camera.offset.x) * scroll.x;
+			screen.y = y - (Ax.camera.y + Ax.camera.offset.y) * scroll.y;
 			
 			if (texture == null) {
 				load(AxResource.ICON);
@@ -390,7 +390,7 @@ package org.axgl {
 				dirty = false;
 			}
 
-			if (screen.x > Ax.width || screen.y > Ax.height || screen.x + frameWidth < 0 || screen.y + frameHeight < 0 || scale.x == 0 || scale.y == 0) {
+			if ((zooms && (screen.x > Ax.viewWidth || screen.y > Ax.viewHeight || screen.x + frameWidth < 0 || screen.y + frameHeight < 0)) || scale.x == 0 || scale.y == 0) {
 				return;
 			}
 			
@@ -409,8 +409,8 @@ package org.axgl {
 			var sy:Number = y - offset.y + parentOffset.y;
 			var scalex:Number = scale.x;
 			var scaley:Number = scale.y;
-			var cx:Number = Ax.camera.x * scroll.x;
-			var cy:Number = Ax.camera.y * scroll.y;
+			var cx:Number = Ax.camera.position.x * scroll.x;
+			var cy:Number = Ax.camera.position.y * scroll.y;
 			if (facing == flip) {
 				matrix.appendScale(scalex * -1, scaley, 1);
 				matrix.appendTranslation(Math.round(sx - cx + AxU.EPSILON + frameWidth), Math.round(sy - cy + AxU.EPSILON), 0);
@@ -421,7 +421,7 @@ package org.axgl {
 			} else {
 				matrix.appendTranslation(Math.round(sx - cx + AxU.EPSILON), Math.round(sy - cy + AxU.EPSILON), 0);
 			}
-
+			
 			matrix.append(zooms ? Ax.camera.projection : Ax.camera.baseProjection);
 
 			if (shader != Ax.shader) {

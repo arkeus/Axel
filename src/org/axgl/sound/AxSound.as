@@ -3,7 +3,7 @@ package org.axgl.sound {
 	import flash.media.Sound;
 	import flash.media.SoundChannel;
 	import flash.media.SoundTransform;
-
+	
 	import org.axgl.Ax;
 	import org.axgl.AxEntity;
 
@@ -58,18 +58,28 @@ package org.axgl.sound {
 		 */
 		public function play():AxSound {
 			soundChannel = sound.play(start, loop ? int.MAX_VALUE : 0, soundTransform);
-			sound.addEventListener(Event.SOUND_COMPLETE, destroy);
+			soundChannel.addEventListener(Event.SOUND_COMPLETE, onSoundComplete);
 			return this;
+		}
+		
+		/**
+		 * Sound completion callback.
+		 * 
+		 * @param event The sound completion event.
+		 */
+		private function onSoundComplete(event:Event):void {
+			destroy();
 		}
 
 		/**
 		 * Destroys the sound, freeing up resources used.
 		 */
 		override public function destroy():void {
-			sound.removeEventListener(Event.SOUND_COMPLETE, destroy);
+			soundChannel.removeEventListener(Event.SOUND_COMPLETE, destroy);
 			sound = null;
 			soundChannel = null;
 			soundTransform = null;
+			Ax.sounds.remove(this);
 			super.destroy();
 		}
 

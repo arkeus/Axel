@@ -19,6 +19,7 @@ package org.axgl {
 	import flash.ui.MultitouchInputMode;
 	import flash.utils.getTimer;
 	
+	import org.axgl.camera.AxCamera;
 	import org.axgl.collision.AxCollider;
 	import org.axgl.collision.AxCollisionGroup;
 	import org.axgl.collision.AxGrid;
@@ -30,7 +31,6 @@ package org.axgl {
 	import org.axgl.sound.AxMusic;
 	import org.axgl.sound.AxSound;
 	import org.axgl.tilemap.AxTilemap;
-	import org.axgl.util.AxCamera;
 	import org.axgl.util.AxDebugger;
 	import org.axgl.util.AxPauseState;
 
@@ -40,9 +40,7 @@ package org.axgl {
 	 */
 	public class Ax extends Sprite {
 		public static const LIBRARY_NAME:String = "Axel";
-		public static const LIBRARY_VERSION:String = "0.9.3";
-		
-		public static var shader:AxShader;
+		public static const LIBRARY_VERSION:String = "0.9.3 r1";
 		
 		/**
 		 * Whether or not the game is running is debug mode.
@@ -257,6 +255,14 @@ package org.axgl {
 		 * Boolean indicating whether all library initialization has completed.
 		 */
 		public static var initialized:Boolean;
+		/**
+		 * Boolean indicating whether the game is currently paused.
+		 */
+		public static var paused:Boolean;
+		/**
+		 * The current shader currently being used for drawing.
+		 */
+		public static var shader:AxShader;
 
 		/**
 		 * Creates the game engine.
@@ -293,6 +299,7 @@ package org.axgl {
 			
 			Ax.pauseState = AxPauseState;
 			Ax.initialized = false;
+			Ax.paused = false;
 
 			addEventListener(Event.ADDED_TO_STAGE, onStageInitialized);
 		}
@@ -400,7 +407,8 @@ package org.axgl {
 			keys.releaseAll();
 			mouse.releaseAll();
 			stage.frameRate = unfocusedFramerate;
-			if (initialized && pauseState != null) {
+			if (initialized && pauseState != null && !paused) {
+				paused = true;
 				pushState(new pauseState);
 			}
 		}
@@ -412,7 +420,8 @@ package org.axgl {
 		 */
 		protected function onFocusGained(event:Event):void {
 			stage.frameRate = requestedFramerate;
-			if (initialized && pauseState != null && state is AxPauseState) {
+			if (initialized && pauseState != null && paused && state is AxPauseState) {
+				paused = false;
 				popState();
 			}
 		}
@@ -594,6 +603,8 @@ package org.axgl {
 					state.draw();
 				}
 			}
+			
+			camera.draw();
 			
 			if (debugger.active) {
 				debugger.draw();
@@ -781,7 +792,7 @@ package org.axgl {
 				if (source is AxTilemap || target is AxTilemap) {
 					collision = new AxCollider;
 				} else {
-					collision = new AxGrid(Ax.width, Ax.height) 
+					collision = new AxGrid(Ax.viewWidth, Ax.viewHeight) 
 				}
 			} else {
 				collision.reset();

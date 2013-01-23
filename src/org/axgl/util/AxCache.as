@@ -111,8 +111,8 @@ package org.axgl.util {
 			if (textureWidth == rawBitmap.width && textureHeight == rawBitmap.height) {
 				textureBitmap = rawBitmap;
 			} else {
-				textureBitmap = new BitmapData(textureWidth, textureHeight, true, 0x00ff00ff);
-				textureBitmap.copyPixels(rawBitmap, new Rectangle(0, 0, rawBitmap.width, rawBitmap.height), new Point(0, 0), null, null, true);
+				textureBitmap = new BitmapData(textureWidth, textureHeight, true, 0x0);
+				textureBitmap.copyPixels(rawBitmap, new Rectangle(0, 0, rawBitmap.width, rawBitmap.height), new Point(0, 0));
 			}
 			
 			var texture:Texture = Ax.context.createTexture(textureWidth, textureHeight, Context3DTextureFormat.BGRA, false);

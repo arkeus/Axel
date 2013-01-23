@@ -65,8 +65,8 @@ package org.axgl.input {
 		public function update(x:Number, y:Number):void {
 			screen.x = x / Ax.zoom;
 			screen.y = y / Ax.zoom;
-			this.x = screen.x + Ax.camera.x;
-			this.y = screen.y + Ax.camera.y;
+			this.x = screen.x + Ax.camera.position.x;
+			this.y = screen.y + Ax.camera.position.y;
 		}
 	}
 }

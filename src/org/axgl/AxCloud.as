@@ -355,7 +355,7 @@ package org.axgl {
 			colorTransform[ALPHA] = color.alpha * parentEntityAlpha;
 			
 			matrix.identity();
-			matrix.appendTranslation(x - Math.round(Ax.camera.x) + parentOffset.x, y - Math.round(Ax.camera.y) + parentOffset.y, 0);
+			matrix.appendTranslation(x - Math.round(Ax.camera.position.x) + parentOffset.x, y - Math.round(Ax.camera.position.y) + parentOffset.y, 0);
 			matrix.append(Ax.camera.projection);
 			
 			if (shader != Ax.shader) {

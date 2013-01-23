@@ -25,21 +25,16 @@ package org.axgl {
 		/**
 		 * Creates a new empty group object with the specified position and size. Note: The position and size
 		 * does not have any effect on where the objects inside are rendered.
-		 * TODO: Remove position/size of AxGroup?
 		 *
 		 * @param x The x position of this group.
 		 * @param y The y position of this group;
-		 * @param width The width of this group.
-		 * @param height The height of this group.
 		 */
-		public function AxGroup(x:Number = 0, y:Number = 0, width:Number = 0, height:Number = 0) {
+		public function AxGroup(x:Number = 0, y:Number = 0) {
 			members = new Vector.<AxEntity>;
 			tempMembers = new Vector.<AxEntity>;
 			scrollFactor = new AxPoint(-1, -1);
 			this.x = x;
 			this.y = y;
-			this.width = width;
-			this.height = height;
 		}
 
 		/**
@@ -60,10 +55,10 @@ package org.axgl {
 			}
 			
 			if (entity is AxModel) {
-				if (scroll.x != -1) {
+				if (scroll.x != -1 && (entity as AxModel).scroll.x == 1) {
 					(entity as AxModel).scroll.x = scroll.x;
 				}
-				if (scroll.y != -1) {
+				if (scroll.y != -1 && (entity as AxModel).scroll.y == 1) {
 					(entity as AxModel).scroll.y = scroll.y;
 				}
 			} else if (entity is AxGroup) {

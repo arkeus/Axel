@@ -134,6 +134,7 @@ package org.axgl.text {
 			var y:uint = 0;
 			var index:uint = 0;
 			var color:AxColor = new AxColor;
+			width = 0;
 			for each (var textLine:AxTextLine in lines) {
 				var x:int = 0;
 				if (align == "right") {
@@ -156,7 +157,7 @@ package org.axgl.text {
 						var colorCode:String = textLine.text.substring(i + 2, closing);
 						if (colorCode == "") {
 							color.red = color.green = color.blue = color.alpha = 1;
-						} else {
+						} else if (colorCode.indexOf(",") != -1) {
 							var colorPieces:Array = colorCode.split(",");
 							color.red = parseInt(colorPieces[0]) / 255;
 							color.green = parseInt(colorPieces[1]) / 255;
@@ -166,6 +167,17 @@ package org.axgl.text {
 							} else {
 								color.alpha = 1;
 							}
+						} else if (colorCode.length == 6 || colorCode.length == 8) {
+							var offset:uint = 0;
+							if (colorCode.length == 8) {
+								color.alpha = uint("0x" + colorCode.substr(offset, 2)) / 255;
+								offset += 2;
+							}
+							color.red = uint("0x" + colorCode.substr(offset, 2)) / 255;
+							color.green = uint("0x" + colorCode.substr(offset + 2, 2)) / 255;
+							color.blue = uint("0x" + colorCode.substr(offset + 4, 2)) / 255;
+						} else {
+							throw new ArgumentError("Invalid color code in text: '" + colorCode + "'");
 						}
 						i = closing;
 						continue;
@@ -239,7 +251,7 @@ package org.axgl.text {
 			var alignOffset:int = align == "right" ? (width * (scale.x - 1)) : (align == "center" ? (width / 2 * (scale.x - 1)) : 0);
 			
 			matrix.appendScale(scale.x, scale.y, 1);
-			matrix.appendTranslation(x - Ax.camera.x * scroll.x + parentOffset.x - alignOffset, y - Ax.camera.y * scroll.y + parentOffset.y, 0);
+			matrix.appendTranslation(x - Ax.camera.position.x * scroll.x + parentOffset.x - alignOffset, y - Ax.camera.position.y * scroll.y + parentOffset.y, 0);
 			matrix.append(zooms ? Ax.camera.projection : Ax.camera.baseProjection);
 
 			if (shader != Ax.shader) {

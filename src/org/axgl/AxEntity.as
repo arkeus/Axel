@@ -54,6 +54,8 @@ package org.axgl {
 		 * The parents of this entity. An entity's position will be relative to its parent, unless it does not have a parent.
 		 * When adding an entity to a group, by default it's parent will be set to the group, and it's position will become
 		 * relative to that group. You can also manually set the parent on any entity to any other entity.
+		 * Important: This should not be used with collision. Parent offsets are not taken into account when colliding, so
+		 * if you are colliding objects, you should not change the position of their parents.
 		 */
 		public var parent:AxEntity;
 		/**
@@ -263,42 +265,40 @@ package org.axgl {
 			pvelocity.x = velocity.x;
 			pvelocity.y = velocity.y;
 			
+			if (!(stationary || (velocity.x == 0 && velocity.y == 0 && velocity.a == 0 && acceleration.x == 0 && acceleration.y == 0 && acceleration.a == 0))) {
+				velocity.x = calculateVelocity(velocity.x, acceleration.x, drag.x, maxVelocity.x);
+				velocity.y = calculateVelocity(velocity.y, acceleration.y, drag.y, maxVelocity.y);
+				velocity.a = calculateVelocity(velocity.a, acceleration.a, drag.a, maxVelocity.a);
+				
+				x += (velocity.x * Ax.dt) + ((pvelocity.x - velocity.x) * Ax.dt / 2);
+				y += (velocity.y * Ax.dt) + ((pvelocity.y - velocity.y) * Ax.dt / 2);
+				angle += velocity.a * Ax.dt;
+				
+				if (worldBounds != null) {
+					if (x < worldBounds.x) {
+						velocity.x = 0;
+						acceleration.x = Math.max(0, acceleration.x);
+						x = worldBounds.x;
+					} else if (x + width > worldBounds.width) {
+						velocity.x = 0;
+						acceleration.x = Math.min(0, acceleration.x);
+						x = worldBounds.width - width;
+					}
+					
+					if (y < worldBounds.y) {
+						velocity.y = 0;
+						acceleration.y = Math.max(0, acceleration.y);
+						y = worldBounds.y;
+					} else if (y + height > worldBounds.height) {
+						velocity.y = 0;
+						acceleration.y = Math.min(0, acceleration.y);
+						y = worldBounds.height - height;
+					}
+				}
+			}
+			
 			center.x = x + width / 2;
 			center.y = y + height / 2;
-			
-			if (stationary || (velocity.x == 0 && velocity.y == 0 && velocity.a == 0 && acceleration.x == 0 && acceleration.y == 0 && acceleration.a == 0)) {
-				return;
-			}
-			
-			velocity.x = calculateVelocity(velocity.x, acceleration.x, drag.x, maxVelocity.x);
-			velocity.y = calculateVelocity(velocity.y, acceleration.y, drag.y, maxVelocity.y);
-			velocity.a = calculateVelocity(velocity.a, acceleration.a, drag.a, maxVelocity.a);
-			
-			x += (velocity.x * Ax.dt) + ((pvelocity.x - velocity.x) * Ax.dt / 2);
-			y += (velocity.y * Ax.dt) + ((pvelocity.y - velocity.y) * Ax.dt / 2);
-			angle += velocity.a * Ax.dt;
-			
-			if (worldBounds != null) {
-				if (x < worldBounds.x) {
-					velocity.x = 0;
-					acceleration.x = Math.max(0, acceleration.x);
-					x = worldBounds.x;
-				} else if (x + width > worldBounds.width) {
-					velocity.x = 0;
-					acceleration.x = Math.min(0, acceleration.x);
-					x = worldBounds.width - width;
-				}
-				
-				if (y < worldBounds.y) {
-					velocity.y = 0;
-					acceleration.y = Math.max(0, acceleration.y);
-					y = worldBounds.y;
-				} else if (y + height > worldBounds.height) {
-					velocity.y = 0;
-					acceleration.y = Math.min(0, acceleration.y);
-					y = worldBounds.height - height;
-				}
-			}
 		}
 
 		/**
@@ -439,7 +439,6 @@ package org.axgl {
 		 */
 		public function get globalX():Number {
 			return x + parentOffset.x;
-			return this;
 		}
 		
 		/**
@@ -470,6 +469,13 @@ package org.axgl {
 		 */
 		public function get alpha():Number {
 			return entityAlpha;
+		}
+		
+		/**
+		 * Helper method that sets horizontal, vertical, and angular velocity of this entity to 0.
+		 */
+		public function stop():void {
+			velocity.x = velocity.y = velocity.a = 0;
 		}
 		
 		/**

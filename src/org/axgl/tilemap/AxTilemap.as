@@ -230,7 +230,7 @@ package org.axgl.tilemap {
 			
 			matrix.identity();
 			matrix.appendScale(scale.x, scale.y, 1);
-			matrix.appendTranslation(Math.round(x - Ax.camera.x * scroll.x + AxU.EPSILON), Math.round(y - Ax.camera.y * scroll.x + AxU.EPSILON), 0);
+			matrix.appendTranslation(Math.round(x - Ax.camera.position.x * scroll.x + AxU.EPSILON), Math.round(y - Ax.camera.position.y * scroll.x + AxU.EPSILON), 0);
 			matrix.append(zooms ? Ax.camera.projection : Ax.camera.baseProjection);
 			
 			colorTransform[RED] = color.red;

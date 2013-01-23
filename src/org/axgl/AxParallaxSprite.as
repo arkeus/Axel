@@ -57,8 +57,8 @@ package org.axgl {
 			var sy:Number = y - offset.y + parentOffset.y;
 			var scalex:Number = scale.x;
 			var scaley:Number = scale.y;
-			var cx:Number = Ax.camera.x * ((parallaxMode & HORIZONTAL) ? 0 : scroll.x);
-			var cy:Number = Ax.camera.y * ((parallaxMode & VERTICAL) ? 0 : scroll.y);
+			var cx:Number = Ax.camera.position.x * ((parallaxMode & HORIZONTAL) ? 0 : scroll.x);
+			var cy:Number = Ax.camera.position.y * ((parallaxMode & VERTICAL) ? 0 : scroll.y);
 			
 			matrix.appendTranslation(Math.round(sx - cx + AxU.EPSILON), Math.round(sy - cy + AxU.EPSILON), 0);
 			matrix.append(zooms ? Ax.camera.projection : Ax.camera.baseProjection);
@@ -68,8 +68,8 @@ package org.axgl {
 				Ax.shader = shader;
 			}
 			
-			uvParams[0] = (parallaxMode & HORIZONTAL) ? Ax.camera.x / texture.width * scroll.x : 0;
-			uvParams[1] = (parallaxMode & VERTICAL) ? Ax.camera.y / texture.height * scroll.y : 0;
+			uvParams[0] = (parallaxMode & HORIZONTAL) ? Ax.camera.position.x / texture.width * scroll.x : 0;
+			uvParams[1] = (parallaxMode & VERTICAL) ? Ax.camera.position.y / texture.height * scroll.y : 0;
 			
 			Ax.context.setTextureAt(0, texture.texture);
 			Ax.context.setBlendFactors(Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA);

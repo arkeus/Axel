@@ -166,9 +166,8 @@ package org.axgl {
 		 * @inheritDoc
 		 */
 		override public function hover():Boolean {
-			return contains(Ax.mouse.x - Ax.camera.x * (1 - scroll.x), Ax.mouse.y - Ax.camera.y * (1 - scroll.y));
+			return contains(Ax.mouse.x - (Ax.camera.x + Ax.camera.offset.x) * (1 - scroll.x), Ax.mouse.y - (Ax.camera.y + Ax.camera.offset.y) * (1 - scroll.y));
 		}
-		
 		
 		override public function dispose():void {
 			vertexShader = null;
