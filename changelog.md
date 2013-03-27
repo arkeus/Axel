@@ -1,4 +1,18 @@
-## 0.9.3 r1 / 2012-??-??
+## 0.9.3 / 2013-??-??
+* Added a flash() camera effect (implemented using the fade effect)
+* The create() method of your main state is now called before your first state is initialized
+* Camera effect offset should is now stored separately from position
+* AxClouds are now properly effected by the scroll attribute
+* Added a second optional parameter to AxGroup.add to allow you not to inherit the scroll factor
+* General logger added, you can now log to Ax.logger.log/warn/error which will log to browser console in addition to trace, when available
+* The default background color is now gray rather than white
+* Fixed an issue where the shake screen effect was being affected by the scroll attribute
+* Fixed an issue where scaled sprites could be rendering 1 pixel off
+* Fixed an issue where the screen attribute of an AxSprite wasn't set until the first update after creation
+* Fixed an issue where removing an entity that doesn't belong to an AxGroup was incorrect
+* Made the fade effect more accurate
+
+## 0.9.3 beta / 2012-01-22
 * Entities now have a simple parenting system. When adding to groups, its parent will be set and position based off of the parent
 * To support parenting, entities now have setParent and removeParent functionality (note: collision does not support parent offsets yet)
 * Positions on entities with parents are now relative to the parent, to support this, globalX and globalY setters have been added to AxEntity

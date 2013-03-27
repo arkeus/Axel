@@ -32,6 +32,7 @@ package org.axgl {
 	import org.axgl.sound.AxSound;
 	import org.axgl.tilemap.AxTilemap;
 	import org.axgl.util.AxDebugger;
+	import org.axgl.util.AxLogger;
 	import org.axgl.util.AxPauseState;
 
 	/**
@@ -263,6 +264,10 @@ package org.axgl {
 		 * The current shader currently being used for drawing.
 		 */
 		public static var shader:AxShader;
+		/**
+		 * A logger that sends messages both to the flash console and to the browser console when embedded in a webpage.
+		 */
+		public static var logger:AxLogger;
 
 		/**
 		 * Creates the game engine.
@@ -284,7 +289,7 @@ package org.axgl {
 			Ax.states = new Vector.<AxState>;
 			Ax.worldZoom = zoom;
 			Ax.unfocusedFramerate = 20;
-			Ax.background = new AxColor(1, 1, 1);
+			Ax.background = new AxColor(0.5, 0.5, 0.5);
 			Ax.destroyedStates = new Vector.<AxState>;
 
 			Ax.sounds = new AxGroup;
@@ -300,6 +305,7 @@ package org.axgl {
 			Ax.pauseState = AxPauseState;
 			Ax.initialized = false;
 			Ax.paused = false;
+			Ax.logger = new AxLogger;
 
 			addEventListener(Event.ADDED_TO_STAGE, onStageInitialized);
 		}
@@ -453,9 +459,6 @@ package org.axgl {
 			// Initialize the game based on requested parameters
 			initialize();
 			
-			// Handle game initialization
-			create();
-			
 			addEventListener(Event.ENTER_FRAME, onEnterFrame);
 		}
 		
@@ -492,7 +495,12 @@ package org.axgl {
 			context.enableErrorChecking = true;
 			
 			camera = new AxCamera;
+			camera.initialize();
 			debugger = new AxDebugger;
+			logger.log(LIBRARY_NAME + " " + LIBRARY_VERSION + " successfully loaded");
+			
+			// Handle game initialization
+			create();
 			
 			pushState(new requestedState());
 			initialized = true;

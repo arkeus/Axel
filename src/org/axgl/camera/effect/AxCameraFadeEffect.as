@@ -13,6 +13,8 @@ package org.axgl.camera.effect {
 		private var source:AxColor;
 		/** The target color of the effect. */
 		private var target:AxColor;
+		/** The camera */
+		private var camera:AxCamera;
 		
 		/** How much the red channel of the overlay will change per second. */
 		private var redDelta:Number = 0;
@@ -39,6 +41,7 @@ package org.axgl.camera.effect {
 			initialize(duration, callback);
 			source = camera.sprite.color;
 			target = AxColor.fromHex(targetColor);
+			this.camera = camera;
 			
 			if (source.alpha == 0) {
 				// If we're fading in from 0 alpha, you shouldn't notice the previous color
@@ -68,6 +71,14 @@ package org.axgl.camera.effect {
 			camera.sprite.color.blue += blueDelta * Ax.dt;
 			camera.sprite.color.alpha += alphaDelta * Ax.dt;
 			super.update(camera);
+		}
+		
+		/**
+		 * @inheritDoc
+		 */
+		override public function deactivate():void {
+			camera.sprite.color = target;
+			super.deactivate();
 		}
 	}
 }

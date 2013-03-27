@@ -106,7 +106,7 @@ package org.axgl {
 			debugColor = Vector.<Number>([1, 0, 0, 1]);
 			colorTransform.fixed = true;
 			uvOffset = new Vector.<Number>(4, true);
-			screen = new AxPoint;
+			screen = new AxPoint(x - (Ax.camera.x + Ax.camera.offset.x) * scroll.x, y - (Ax.camera.y + Ax.camera.offset.y) * scroll.y);
 
 			quad = null;
 			dirty = true;
@@ -409,15 +409,15 @@ package org.axgl {
 			var sy:Number = y - offset.y + parentOffset.y;
 			var scalex:Number = scale.x;
 			var scaley:Number = scale.y;
-			var cx:Number = Ax.camera.position.x * scroll.x;
-			var cy:Number = Ax.camera.position.y * scroll.y;
+			var cx:Number = Ax.camera.position.x * scroll.x + Ax.camera.effectOffset.x;
+			var cy:Number = Ax.camera.position.y * scroll.y + Ax.camera.effectOffset.y;
 			if (facing == flip) {
 				matrix.appendScale(scalex * -1, scaley, 1);
 				matrix.appendTranslation(Math.round(sx - cx + AxU.EPSILON + frameWidth), Math.round(sy - cy + AxU.EPSILON), 0);
 			} else if (scalex != 1 || scaley != 1) {
 				matrix.appendTranslation(-origin.x, -origin.y, 0);
 				matrix.appendScale(scalex, scaley, 1);
-				matrix.appendTranslation(origin.x + sx - cx, origin.y + sy - cy, 0);
+				matrix.appendTranslation(origin.x + Math.round(sx - cx + AxU.EPSILON), origin.y + Math.round(sy - cy + AxU.EPSILON), 0);
 			} else {
 				matrix.appendTranslation(Math.round(sx - cx + AxU.EPSILON), Math.round(sy - cy + AxU.EPSILON), 0);
 			}

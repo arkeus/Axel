@@ -251,7 +251,7 @@ package org.axgl.text {
 			var alignOffset:int = align == "right" ? (width * (scale.x - 1)) : (align == "center" ? (width / 2 * (scale.x - 1)) : 0);
 			
 			matrix.appendScale(scale.x, scale.y, 1);
-			matrix.appendTranslation(x - Ax.camera.position.x * scroll.x + parentOffset.x - alignOffset, y - Ax.camera.position.y * scroll.y + parentOffset.y, 0);
+			matrix.appendTranslation(x - Ax.camera.position.x * scroll.x - Ax.camera.effectOffset.x + parentOffset.x - alignOffset, y - Ax.camera.position.y * scroll.y - Ax.camera.effectOffset.y + parentOffset.y, 0);
 			matrix.append(zooms ? Ax.camera.projection : Ax.camera.baseProjection);
 
 			if (shader != Ax.shader) {

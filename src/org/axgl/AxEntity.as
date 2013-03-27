@@ -510,6 +510,19 @@ package org.axgl {
 		}
 		
 		/**
+		 * Removes all timers currently set on this object. Does not run the callbacks of any timers currently
+		 * in progress.
+		 */
+		public function clearTimers():void {
+			if (timers != null) {
+				timers.length = 0;
+			}
+			if (timersTemp != null) {
+				timersTemp.length = 0;
+			}
+		}
+		
+		/**
 		 * Any class that holds onto external resources that should be cleaned up upon deletion should delete those
 		 * resources in the dispose method. Be sure to call <code>super.dispose()</code> for parent classes to do their cleanup.
 		 */
