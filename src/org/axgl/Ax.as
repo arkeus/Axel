@@ -497,7 +497,7 @@ package org.axgl {
 			camera = new AxCamera;
 			camera.initialize();
 			debugger = new AxDebugger;
-			//logger.log(LIBRARY_NAME + " " + LIBRARY_VERSION + " successfully loaded");
+			logger.log(LIBRARY_NAME + " " + LIBRARY_VERSION + " successfully loaded");
 			
 			// Handle game initialization
 			create();

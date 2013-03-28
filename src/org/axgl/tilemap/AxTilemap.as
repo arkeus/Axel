@@ -134,7 +134,6 @@ package org.axgl.tilemap {
 		 * 
 		 * @param x The x-coordinate of the tilemap.
 		 * @param y The y-coordinate of the tilemap.
-		 *
 		 */
 		public function AxTilemap(x:Number = 0, y:Number = 0) {
 			super(x, y, VERTEX_SHADER, FRAGMENT_SHADER, 4);
@@ -148,7 +147,9 @@ package org.axgl.tilemap {
 		 * @param graphic The tileset graphic.
 		 * @param tileWidth The width of each tile in the tileset graphic.
 		 * @param tileHeight The height of each tile in the tileset graphic.
-		 * @param collisionIndex The index of the first solid tile.
+		 * @param solidIndex The index of the first solid tile.
+		 * @param segmentWidth The width of each tilemap segment, defaults to number of tiles that fit in Ax.viewWidth
+		 * @param segmentWidth The height of each tilemap segment, defaults to number of tiles that fit in Ax.viewHeight
 		 *
 		 * @return The tilemap object.
 		 */
@@ -200,6 +201,7 @@ package org.axgl.tilemap {
 					}
 					
 					data.push(tid);
+					// BUG: Non-full segments have incorrect offsets
 					segment.bufferOffsets.push(segment.bufferSize++);
 					tid -= 1;
 					
@@ -545,16 +547,20 @@ package org.axgl.tilemap {
 				right = current + 1;
 				left = current - 1;
 				
-				if (up > 0 && pathVisited[up] == 0) {calls++;
+				if (up > 0 && pathVisited[up] == 0) {
+					calls++;
 					handlePathNode(queue, up, current, targetTileX, targetTileY);
 				}
-				if (down < numTiles && pathVisited[down] == 0) {calls++;
+				if (down < numTiles && pathVisited[down] == 0) {
+					calls++;
 					handlePathNode(queue, down, current, targetTileX, targetTileY);
 				}
-				if (current % cols > 0 && pathVisited[left] == 0) {calls++;
+				if (current % cols > 0 && pathVisited[left] == 0) {
+					calls++;
 					handlePathNode(queue, left, current, targetTileX, targetTileY);
 				}
-				if (current % cols < cols - 1 && pathVisited[right] == 0) {calls++;
+				if (current % cols < cols - 1 && pathVisited[right] == 0) {
+					calls++;
 					handlePathNode(queue, right, current, targetTileX, targetTileY);
 				}
 				
