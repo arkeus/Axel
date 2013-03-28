@@ -21,10 +21,18 @@ package org.axgl.util {
 		private static var shaders:Object;
 		
 		{
-			vertexBuffers = new Object;
-			debugVertexBuffers = new Object;
-			textures = new Object;
-			shaders = new Object;
+			reset();
+		}
+		
+		/**
+		 * Resets the cache, causing all new objects to create new instances of their buffers, textures, and shaders.
+		 * Existing objects will continue to have their references to the old cached version.
+		 */
+		public static function reset():void {
+			vertexBuffers = {};
+			debugVertexBuffers = {};
+			textures = {};
+			shaders = {};
 		}
 		
 		public static function shader(shaderKey:*, vertex:Array, fragment:Array, rowSize:uint):AxShader {

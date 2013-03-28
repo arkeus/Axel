@@ -29,9 +29,9 @@ package org.axgl {
 		/** The vertex buffer used to draw this model. */
 		protected var vertexBuffer:VertexBuffer3D;
 		/** The shader (containing the Program3D) used to draw this model. */
-		protected var shader:AxShader;
+		public var shader:AxShader;
 		/** The number of triangles contained in this model's mesh. */
-		protected var triangles:uint;
+		public var triangles:uint;
 		/** A matrix containing a generic transformation to apply to this model. */
 		protected var matrix:Matrix3D;
 		/** A vector containing the red, green, blue, and alpha values to transform this model. */

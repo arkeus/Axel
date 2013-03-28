@@ -35,7 +35,11 @@ package org.axgl.util {
 		private function send(arguments:Object, level:String = LOG):void {
 			for (var i:String in arguments) {
 				if (external && level != DEBUG) {
-					ExternalInterface.call("console." + level, arguments[i]);
+					try {
+						ExternalInterface.call("console." + level, arguments[i]);
+					} catch (error:Error) {
+						trace(error);
+					}
 				}
 				trace(arguments[i]);
 			}

@@ -43,11 +43,31 @@ package org.axgl.tilemap {
 		/**
 		 * The number of rows in the tiles image.
 		 */
-		protected var tileRows:uint;
+		protected var tilesetRows:uint;
 		/**
 		 * The number of columns in the tiles image.
 		 */
-		protected var tileCols:uint;
+		protected var tilesetCols:uint;
+		/**
+		 * The segments that make up this tilemap.
+		 */
+		protected var segments:Vector.<AxTilemapSegment>;
+		/**
+		 * The width of each tilemap segment in tiles.
+		 */
+		protected var segmentWidth:int;
+		/**
+		 * The height of each tilemap segment in tiles.
+		 */
+		protected var segmentHeight:int;
+		/**
+		 * The number of columns of segments in this tilemap.
+		 */
+		protected var segmentCols:uint;
+		/**
+		 * The number of rows of segments in this tilemap;
+		 */
+		protected var segmentRows:uint;
 		/**
 		 * The number of rows in the map.
 		 */
@@ -65,14 +85,6 @@ package org.axgl.tilemap {
 		 */
 		protected var data:Vector.<uint>;
 		/**
-		 * The offset into the buffers where this tile location maps to.
-		 */
-		protected var bufferOffsets:Vector.<int>;
-		/**
-		 * The number of sets of quad data stored in the buffers.
-		 */
-		protected var bufferSize:uint;
-		/**
 		 * The width of the uv box for each tile.
 		 */
 		protected var uvWidth:Number;
@@ -80,10 +92,6 @@ package org.axgl.tilemap {
 		 * The height of the uv box for each tile.
 		 */
 		protected var uvHeight:Number;
-		/**
-		 * Whether or not the buffers have changed and must be reuploaded.
-		 */
-		protected var dirty:Boolean;
 
 		/**
 		 * The frame used to calculate collisions against other objects.
@@ -131,8 +139,6 @@ package org.axgl.tilemap {
 		public function AxTilemap(x:Number = 0, y:Number = 0) {
 			super(x, y, VERTEX_SHADER, FRAGMENT_SHADER, 4);
 			frame = new AxRect;
-			bufferSize = 0;
-			dirty = false;
 		}
 
 		/**
@@ -146,56 +152,70 @@ package org.axgl.tilemap {
 		 *
 		 * @return The tilemap object.
 		 */
-		public function build(mapString:String, graphic:Class, tileWidth:uint, tileHeight:uint, solidIndex:uint = 1):AxTilemap {
+		public function build(mapString:String, graphic:Class, tileWidth:uint, tileHeight:uint, solidIndex:uint = 1, segmentWidth:int = -1, segmentHeight:int = -1):AxTilemap {
 			this.texture = AxCache.texture(graphic);
 			this.tileWidth = tileWidth;
 			this.tileHeight = tileHeight;
 			this.solidIndex = solidIndex;
 
-			this.tileCols = Math.floor(texture.rawWidth / tileWidth);
-			this.tileRows = Math.floor(texture.rawHeight / tileHeight);
+			this.tilesetCols = Math.floor(texture.rawWidth / tileWidth);
+			this.tilesetRows = Math.floor(texture.rawHeight / tileHeight);
 			this.tiles = new Vector.<AxTile>;
 			this.data = new Vector.<uint>;
-			this.bufferOffsets = new Vector.<int>;
+			
+			var rowArray:Array = mapString.split("\n");
+			var x:uint, y:uint, i:uint;
+			
+			this.rows = rowArray.length;
+			this.cols = Math.max.apply(null, rowArray.map(function(item:String, i:int, a:Array):int { return item.split(",").length; }));
+			
+			this.segmentWidth = segmentWidth == -1 ? (Ax.width / tileWidth) : segmentWidth;
+			this.segmentHeight = segmentHeight == -1 ? (Ax.height / tileHeight) : segmentHeight;
+			this.segmentCols = Math.ceil(this.cols / this.segmentWidth);
+			this.segmentRows = Math.ceil(this.rows / this.segmentHeight);
+			this.segments = new Vector.<AxTilemapSegment>(this.segmentCols * this.segmentRows, true);
+			for (i = 0; i < this.segments.length; i++) {
+				this.segments[i] = new AxTilemapSegment(this);
+			}
 			
 			this.uvWidth = 1 / (texture.width / tileWidth);
 			this.uvHeight = 1 / (texture.height / tileWidth);
 
 			indexData = new Vector.<uint>;
 			vertexData = new Vector.<Number>;
-
-			var rowArray:Array = mapString.split("\n");
-			var index:uint = 0;
 			
-			rows = rowArray.length;
-			for (var y:uint = 0; y < rows; y++) {
+			for (y = 0; y < rows; y++) {
 				var row:Array = rowArray[y].split(",");
-				cols = Math.max(cols, row.length);
-				for (var x:uint = 0; x < cols; x++) {
+				for (x = 0; x < cols; x++) {
+					var segmentRow:uint = y / this.segmentHeight;
+					var segmentCol:uint = x / this.segmentWidth;
+					var segmentOffset:uint = segmentRow * segmentCols + segmentCol;
+					var segment:AxTilemapSegment = this.segments[segmentOffset];
+					
 					var tid:uint = row[x];
 					if (tid == 0) {
 						data.push(0);
-						bufferOffsets.push(-1);
+						segment.bufferOffsets.push(-1);
 						continue;
 					}
 					
 					data.push(tid);
-					bufferOffsets.push(bufferSize++);
+					segment.bufferOffsets.push(segment.bufferSize++);
 					tid -= 1;
 					
 					var tx:uint = x * tileWidth;
 					var ty:uint = y * tileHeight;
-					var u:Number = (tid % tileCols) * uvWidth;
-					var v:Number = Math.floor(tid / tileCols) * uvHeight;
+					var u:Number = (tid % tilesetCols) * uvWidth;
+					var v:Number = Math.floor(tid / tilesetCols) * uvHeight;
 					
-					indexData.push(index, index + 1, index + 2, index + 1, index + 2, index + 3);
-					vertexData.push(
+					segment.indexData.push(segment.index, segment.index + 1, segment.index + 2, segment.index + 1, segment.index + 2, segment.index + 3);
+					segment.vertexData.push(
 						tx, 				ty,					u,				v,
 						tx + tileWidth,		ty,					u + uvWidth,	v,
 						tx,					ty + tileHeight,	u,				v + uvHeight,
 						tx + tileWidth,		ty + tileHeight,	u + uvWidth,	v + uvHeight
 					);
-					index += 4;
+					segment.index += 4;
 				}
 			}
 
@@ -203,31 +223,16 @@ package org.axgl.tilemap {
 			height = rows * tileHeight;
 
 			tiles.push(null);
-			for (index = 1; index <= tileCols * tileRows; index++) { 
-				var tile:AxTile = new AxTile(this, index, tileWidth, tileHeight);
-				tile.collision = index >= solidIndex ? ANY : NONE;
+			for (i = 1; i <= tilesetCols * tilesetRows; i++) { 
+				var tile:AxTile = new AxTile(this, i, tileWidth, tileHeight);
+				tile.collision = i >= solidIndex ? ANY : NONE;
 				tiles.push(tile);
 			}
 			
-			dirty = true;
 			return this;
-		}
-		
-		private function upload():void {
-			var vertexLength:uint = vertexData.length / shader.rowSize;
-			indexBuffer = Ax.context.createIndexBuffer(indexData.length);
-			indexBuffer.uploadFromVector(indexData, 0, indexData.length);
-			vertexBuffer = Ax.context.createVertexBuffer(vertexLength, shader.rowSize);
-			vertexBuffer.uploadFromVector(vertexData, 0, vertexLength);
-			triangles = indexData.length / 3;
-			dirty = false;
 		}
 
 		override public function draw():void {
-			if (dirty) {
-				upload();
-			}
-			
 			matrix.identity();
 			matrix.appendScale(scale.x, scale.y, 1);
 			matrix.appendTranslation(Math.round(x - Ax.camera.position.x * scroll.x - Ax.camera.effectOffset.x + AxU.EPSILON), Math.round(y - Ax.camera.position.y * scroll.x - Ax.camera.effectOffset.y + AxU.EPSILON), 0);
@@ -247,12 +252,22 @@ package org.axgl.tilemap {
 			Ax.context.setBlendFactors(Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA);
 			Ax.context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, matrix, true);
 			Ax.context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 0, colorTransform);
-			Ax.context.setVertexBufferAt(0, vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_2);
-			Ax.context.setVertexBufferAt(1, vertexBuffer, 2, Context3DVertexBufferFormat.FLOAT_2);
-			Ax.context.drawTriangles(indexBuffer, 0, triangles);
-			
-			if (countTris) {
-				Ax.debugger.tris += triangles;
+			// Draw segments that are at least partially visible on the screen, with default segment size this will be a max of 4
+			var minXSegment:int = Math.floor((Ax.camera.x - x) / tileWidth / segmentWidth);
+			var maxXSegment:int = Math.floor((Ax.camera.x + Ax.viewWidth - x) / tileWidth / segmentWidth);
+			var minYSegment:int = Math.floor((Ax.camera.y - y) / tileHeight / segmentHeight);
+			var maxYSegment:int = Math.floor((Ax.camera.y + Ax.viewWidth - y) / tileHeight / segmentHeight);
+			for (var sx:int = minXSegment; sx <= maxXSegment; sx++) {
+				for (var sy:int = minYSegment; sy <= maxYSegment; sy++) {
+					var si:int = sy * segmentCols + sx;
+					if (si < 0 || si >= segments.length) {
+						continue;
+					}
+					segments[si].draw();
+					if (countTris) {
+						Ax.debugger.tris += segments[si].triangles;
+					}
+				}
 			}
 		}
 
@@ -389,7 +404,6 @@ package org.axgl.tilemap {
 			return getTileAt(x / tileWidth, y / tileHeight);
 		}
 		
-		
 		/**
 		 * Given a location, changes the tile to the passed tile index.
 		 * 
@@ -403,40 +417,48 @@ package org.axgl.tilemap {
 				return;
 			}
 			
-			var offset:uint = y * cols + x;
+			var segmentRow:uint = y / segmentHeight;
+			var segmentCol:uint = x / segmentWidth;
+			var segmentOffset:uint = segmentRow * segmentCols + segmentCol;
+			var segment:AxTilemapSegment = segments[segmentOffset];
+			var sx:uint = x - segmentCol * segmentWidth;
+			var sy:uint = y - segmentRow * segmentHeight;
+			
+			var offset:uint = sy * segmentWidth + sx;
+			var bufferOffset:int = segment.bufferOffsets[offset];
+			
+			var u:Number = (index % tilesetCols) * uvWidth;
+			var v:Number = Math.floor(index / tilesetCols) * uvHeight;
+			
+			data[y * cols + x] = index;
 			index--;
 			
-			var bufferOffset:int = bufferOffsets[y * cols + x];
-			var u:Number = (index % tileCols) * uvWidth;
-			var v:Number = Math.floor(index / tileCols) * uvHeight;
-			
 			if (bufferOffset == -1) {
-				data[offset] = index;
-				bufferOffsets[offset] = bufferSize++;
+				segment.bufferOffsets[offset] = segment.bufferSize++;
 				
 				var tx:uint = x * tileWidth;
 				var ty:uint = y * tileHeight;
 				
-				var idx:uint = vertexData.length / 4;
-				indexData.push(idx, idx + 1, idx + 2, idx + 1, idx + 2, idx + 3);
-				vertexData.push(
+				var idx:uint = segment.vertexData.length / 4;
+				segment.indexData.push(idx, idx + 1, idx + 2, idx + 1, idx + 2, idx + 3);
+				segment.vertexData.push(
 					tx, 				ty,					u,				v,
 					tx + tileWidth,		ty,					u + uvWidth,	v,
 					tx,					ty + tileHeight,	u,				v + uvHeight,
 					tx + tileWidth,		ty + tileHeight,	u + uvWidth,	v + uvHeight
 				);
 			} else {
-				vertexData[bufferOffset * VERTEX_SET_LENGTH + 2]  = u;
-				vertexData[bufferOffset * VERTEX_SET_LENGTH + 3]  = v;
-				vertexData[bufferOffset * VERTEX_SET_LENGTH + 6]  = u + uvWidth;
-				vertexData[bufferOffset * VERTEX_SET_LENGTH + 7]  = v;
-				vertexData[bufferOffset * VERTEX_SET_LENGTH + 10] = u;
-				vertexData[bufferOffset * VERTEX_SET_LENGTH + 11] = v + uvHeight;
-				vertexData[bufferOffset * VERTEX_SET_LENGTH + 14] = u + uvWidth;
-				vertexData[bufferOffset * VERTEX_SET_LENGTH + 15] = v + uvHeight;
+				segment.vertexData[bufferOffset * VERTEX_SET_LENGTH + 2]  = u;
+				segment.vertexData[bufferOffset * VERTEX_SET_LENGTH + 3]  = v;
+				segment.vertexData[bufferOffset * VERTEX_SET_LENGTH + 6]  = u + uvWidth;
+				segment.vertexData[bufferOffset * VERTEX_SET_LENGTH + 7]  = v;
+				segment.vertexData[bufferOffset * VERTEX_SET_LENGTH + 10] = u;
+				segment.vertexData[bufferOffset * VERTEX_SET_LENGTH + 11] = v + uvHeight;
+				segment.vertexData[bufferOffset * VERTEX_SET_LENGTH + 14] = u + uvWidth;
+				segment.vertexData[bufferOffset * VERTEX_SET_LENGTH + 15] = v + uvHeight;
 			}
 			
-			dirty = true;
+			segment.dirty = true;
 		}
 		
 		/**
@@ -448,31 +470,38 @@ package org.axgl.tilemap {
 		 *
 		 */
 		public function removeTileAt(x:uint, y:uint):void {
-			var index:uint = y * cols + x;
-			var bufferOffset:int = bufferOffsets[index];
+			var segmentRow:uint = y / segmentHeight;
+			var segmentCol:uint = x / segmentWidth;
+			var segmentOffset:uint = segmentRow * segmentCols + segmentCol;
+			var segment:AxTilemapSegment = segments[segmentOffset];
+			var sx:uint = x - segmentCol * segmentWidth;
+			var sy:uint = y - segmentRow * segmentHeight;
+			
+			var index:uint = sy * segmentWidth + sx;
+			var bufferOffset:int = segment.bufferOffsets[index];
 			if (bufferOffset == -1) {
 				return;
 			}
-			vertexData.splice(bufferOffset * VERTEX_SET_LENGTH, VERTEX_SET_LENGTH);
-			indexData.splice(bufferOffset * INDEX_SET_LENGTH, INDEX_SET_LENGTH);
-			for (var i:uint = 0; i < bufferOffsets.length; i++) {
-				if (bufferOffsets[i] > bufferOffset) {
-					bufferOffsets[i] = bufferOffsets[i] == -1 ? -1 : bufferOffsets[i] - 1;
+			segment.vertexData.splice(bufferOffset * VERTEX_SET_LENGTH, VERTEX_SET_LENGTH);
+			segment.indexData.splice(bufferOffset * INDEX_SET_LENGTH, INDEX_SET_LENGTH);
+			for (var i:uint = 0; i < segment.bufferOffsets.length; i++) {
+				if (segment.bufferOffsets[i] > bufferOffset) {
+					segment.bufferOffsets[i] = segment.bufferOffsets[i] == -1 ? -1 : segment.bufferOffsets[i] - 1;
 				}
 			}
-			for (i = bufferOffset * INDEX_SET_LENGTH; i < indexData.length; i++) {
-				indexData[i] -= 4;
+			for (i = bufferOffset * INDEX_SET_LENGTH; i < segment.indexData.length; i++) {
+				segment.indexData[i] -= 4;
 			}
-			bufferOffsets[index] = -1;
-			data[index] = 0;
-			bufferSize--;
-			dirty = true;
+			segment.bufferOffsets[index] = -1;
+			data[y * cols + x] = 0;
+			segment.bufferSize--;
+			segment.dirty = true;
 		}
 		
 		/**
 		 * Warning, this implementation is incomplete and is thus set to private. Use at your own risk.
 		 */
-		public function findPath(sourceX:uint, sourceY:uint, targetX:uint, targetY:uint):AxPath {
+		private function findPath(sourceX:uint, sourceY:uint, targetX:uint, targetY:uint):AxPath {
 			var calls:uint = 0;
 			var sourceTileX:uint = sourceX / tileWidth;
 			var sourceTileY:uint = sourceY / tileHeight;
@@ -576,8 +605,8 @@ package org.axgl.tilemap {
 			// va0 = [x, y, , ]
 			// va1 = [u, v, , ]
 			// vc0 = transform matrix
-			"mov v1, va1",			// move uv to fragment shader
-			"m44 op, va0, vc0"		// multiply position by transform matrix 
+			"mov v1, va1",		// move uv to fragment shader
+			"m44 op, va0, vc0",	// multiply position by transform matrix 
 		];
 		
 		/**
@@ -588,8 +617,8 @@ package org.axgl.tilemap {
 			// v1  = uv
 			// fs0 = something
 			// fc0 = color
-			"tex ft0, v1, fs0 <2d,nearest,mipnone>",	// sample texture
-			"mul oc, fc0, ft0",							// multiply by color+alpha
+			"tex ft0, v1, fs0 <2d,nearest,mipnone>", // sample texture
+			"mul oc, fc0, ft0",						 // multiply by color+alpha
 		];
 	}
 }

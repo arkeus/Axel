@@ -41,7 +41,7 @@ package org.axgl {
 	 */
 	public class Ax extends Sprite {
 		public static const LIBRARY_NAME:String = "Axel";
-		public static const LIBRARY_VERSION:String = "0.9.3 r1";
+		public static const LIBRARY_VERSION:String = "0.9.3 r2";
 		
 		/**
 		 * Whether or not the game is running is debug mode.
@@ -497,7 +497,7 @@ package org.axgl {
 			camera = new AxCamera;
 			camera.initialize();
 			debugger = new AxDebugger;
-			logger.log(LIBRARY_NAME + " " + LIBRARY_VERSION + " successfully loaded");
+			//logger.log(LIBRARY_NAME + " " + LIBRARY_VERSION + " successfully loaded");
 			
 			// Handle game initialization
 			create();
@@ -571,7 +571,7 @@ package org.axgl {
 
 			frames++;
 			if (now - frameStart >= 1000) {
-				fps = frames;
+				fps = Math.min(requestedFramerate, frames);
 				frames = 0;
 				frameStart = now;
 			}
