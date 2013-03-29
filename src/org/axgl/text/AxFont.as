@@ -210,7 +210,7 @@ package org.axgl.text {
 			var padding:uint = 2; // there has to be somewhere better to pull this from
 			var dpadding:uint = padding * 2;
 			var translationMatrix:Matrix = new Matrix(1, 0, 0, 1, -padding, -padding);
-			var colorTransform:ColorTransform = new ColorTransform(1, 1, 0, 1, 0, 0, 0, 0);
+			var colorTransform:ColorTransform = new ColorTransform(1, 1, 1, 1, 0, 0, 0, 0);
 
 			for each (var character:String in characters) {
 				tf.setTextFormat(format);
