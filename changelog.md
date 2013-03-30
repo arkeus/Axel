@@ -8,6 +8,7 @@
 * General logger added, you can now log to Ax.logger.log/warn/error which will log to browser console in addition to trace, when available
 * The default background color is now gray rather than white
 * Added a reset method to AxCache
+* You can now pass an array of arrays to AxTilemap.build in addition to passing a CSV
 * Fixed an issue where the shake screen effect was being affected by the scroll attribute
 * Fixed an issue where scaled sprites could be rendering 1 pixel off
 * Fixed an issue where the screen attribute of an AxSprite wasn't set until the first update after creation

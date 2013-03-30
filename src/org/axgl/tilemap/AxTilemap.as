@@ -153,7 +153,7 @@ package org.axgl.tilemap {
 		 *
 		 * @return The tilemap object.
 		 */
-		public function build(mapString:String, graphic:Class, tileWidth:uint, tileHeight:uint, solidIndex:uint = 1, segmentWidth:int = -1, segmentHeight:int = -1):AxTilemap {
+		public function build(mapData:*, graphic:Class, tileWidth:uint, tileHeight:uint, solidIndex:uint = 1, segmentWidth:int = -1, segmentHeight:int = -1):AxTilemap {
 			this.texture = AxCache.texture(graphic);
 			this.tileWidth = tileWidth;
 			this.tileHeight = tileHeight;
@@ -164,7 +164,7 @@ package org.axgl.tilemap {
 			this.tiles = new Vector.<AxTile>;
 			this.data = new Vector.<uint>;
 			
-			var rowArray:Array = mapString.split("\n");
+			var rowArray:Array = mapData is String ? parseMapString(mapData) : mapData;
 			var x:uint, y:uint, i:uint;
 			
 			this.rows = rowArray.length;
@@ -186,7 +186,7 @@ package org.axgl.tilemap {
 			vertexData = new Vector.<Number>;
 			
 			for (y = 0; y < rows; y++) {
-				var row:Array = rowArray[y].split(",");
+				var row:Array = rowArray[y];
 				for (x = 0; x < cols; x++) {
 					var segmentRow:uint = y / this.segmentHeight;
 					var segmentCol:uint = x / this.segmentWidth;
@@ -233,7 +233,22 @@ package org.axgl.tilemap {
 			
 			return this;
 		}
+		
+		/**
+		 * Parse map data from string format to array format. The expected string format is that each tile
+		 * is an integer tile id separated by commas, with each row separated by a newline.
+		 * 
+		 * @param mapString The map string.
+		 * 
+		 * @return The parsed map data as an array of arrays.
+		 */
+		private function parseMapString(mapString:String):Array {
+			return mapString.split("\n").map(function(item:String, i:int, a:Array):Array { return item.split(","); });
+		}
 
+		/**
+		 * @inheritDoc
+		 */
 		override public function draw():void {
 			matrix.identity();
 			matrix.appendScale(scale.x, scale.y, 1);
