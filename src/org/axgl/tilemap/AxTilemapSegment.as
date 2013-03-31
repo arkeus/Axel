@@ -36,9 +36,15 @@ package org.axgl.tilemap {
 		internal var dirty:Boolean;
 		/** The index used by the tilemap to calculate the index buffer entries. */
 		internal var index:uint;
+		/** The width of the segment in tiles. */
+		internal var width:uint;
+		/** The height of the segment in tiles. */
+		internal var height:uint;
 		
-		public function AxTilemapSegment(tilemap:AxTilemap) {
+		public function AxTilemapSegment(tilemap:AxTilemap, width:uint, height:uint) {
 			this.tilemap = tilemap;
+			this.width = width;
+			this.height = height;
 			indexData = new Vector.<uint>;
 			vertexData = new Vector.<Number>;
 			bufferOffsets = new Vector.<int>;

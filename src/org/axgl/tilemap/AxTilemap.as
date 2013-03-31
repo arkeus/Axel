@@ -165,18 +165,27 @@ package org.axgl.tilemap {
 			this.data = new Vector.<uint>;
 			
 			var rowArray:Array = mapData is String ? parseMapString(mapData) : mapData;
-			var x:uint, y:uint, i:uint;
+			var x:uint, y:uint;
 			
 			this.rows = rowArray.length;
 			this.cols = Math.max.apply(null, rowArray.map(function(item:String, i:int, a:Array):int { return item.split(",").length; }));
 			
-			this.segmentWidth = segmentWidth == -1 ? (Ax.width / tileWidth) : segmentWidth;
-			this.segmentHeight = segmentHeight == -1 ? (Ax.height / tileHeight) : segmentHeight;
+			var viewWidthInTiles:uint = Ax.viewWidth / tileWidth;
+			var viewHeightInTiles:uint = Ax.viewHeight / tileHeight;
+			// By default the segment size is the size of the map that fits on the screen at once, unless the size of the map is less than
+			// 2 screens, in which it is the entire size of the map.
+			this.segmentWidth = segmentWidth == -1 ? (cols < viewWidthInTiles * 2 ? cols : viewWidthInTiles) : segmentWidth;
+			this.segmentHeight = segmentHeight == -1 ? (rows < viewHeightInTiles * 2 ? rows : viewHeightInTiles) : segmentHeight;
 			this.segmentCols = Math.ceil(this.cols / this.segmentWidth);
 			this.segmentRows = Math.ceil(this.rows / this.segmentHeight);
 			this.segments = new Vector.<AxTilemapSegment>(this.segmentCols * this.segmentRows, true);
-			for (i = 0; i < this.segments.length; i++) {
-				this.segments[i] = new AxTilemapSegment(this);
+			
+			for (y = 0; y < this.segmentRows; y++) {
+				for (x = 0; x < this.segmentCols; x++) {
+					var sw:uint = x == this.segmentCols - 1 && this.cols % this.segmentWidth != 0 ? this.cols % this.segmentWidth : this.segmentWidth;
+					var sh:uint = y == this.segmentRows - 1 && this.rows % this.segmentHeight != 0 ? this.rows % this.segmentHeight : this.segmentHeight;
+					this.segments[y * this.segmentCols + x] = new AxTilemapSegment(this, sw, sh);
+				}
 			}
 			
 			this.uvWidth = 1 / (texture.width / tileWidth);
@@ -201,7 +210,6 @@ package org.axgl.tilemap {
 					}
 					
 					data.push(tid);
-					// BUG: Non-full segments have incorrect offsets
 					segment.bufferOffsets.push(segment.bufferSize++);
 					tid -= 1;
 					
@@ -225,7 +233,7 @@ package org.axgl.tilemap {
 			height = rows * tileHeight;
 
 			tiles.push(null);
-			for (i = 1; i <= tilesetCols * tilesetRows; i++) { 
+			for (var i:uint = 1; i <= tilesetCols * tilesetRows; i++) { 
 				var tile:AxTile = new AxTile(this, i, tileWidth, tileHeight);
 				tile.collision = i >= solidIndex ? ANY : NONE;
 				tiles.push(tile);
@@ -441,7 +449,7 @@ package org.axgl.tilemap {
 			var sx:uint = x - segmentCol * segmentWidth;
 			var sy:uint = y - segmentRow * segmentHeight;
 			
-			var offset:uint = sy * segmentWidth + sx;
+			var offset:uint = sy * segment.width + sx;
 			var bufferOffset:int = segment.bufferOffsets[offset];
 			
 			var u:Number = (index % tilesetCols) * uvWidth;
@@ -494,7 +502,7 @@ package org.axgl.tilemap {
 			var sx:uint = x - segmentCol * segmentWidth;
 			var sy:uint = y - segmentRow * segmentHeight;
 			
-			var index:uint = sy * segmentWidth + sx;
+			var index:uint = sy * segment.width + sx;
 			var bufferOffset:int = segment.bufferOffsets[index];
 			if (bufferOffset == -1) {
 				return;
