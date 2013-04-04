@@ -1,6 +1,9 @@
 ## 0.9.3 / 2013-??-??
 * AxTilemaps are now split into segments, and you should be able to create arbitrarily big tilemaps now
 * Added a flash() camera effect (implemented using the fade effect)
+* Added a debug console, all messages via Ax.logger.(info/warn/error) are placed there (in progress feature, needs truncating to last X lines)
+* Added three debug console layouts that you can use
+* Added a resize() method to AxText to resize the text without creating a new one (TODO: make it a setter for width?)
 * The create() method of your main state is now called before your first state is initialized
 * Camera effect offset should is now stored separately from position
 * AxClouds are now properly effected by the scroll attribute

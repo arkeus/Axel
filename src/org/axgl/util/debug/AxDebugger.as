@@ -1,4 +1,4 @@
-package org.axgl.util {
+package org.axgl.util.debug {
 	import flash.system.System;
 	
 	import org.axgl.Ax;
@@ -8,6 +8,8 @@ package org.axgl.util {
 	import org.axgl.text.AxText;
 
 	public class AxDebugger extends AxGroup {
+		public static const BAR_HEIGHT:uint = 15;
+		
 		private static const MEGABYTES_IN_BYTES:uint = 1024 * 1024;
 		private var topBar:AxSprite;
 		private var bottomBar:AxSprite;
@@ -20,6 +22,8 @@ package org.axgl.util {
 		
 		private var updateTime:uint = 0;
 		private var drawTime:uint = 0;
+		
+		public var console:AxDebugConsole;
 		public var tris:uint = 0;
 		public var draws:uint = 0;
 		public var updates:uint = 0;
@@ -33,12 +37,12 @@ package org.axgl.util {
 		private static const HEIGHT:uint = 15;
 		
 		public function AxDebugger() {			
-			var topBar:AxSprite = new AxSprite(0, 0).create(Ax.width, 15, 0xcc000000);
+			var topBar:AxSprite = new AxSprite(0, 0).create(Ax.width, BAR_HEIGHT, 0xcc000000);
 			topBar.scroll.x = topBar.scroll.y = 0;
 			topBar.zooms = topBar.countTris = false;
 			this.add(topBar);
 			
-			var bottomBar:AxSprite = new AxSprite(0, Ax.height - 15).create(Ax.width, 15, 0xcc000000);
+			var bottomBar:AxSprite = new AxSprite(0, Ax.height - BAR_HEIGHT).create(Ax.width, BAR_HEIGHT, 0xcc000000);
 			bottomBar.scroll.x = bottomBar.scroll.y = 0;
 			bottomBar.zooms = bottomBar.countTris = false;
 			this.add(bottomBar);
@@ -74,6 +78,8 @@ package org.axgl.util {
 			titleText.scroll.x = titleText.scroll.y = 0;
 			titleText.zooms = titleText.countTris = false;
 			this.add(titleText);
+			
+			this.add(console = new AxDebugConsole);
 			
 			active = false;
 			countUpdate = countDraw = false;
@@ -129,6 +135,11 @@ package org.axgl.util {
 		
 		public function get title():String {
 			return titleText.text;
+		}
+		
+		public function log(level:String, message:String):void {
+			trace("debugger");
+			console.log(level, message);
 		}
 	}
 }

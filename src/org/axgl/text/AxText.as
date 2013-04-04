@@ -227,6 +227,16 @@ package org.axgl.text {
 		}
 		
 		/**
+		 * Resizes the text to a new width and rebuilds and reflows the text to fit the newly requested width.
+		 * 
+		 * @param width The new width of the text.
+		 */
+		public function resize(width:uint):void {
+			this.requestedWidth = this.width = width;
+			build();
+		}
+		
+		/**
 		 * Returns the text of this object.
 		 */
 		public function get text():String {

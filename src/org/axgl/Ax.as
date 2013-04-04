@@ -31,7 +31,7 @@ package org.axgl {
 	import org.axgl.sound.AxMusic;
 	import org.axgl.sound.AxSound;
 	import org.axgl.tilemap.AxTilemap;
-	import org.axgl.util.AxDebugger;
+	import org.axgl.util.debug.AxDebugger;
 	import org.axgl.util.AxLogger;
 	import org.axgl.util.AxPauseState;
 
@@ -498,6 +498,7 @@ package org.axgl {
 			camera.initialize();
 			debugger = new AxDebugger;
 			logger.log(LIBRARY_NAME + " " + LIBRARY_VERSION + " successfully loaded");
+			logger.console = true;
 			
 			// Handle game initialization
 			create();
