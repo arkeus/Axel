@@ -4,6 +4,7 @@ package org.axgl.util.debug {
 	import org.axgl.AxSprite;
 	import org.axgl.resource.AxResource;
 	import org.axgl.text.AxText;
+	import org.axgl.text.AxTextLimitStrategy;
 	import org.axgl.util.AxLogger;
 
 	/**
@@ -20,10 +21,11 @@ package org.axgl.util.debug {
 		public static const FULL_SCREEN_LAYOUT:uint = 2;
 		
 		public static const CONSOLE_COLOR:uint = 0x77000000;
-		public static const PADDING:uint = 5;
+		public static const PADDING:uint = 6;
 		
 		public var background:AxSprite;
 		public var text:AxText;
+		public var messages:Vector.<String> = new Vector.<String>;
 		
 		public function AxDebugConsole() {
 			this.add(background = new AxSprite(0, 0));
@@ -32,6 +34,7 @@ package org.axgl.util.debug {
 			text.scroll.x = text.scroll.y = 0;
 			background.zooms = text.zooms = false;
 			visible = false;
+			text.limitStrategy = new AxTextLimitStrategy(3, AxTextLimitStrategy.END);
 			reflow(BOTTOM_LEFT_LAYOUT);
 		}
 		
@@ -64,14 +67,18 @@ package org.axgl.util.debug {
 		
 		/**
 		 * Logs a message to the debug console. Unless necessary, you should typically be calling
-		 * functions on Ax.logger rather than this class directory.
+		 * functions on Ax.logger rather than this class directly.
 		 * 
 		 * @param level The log level to use.
 		 * @param message The message to log.
 		 */
 		public function log(level:String, message:String):void {
 			visible = true;
-			text.text += (text.text.length == 0 ? "" : "\n") + getDateTag() + " " + getLogTag(level) + " " + message;
+			messages.push(getDateTag() + " " + getLogTag(level) + " " + message);
+			if (messages.length > text.limitStrategy.limit) {
+				messages.splice(0, messages.length - text.limitStrategy.limit);
+			}
+			text.text = messages.join("\n");
 		}
 		
 		private static const INFO_TAG:String = "@[ffffff][@[89ee9c]INFO@[ffffff]]";

@@ -138,7 +138,6 @@ package org.axgl.util.debug {
 		}
 		
 		public function log(level:String, message:String):void {
-			trace("debugger");
 			console.log(level, message);
 		}
 	}

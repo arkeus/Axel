@@ -21,7 +21,7 @@ package org.axgl.util {
 		/**
 		 * Starts the profiling timer and sets the name.
 		 * 
-		 * @param name The name of this blocked, used when viewing the result.
+		 * @param name The name of this block, used when viewing the result.
 		 */
 		public static function start(name:String):void {
 			startTime = getTimer();

@@ -8,6 +8,7 @@ package org.axgl.text {
 	import org.axgl.AxModel;
 	import org.axgl.render.AxColor;
 	import org.axgl.resource.AxResource;
+	import org.axgl.util.AxProfiler;
 
 	/**
 	 * Creates text for display on the screen using the given AxFont.
@@ -30,6 +31,11 @@ package org.axgl.text {
 		 * The width that was requested when this text was created. Read-only.
 		 */
 		public var requestedWidth:uint;
+		/**
+		 * A strategy for limiting the size of the text, by keeping only X lines from the start/end when the
+		 * text changes.
+		 */
+		public var limitStrategy:AxTextLimitStrategy;
 
 		/**
 		 * Creates a new text at the given position, using the given font. If width is 0, it will not wrap at all. If
@@ -64,7 +70,7 @@ package org.axgl.text {
 		 *
 		 * @return A vector of text lines.
 		 */
-		public static function split(text:String, font:AxFont, width:uint):Vector.<AxTextLine> {
+		public static function split(text:String, font:AxFont, width:uint, limitStrategy:AxTextLimitStrategy = null):Vector.<AxTextLine> {
 			var lines:Vector.<AxTextLine> = new Vector.<AxTextLine>;
 			var spaceWidth:int = font.characterWidth(" ");
 			
@@ -106,13 +112,22 @@ package org.axgl.text {
 
 					if (!inTag) {
 						line += (line == "" ? "" : " ") + wordString;
-						lineWidth += wordWidth + font.spacing.x + spaceWidth;
+						lineWidth += wordWidth + font.spacing.x + spaceWidth + font.spacing.x;
 					}
 				}
 
 				lines.push(new AxTextLine(line, lineWidth));
 				lineWidth = 0;
 				line = "";
+			}
+			
+			if (limitStrategy != null && lines.length > limitStrategy.limit) {
+				switch (limitStrategy.keepType) {
+					case AxTextLimitStrategy.START:
+						return lines.slice(0, limitStrategy.limit);
+					case AxTextLimitStrategy.END:
+						return lines.slice(lines.length - limitStrategy.limit);
+				}
 			}
 
 			return lines;
@@ -130,7 +145,10 @@ package org.axgl.text {
 			indexData = new Vector.<uint>;
 			vertexData = new Vector.<Number>;
 
-			var lines:Vector.<AxTextLine> = split(_text, font, requestedWidth);
+			var lines:Vector.<AxTextLine> = split(_text, font, requestedWidth, limitStrategy);
+			if (limitStrategy != null) {
+				//_text = lines.map(function(line:AxTextLine):String { line.text }).join("\n");
+			}
 			var y:uint = 0;
 			var index:uint = 0;
 			var color:AxColor = new AxColor;
