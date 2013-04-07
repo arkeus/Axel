@@ -5,8 +5,8 @@
 * Added three debug console layouts that you can use
 * Added a resize() method to AxText to resize the text without creating a new one (TODO: make it a setter for width?)
 * The create() method of your main state is now called before your first state is initialized
-* Camera effect offset should is now stored separately from position
-* AxClouds are now properly effected by the scroll attribute
+* Camera effect offset is now stored separately from position
+* AxClouds are now properly affected by the scroll attribute
 * Added a second optional parameter to AxGroup.add to allow you not to inherit the scroll factor
 * General logger added, you can now log to Ax.logger.log/warn/error which will log to browser console in addition to trace, when available
 * The default background color is now gray rather than white
@@ -21,9 +21,10 @@
 * Fixed an issue where fps was greater than requested fps in the debugger display (cosmetic change)
 * Fixed an issue where the external logger could prevent the game from loading
 * Fixed a text width issue that could cause text to be slightly longer than the requested width
+* Fixed an issue where if you bounded the camera to an area smaller than the screen the screen would flicker
 * Made the fade effect more accurate
 
-## 0.9.3 beta / 2012-01-22
+## 0.9.3 beta / 2013-01-22
 * Entities now have a simple parenting system. When adding to groups, its parent will be set and position based off of the parent
 * To support parenting, entities now have setParent and removeParent functionality (note: collision does not support parent offsets yet)
 * Positions on entities with parents are now relative to the parent, to support this, globalX and globalY setters have been added to AxEntity

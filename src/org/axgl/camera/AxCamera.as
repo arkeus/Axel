@@ -136,8 +136,8 @@ package org.axgl.camera {
 				}
 			}
 			
-			x = AxU.clamp(x, bounds.x, bounds.width - Ax.viewWidth);
-			y = AxU.clamp(y, bounds.y, bounds.height - Ax.viewHeight);
+			x = bounds.width - Ax.viewWidth < bounds.x ? bounds.x : AxU.clamp(x, bounds.x, bounds.width - Ax.viewWidth);
+			y = bounds.height - Ax.viewHeight < bounds.y ? bounds.y : AxU.clamp(y, bounds.y, bounds.height - Ax.viewHeight);
 			
 			if (shakeEffect.active) {
 				shakeEffect.update(this);
