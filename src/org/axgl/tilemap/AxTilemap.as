@@ -154,6 +154,12 @@ package org.axgl.tilemap {
 		 * @return The tilemap object.
 		 */
 		public function build(mapData:*, graphic:Class, tileWidth:uint, tileHeight:uint, solidIndex:uint = 1, segmentWidth:int = -1, segmentHeight:int = -1):AxTilemap {
+			if (tileWidth == 0 || tileHeight == 0) {
+				throw new Error("Tile size cannot be 0");
+			} else if (segmentWidth == 0 || segmentHeight == 0) {
+				throw new Error("Segment size cannot be 0");
+			}
+			
 			this.texture = AxCache.texture(graphic);
 			this.tileWidth = tileWidth;
 			this.tileHeight = tileHeight;
