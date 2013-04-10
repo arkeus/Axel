@@ -160,7 +160,7 @@ package org.axgl.tilemap {
 				throw new Error("Segment size cannot be 0");
 			}
 			
-			this.texture = AxCache.texture(graphic);
+			setGraphic(graphic);
 			this.tileWidth = tileWidth;
 			this.tileHeight = tileHeight;
 			this.solidIndex = solidIndex;
@@ -245,6 +245,19 @@ package org.axgl.tilemap {
 				tiles.push(tile);
 			}
 			
+			return this;
+		}
+		
+		/**
+		 * Changes the graphic of the tilemap to a new graphic. The new graphic should be the
+		 * same dimensions with the same tile size as the previous graphic.
+		 * 
+		 * @param graphic The tileset graphic.
+		 *
+		 * @return The tilemap object.
+		 */
+		public function setGraphic(graphic:Class):AxTilemap {
+			this.texture = AxCache.texture(graphic);
 			return this;
 		}
 		
@@ -433,6 +446,23 @@ package org.axgl.tilemap {
 		 */
 		public function getTileAtPixelCoordinates(x:uint, y:uint):AxTile {
 			return getTileAt(x / tileWidth, y / tileHeight);
+		}
+		
+		/**
+		 * Given a position on the map in tiles (0, 0 is the upper left), returns the tile id representing
+		 * the tile at that position. If there is no tile, returns 0. The tile is is the index into the
+		 * tileset image (the upper left tile is 1).
+		 * 
+		 * @param x The x coordinate in tiles.
+		 * @param y The y coordinate in tiles.
+		 * 
+		 * @return The number representing the tile id at the position.
+		 */
+		public function getTileIndexAt(x:uint, y:uint):uint {
+			if (x < 0 || x >= cols || y < 0 || y > rows) {
+				throw new Error("Tile location (" + x + "," + y + ") is out of bounds");
+			}
+			return data[y * cols + x];
 		}
 		
 		/**

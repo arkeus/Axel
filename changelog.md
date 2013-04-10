@@ -13,6 +13,7 @@
 * Added a reset method to AxCache
 * You can now pass an array of arrays to AxTilemap.build in addition to passing a CSV
 * Added the ability to define a text limit strategy to limit the number of lines that are drawn in a text
+* Added an AxTilemap.getTileIndexAt to get the tile id at a given position without having to go through AxTile
 * Fixed an issue where the shake screen effect was being affected by the scroll attribute
 * Fixed an issue where scaled sprites could be rendering 1 pixel off
 * Fixed an issue where the screen attribute of an AxSprite wasn't set until the first update after creation
