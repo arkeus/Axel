@@ -364,19 +364,50 @@ package org.axgl.tilemap {
 						continue;
 					}
 
-					tile.x = x * tileWidth + this.x;
-					tile.y = y * tileHeight + this.y;
+					var tx:Number = tile.x = x * tileWidth + this.x;
+					var ty:Number = tile.y = y * tileHeight + this.y;
 					tile.previous.x = tile.x;
 					tile.previous.y = tile.y;
 					
-					if (collide) {
-						if (tile.collision != NONE && callback != null) {
-							if (callback(target, tile)) {
-								overlapped = true;
+					if (!collide) {
+						overlapped = true;
+					} else if (tile.collision != NONE && callback != null) {
+						if (tile.collision == ANY) {
+							overlapped = callback(target, tile);
+						} else {
+							var tw:Number = tx + tileWidth;
+							var th:Number = ty + tileHeight;
+							var ow:Number = target.x + target.width;
+							var oh:Number = target.y + target.height;
+							var opw:Number = target.previous.x + target.width;
+							var oph:Number = target.previous.y + target.height;
+							if (tile.collision & RIGHT && ow > tw) {
+								if (ow >= opw) {
+									tile.previous.x = tile.x = tw;
+								}
+								overlapped = callback(target, tile);
+								tile.previous.x = tile.x = tx;
+							} else if (tile.collision & LEFT && target.x < tx) {
+								if (ow <= opw) {
+									tile.previous.x = tile.x = tx - tileWidth;
+								}
+								overlapped = callback(target, tile);
+								tile.previous.x = tile.x = tx;
+							}
+							if (tile.collision & DOWN && oh > th) {
+								if (oh >= oph) {
+									tile.previous.y = tile.y = th;
+								}
+								overlapped = callback(target, tile);
+								tile.previous.y = tile.y = ty;
+							} else if (tile.collision & UP && target.y < ty) {
+								if (oh <= oph) {
+									tile.previous.y = tile.y = ty - tileHeight;
+								}
+								overlapped = callback(target, tile);
+								tile.previous.y = tile.y = ty;
 							}
 						}
-					} else {
-						overlapped = true;
 					}
 					
 					if (tile.callback != null) {
