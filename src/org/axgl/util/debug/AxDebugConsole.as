@@ -29,7 +29,7 @@ package org.axgl.util.debug {
 		
 		public function AxDebugConsole() {
 			this.add(background = new AxSprite(0, 0));
-			this.add(text = new AxText(5, 5, AxResource.FONT, "", Ax.viewWidth - 20));
+			this.add(text = new AxText(5, 5, AxResource.font, "", Ax.viewWidth - 20));
 			background.scroll.x = background.scroll.y = 0;
 			text.scroll.x = text.scroll.y = 0;
 			background.zooms = text.zooms = false;

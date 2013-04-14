@@ -2,7 +2,6 @@ package org.axgl.util {
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display3D.Context3DTextureFormat;
-	import flash.display3D.Program3D;
 	import flash.display3D.VertexBuffer3D;
 	import flash.display3D.textures.Texture;
 	import flash.geom.Point;
@@ -10,7 +9,6 @@ package org.axgl.util {
 	import flash.utils.getQualifiedClassName;
 	
 	import org.axgl.Ax;
-	import org.axgl.AxSprite;
 	import org.axgl.render.AxShader;
 	import org.axgl.render.AxTexture;
 	

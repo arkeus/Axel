@@ -374,6 +374,10 @@ package org.axgl {
 		 */
 		public function buildVertexBuffer(quad:AxQuad):void {
 			if (indexBuffer == null) {
+				if (SPRITE_INDEX_BUFFER == null) {
+					SPRITE_INDEX_BUFFER = Ax.context.createIndexBuffer(6);
+					SPRITE_INDEX_BUFFER.uploadFromVector(Vector.<uint>([0, 1, 2, 1, 2, 3]), 0, 6);
+				}
 				indexBuffer = SPRITE_INDEX_BUFFER;
 			}
 
@@ -604,10 +608,5 @@ package org.axgl {
 		 * A static sprite index buffer that all AxSprites will use.
 		 */
 		public static var SPRITE_INDEX_BUFFER:IndexBuffer3D;
-
-		{
-			SPRITE_INDEX_BUFFER = Ax.context.createIndexBuffer(6);
-			SPRITE_INDEX_BUFFER.uploadFromVector(Vector.<uint>([0, 1, 2, 1, 2, 3]), 0, 6);
-		}
 	}
 }

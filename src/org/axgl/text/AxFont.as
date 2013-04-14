@@ -271,11 +271,11 @@ package org.axgl.text {
 		 * @return The character's width, 0 if that character was not part of the font.
 		 */
 		internal function characterWidth(char:String):uint {
-			var character:AxCharacter = character(char);
-			if (character == null) {
+			var ch:AxCharacter = character(char);
+			if (ch == null) {
 				return 0;
 			}
-			return character.width;
+			return ch.width;
 		}
 	}
 }

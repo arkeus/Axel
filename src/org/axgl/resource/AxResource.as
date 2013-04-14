@@ -13,6 +13,10 @@ package org.axgl.resource {
 		
 		/* Build in Axel font */
 		[Embed(source = "font.png")] public static const FONT_BITMAP:Class;
-		public static const FONT:AxFont = AxFont.fromBitmap(FONT_BITMAP, 1, 0);
+		public static var font:AxFont;
+		
+		public static function initialize():void {
+			font = AxFont.fromBitmap(FONT_BITMAP, 1, 0);
+		}
 	}
 }

@@ -28,12 +28,13 @@ package org.axgl {
 	import org.axgl.input.AxMouse;
 	import org.axgl.render.AxColor;
 	import org.axgl.render.AxShader;
+	import org.axgl.resource.AxResource;
 	import org.axgl.sound.AxMusic;
 	import org.axgl.sound.AxSound;
 	import org.axgl.tilemap.AxTilemap;
-	import org.axgl.util.debug.AxDebugger;
 	import org.axgl.util.AxLogger;
 	import org.axgl.util.AxPauseState;
+	import org.axgl.util.debug.AxDebugger;
 
 	/**
 	 * The general game class that your base class should extends. Contains all the properties of the game,
@@ -494,6 +495,7 @@ package org.axgl {
 			context.configureBackBuffer(Ax.width, Ax.height, 0, false);
 			context.enableErrorChecking = true;
 			
+			AxResource.initialize();
 			camera = new AxCamera;
 			camera.initialize();
 			debugger = new AxDebugger;
