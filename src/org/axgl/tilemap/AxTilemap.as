@@ -1,16 +1,13 @@
 package org.axgl.tilemap {
 	import flash.display3D.Context3DBlendFactor;
 	import flash.display3D.Context3DProgramType;
-	import flash.display3D.Context3DVertexBufferFormat;
 	
 	import org.axgl.Ax;
 	import org.axgl.AxEntity;
 	import org.axgl.AxModel;
-	import org.axgl.AxPoint;
 	import org.axgl.AxRect;
 	import org.axgl.AxU;
 	import org.axgl.util.AxCache;
-	import org.axgl.util.AxProfiler;
 
 	/**
 	 * A tilemap class representing a set of tiles. A tilemap is much more much more efficient representation of a large

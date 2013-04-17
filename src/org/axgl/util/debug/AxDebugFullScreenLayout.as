@@ -1,6 +1,5 @@
 package org.axgl.util.debug {
 	import org.axgl.Ax;
-	import org.axgl.AxRect;
 	
 	public class AxDebugFullScreenLayout extends AxDebugLayout {		
 		public function AxDebugFullScreenLayout() {

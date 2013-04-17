@@ -1,6 +1,5 @@
 package org.axgl.util.debug {
 	import org.axgl.Ax;
-	import org.axgl.AxRect;
 
 	public class AxDebugBottomLeftLayout extends AxDebugLayout {
 		public function AxDebugBottomLeftLayout() {

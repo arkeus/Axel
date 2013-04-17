@@ -1,6 +1,5 @@
 package org.axgl.camera.effect {
 	import org.axgl.Ax;
-	import org.axgl.AxU;
 	import org.axgl.camera.AxCamera;
 	import org.axgl.render.AxColor;
 

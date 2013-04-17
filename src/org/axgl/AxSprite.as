@@ -1,14 +1,11 @@
 package org.axgl {
-	import flash.display.Bitmap;
 	import flash.display.BitmapData;
-	import flash.display.Sprite;
 	import flash.display3D.Context3DBlendFactor;
 	import flash.display3D.Context3DProgramType;
 	import flash.display3D.Context3DVertexBufferFormat;
 	import flash.display3D.IndexBuffer3D;
 	import flash.geom.Matrix3D;
 	import flash.geom.Vector3D;
-	import flash.sensors.Accelerometer;
 	
 	import org.axgl.effect.sprite.AxAlphaSpriteEffect;
 	import org.axgl.effect.sprite.AxFlickerSpriteEffect;

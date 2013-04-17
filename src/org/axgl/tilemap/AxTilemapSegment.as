@@ -4,7 +4,6 @@ package org.axgl.tilemap {
 	import flash.display3D.VertexBuffer3D;
 	
 	import org.axgl.Ax;
-	import org.axgl.AxModel;
 
 	/**
 	 * A structure that holds information about a single segment within an AxTilemap. Each

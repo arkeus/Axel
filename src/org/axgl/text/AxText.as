@@ -8,7 +8,6 @@ package org.axgl.text {
 	import org.axgl.AxModel;
 	import org.axgl.render.AxColor;
 	import org.axgl.resource.AxResource;
-	import org.axgl.util.AxProfiler;
 
 	/**
 	 * Creates text for display on the screen using the given AxFont.

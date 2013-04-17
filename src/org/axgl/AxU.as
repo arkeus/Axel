@@ -1,8 +1,6 @@
 package org.axgl {
 	import flash.net.URLRequest;
 	import flash.net.navigateToURL;
-	import flash.utils.ByteArray;
-	import flash.utils.Endian;
 
 	/**
 	 * The Ax Utility class, containing various utility functions to make your life easier. Some of these
