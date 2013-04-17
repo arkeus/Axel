@@ -72,7 +72,7 @@ package org.axgl {
 		 */
 		public function text(str:String, font:AxFont = null, verticalOffset:uint = 10, horizontalOffset:uint = 0):AxButton {
 			if (font == null) {
-				font = AxResource.FONT;
+				font = AxResource.font;
 			}
 
 			labelY = verticalOffset;
