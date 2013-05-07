@@ -18,6 +18,7 @@ package org.axgl.util {
 		public var delay:Number;
 		public var callback:Function;
 		public var repeat:uint;
+		private var _originalRepeat:uint;
 		public var timer:Number;
 		public var active:Boolean;
 		public var alive:Boolean;
@@ -36,6 +37,7 @@ package org.axgl.util {
 			this.delay = delay;
 			this.callback = callback;
 			this.repeat = repeat;
+			_originalRepeat = repeat;
 			this.timer = start < 0 ? delay : start;
 			this.active = true;
 			this.alive = true;
@@ -79,5 +81,11 @@ package org.axgl.util {
 			alive = false;
 			return this;
 		}
+		
+		public function get originalRepeat():uint
+		{
+			return _originalRepeat;
+		}
+
 	}
 }
