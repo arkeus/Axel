@@ -595,6 +595,23 @@ package org.axgl {
 		{
 			return _numFrames;
 		}
+		
+		/**
+		 * Helper function that adjusts the offset automatically to center the bounding box within the graphic.
+		 * 
+		 * @param	AdjustPosition		Adjusts the actual X and Y position just once to match the offset change. Default is false.
+		 */
+		public function centerOffsets(AdjustPosition:Boolean=false):void
+		{
+			offset.x = (frameWidth-width)*0.5;
+			offset.y = (frameHeight-height)*0.5;
+			if(AdjustPosition)
+			{
+				x += offset.x;
+				y += offset.y;
+			}
+		}
+		
 		/**
 		 * The vertex shader for this sprite.
 		 */
