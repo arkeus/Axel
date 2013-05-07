@@ -1,4 +1,5 @@
 package org.axgl {
+	import org.axgl.util.AxRange;
 
 	/**
 	 * AxGroup is the basic container object. When building a world, you'll often want to group objects
@@ -21,6 +22,7 @@ package org.axgl {
 		private var recyclePosition:uint = 0;
 		/** Global scroll factor for the group. */
 		public var scrollFactor:AxPoint;
+		private var _membersRange:AxRange;
 
 		/**
 		 * Creates a new empty group object with the specified position and size. Note: The position and size
@@ -261,6 +263,86 @@ package org.axgl {
 			clear(true);
 			members = null;
 			super.dispose();
+		}
+		
+		public function getFirstAvailable():AxEntity
+		{
+			return getFirstDead();
+		}
+		
+		public function getFirstDead():AxEntity
+		{
+			for each( var member:AxEntity in members )
+			{
+				if( !member.exists )
+				{
+					return member;
+				}
+			}
+			
+			return null;
+		}
+		
+		public function getFirstExtant():AxEntity
+		{
+			return getFirstAlive();
+		}
+		
+		public function getFirstAlive():AxEntity
+		{
+			for each( var member:AxEntity in members )
+			{
+				if( member.exists )
+				{
+					return member;
+				}
+			}
+			
+			return null;
+		}
+		
+		
+
+		public function getRandom():AxEntity
+		{
+			if( _membersRange == null )
+			{
+				_membersRange = new AxRange( 0, members.length - 1 );
+			}
+			else
+			{
+				_membersRange.make( 0, members.length - 1 );
+			}
+			
+			return members[ _membersRange.randomInt() ];
+		}
+		
+		public function countLiving():int
+		{
+			var ret:int = 0;
+			for each( var member:AxEntity in members )
+			{
+				if( member.exists )
+				{
+					ret++;
+				}
+			}
+			
+			return ret;
+		}
+
+		public function countDead():int
+		{
+			var ret:int = 0;
+			for each( var member:AxEntity in members )
+			{
+				if( !member.exists )
+				{
+					ret++;
+				}
+			}
+			
+			return ret;
 		}
 	}
 }
