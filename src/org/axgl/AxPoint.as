@@ -63,6 +63,14 @@ package org.axgl {
 			return this;
 		}
 		
+		public function make( x:Number, y:Number ):AxPoint
+		{
+			this.x = x;
+			this.y = y;
+			
+			return this;
+		}
+		
 		/**
 		 * Provides a more useful string representation when printing this object.
 		 * 
