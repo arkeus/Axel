@@ -2,8 +2,6 @@ package org.axgl {
 	import flash.display3D.Context3DBlendFactor;
 	import flash.display3D.Context3DProgramType;
 	import flash.display3D.Context3DVertexBufferFormat;
-	import flash.utils.getTimer;
-	
 	
 	/**
 	 * AxCloud is a group that allows you to draw many sprites that use the same texture efficiently. By changing the actions
@@ -355,7 +353,7 @@ package org.axgl {
 			colorTransform[ALPHA] = color.alpha * parentEntityAlpha;
 			
 			matrix.identity();
-			matrix.appendTranslation(x - Math.round(Ax.camera.position.x) + parentOffset.x, y - Math.round(Ax.camera.position.y) + parentOffset.y, 0);
+			matrix.appendTranslation(x - Math.round(Ax.camera.position.x * scroll.x + Ax.camera.effectOffset.x) + parentOffset.x, y - Math.round(Ax.camera.position.y * scroll.x + Ax.camera.effectOffset.y) + parentOffset.y, 0);
 			matrix.append(Ax.camera.projection);
 			
 			if (shader != Ax.shader) {

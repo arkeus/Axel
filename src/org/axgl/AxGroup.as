@@ -46,7 +46,7 @@ package org.axgl {
 		 *
 		 * @return This group.
 		 */
-		public function add(entity:AxEntity, linkParent:Boolean = true):AxGroup {
+		public function add(entity:AxEntity, linkParent:Boolean = true, inheritScroll:Boolean = true):AxGroup {
 			if (entity == null) {
 				throw new ArgumentError("Cannot add a null object to a group.");
 			}
@@ -56,16 +56,18 @@ package org.axgl {
 				entity.setParent(this);
 			}
 			
-			if (entity is AxModel) {
-				if (scroll.x != -1 && (entity as AxModel).scroll.x == 1) {
-					(entity as AxModel).scroll.x = scroll.x;
-				}
-				if (scroll.y != -1 && (entity as AxModel).scroll.y == 1) {
-					(entity as AxModel).scroll.y = scroll.y;
-				}
-			} else if (entity is AxGroup) {
-				if (scroll.x != -1 || scroll.y != -1) {
-					(entity as AxGroup).scroll = new AxPoint(scroll.x, scroll.y);
+			if (inheritScroll) {
+				if (entity is AxModel) {
+					if (scroll.x != -1 && (entity as AxModel).scroll.x == 1) {
+						(entity as AxModel).scroll.x = scroll.x;
+					}
+					if (scroll.y != -1 && (entity as AxModel).scroll.y == 1) {
+						(entity as AxModel).scroll.y = scroll.y;
+					}
+				} else if (entity is AxGroup) {
+					if (scroll.x != -1 || scroll.y != -1) {
+						(entity as AxGroup).scroll = new AxPoint(scroll.x, scroll.y);
+					}
 				}
 			}
 			

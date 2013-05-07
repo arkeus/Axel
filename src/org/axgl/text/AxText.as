@@ -30,6 +30,11 @@ package org.axgl.text {
 		 * The width that was requested when this text was created. Read-only.
 		 */
 		public var requestedWidth:uint;
+		/**
+		 * A strategy for limiting the size of the text, by keeping only X lines from the start/end when the
+		 * text changes.
+		 */
+		public var limitStrategy:AxTextLimitStrategy;
 
 		/**
 		 * Creates a new text at the given position, using the given font. If width is 0, it will not wrap at all. If
@@ -48,7 +53,7 @@ package org.axgl.text {
 			super(x, y, VERTEX_SHADER, FRAGMENT_SHADER, 8);
 
 			this._text = text;
-			this.font = font ? font : AxResource.FONT;
+			this.font = font ? font : AxResource.font;
 			this.width = this.requestedWidth = width;
 			this.align = align;
 
@@ -64,7 +69,7 @@ package org.axgl.text {
 		 *
 		 * @return A vector of text lines.
 		 */
-		public static function split(text:String, font:AxFont, width:uint):Vector.<AxTextLine> {
+		public static function split(text:String, font:AxFont, width:uint, limitStrategy:AxTextLimitStrategy = null):Vector.<AxTextLine> {
 			var lines:Vector.<AxTextLine> = new Vector.<AxTextLine>;
 			var spaceWidth:int = font.characterWidth(" ");
 			
@@ -106,13 +111,22 @@ package org.axgl.text {
 
 					if (!inTag) {
 						line += (line == "" ? "" : " ") + wordString;
-						lineWidth += wordWidth + font.spacing.x + spaceWidth;
+						lineWidth += wordWidth + font.spacing.x + spaceWidth + font.spacing.x;
 					}
 				}
 
 				lines.push(new AxTextLine(line, lineWidth));
 				lineWidth = 0;
 				line = "";
+			}
+			
+			if (limitStrategy != null && lines.length > limitStrategy.limit) {
+				switch (limitStrategy.keepType) {
+					case AxTextLimitStrategy.START:
+						return lines.slice(0, limitStrategy.limit);
+					case AxTextLimitStrategy.END:
+						return lines.slice(lines.length - limitStrategy.limit);
+				}
 			}
 
 			return lines;
@@ -130,7 +144,10 @@ package org.axgl.text {
 			indexData = new Vector.<uint>;
 			vertexData = new Vector.<Number>;
 
-			var lines:Vector.<AxTextLine> = split(_text, font, requestedWidth);
+			var lines:Vector.<AxTextLine> = split(_text, font, requestedWidth, limitStrategy);
+			if (limitStrategy != null) {
+				//_text = lines.map(function(line:AxTextLine):String { line.text }).join("\n");
+			}
 			var y:uint = 0;
 			var index:uint = 0;
 			var color:AxColor = new AxColor;
@@ -227,6 +244,16 @@ package org.axgl.text {
 		}
 		
 		/**
+		 * Resizes the text to a new width and rebuilds and reflows the text to fit the newly requested width.
+		 * 
+		 * @param width The new width of the text.
+		 */
+		public function resize(width:uint):void {
+			this.requestedWidth = this.width = width;
+			build();
+		}
+		
+		/**
 		 * Returns the text of this object.
 		 */
 		public function get text():String {
@@ -251,7 +278,7 @@ package org.axgl.text {
 			var alignOffset:int = align == "right" ? (width * (scale.x - 1)) : (align == "center" ? (width / 2 * (scale.x - 1)) : 0);
 			
 			matrix.appendScale(scale.x, scale.y, 1);
-			matrix.appendTranslation(x - Ax.camera.position.x * scroll.x + parentOffset.x - alignOffset, y - Ax.camera.position.y * scroll.y + parentOffset.y, 0);
+			matrix.appendTranslation(x - Ax.camera.position.x * scroll.x - Ax.camera.effectOffset.x + parentOffset.x - alignOffset, y - Ax.camera.position.y * scroll.y - Ax.camera.effectOffset.y + parentOffset.y, 0);
 			matrix.append(zooms ? Ax.camera.projection : Ax.camera.baseProjection);
 
 			if (shader != Ax.shader) {

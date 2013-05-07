@@ -1,14 +1,11 @@
 package org.axgl {
-	import flash.display.Bitmap;
 	import flash.display.BitmapData;
-	import flash.display.Sprite;
 	import flash.display3D.Context3DBlendFactor;
 	import flash.display3D.Context3DProgramType;
 	import flash.display3D.Context3DVertexBufferFormat;
 	import flash.display3D.IndexBuffer3D;
 	import flash.geom.Matrix3D;
 	import flash.geom.Vector3D;
-	import flash.sensors.Accelerometer;
 	
 	import org.axgl.effect.sprite.AxAlphaSpriteEffect;
 	import org.axgl.effect.sprite.AxFlickerSpriteEffect;
@@ -108,7 +105,7 @@ package org.axgl {
 			debugColor = Vector.<Number>([1, 0, 0, 1]);
 			colorTransform.fixed = true;
 			uvOffset = new Vector.<Number>(4, true);
-			screen = new AxPoint;
+			screen = new AxPoint(x - (Ax.camera.x + Ax.camera.offset.x) * scroll.x, y - (Ax.camera.y + Ax.camera.offset.y) * scroll.y);
 
 			quad = null;
 			dirty = true;
@@ -378,6 +375,10 @@ package org.axgl {
 		 */
 		public function buildVertexBuffer(quad:AxQuad):void {
 			if (indexBuffer == null) {
+				if (SPRITE_INDEX_BUFFER == null) {
+					SPRITE_INDEX_BUFFER = Ax.context.createIndexBuffer(6);
+					SPRITE_INDEX_BUFFER.uploadFromVector(Vector.<uint>([0, 1, 2, 1, 2, 3]), 0, 6);
+				}
 				indexBuffer = SPRITE_INDEX_BUFFER;
 			}
 
@@ -413,15 +414,15 @@ package org.axgl {
 			var sy:Number = y - offset.y + parentOffset.y;
 			var scalex:Number = scale.x;
 			var scaley:Number = scale.y;
-			var cx:Number = Ax.camera.position.x * scroll.x;
-			var cy:Number = Ax.camera.position.y * scroll.y;
+			var cx:Number = Ax.camera.position.x * scroll.x + Ax.camera.effectOffset.x;
+			var cy:Number = Ax.camera.position.y * scroll.y + Ax.camera.effectOffset.y;
 			if (facing == flip) {
 				matrix.appendScale(scalex * -1, scaley, 1);
 				matrix.appendTranslation(Math.round(sx - cx + AxU.EPSILON + frameWidth), Math.round(sy - cy + AxU.EPSILON), 0);
 			} else if (scalex != 1 || scaley != 1) {
 				matrix.appendTranslation(-origin.x, -origin.y, 0);
 				matrix.appendScale(scalex, scaley, 1);
-				matrix.appendTranslation(origin.x + sx - cx, origin.y + sy - cy, 0);
+				matrix.appendTranslation(origin.x + Math.round(sx - cx + AxU.EPSILON), origin.y + Math.round(sy - cy + AxU.EPSILON), 0);
 			} else {
 				matrix.appendTranslation(Math.round(sx - cx + AxU.EPSILON), Math.round(sy - cy + AxU.EPSILON), 0);
 			}
@@ -633,10 +634,5 @@ package org.axgl {
 		 * A static sprite index buffer that all AxSprites will use.
 		 */
 		public static var SPRITE_INDEX_BUFFER:IndexBuffer3D;
-
-		{
-			SPRITE_INDEX_BUFFER = Ax.context.createIndexBuffer(6);
-			SPRITE_INDEX_BUFFER.uploadFromVector(Vector.<uint>([0, 1, 2, 1, 2, 3]), 0, 6);
-		}
 	}
 }

@@ -30,9 +30,14 @@ package org.axgl.camera {
 		 */
 		public var bounds:AxRect;
 		/**
-		 * The calculated position of the camera, taking into account offsets and effects.
+		 * The calculated position of the camera, taking into account offsets.
 		 */
 		public var position:AxPoint;
+		/**
+		 * The calculate offset due to effects. This are stored separated as they shouldn't be affected
+		 * by the scroll factor.
+		 */
+		public var effectOffset:AxPoint;
 		/**
 		 * Padding to be used when following an object. The padding defines a rectangle where the
 		 * followed target is allowed to move without affecting the camera. Once the target moves out
@@ -83,12 +88,18 @@ package org.axgl.camera {
 			view = new PerspectiveMatrix3D;
 			baseProjection = new Matrix3D;
 			
+			effectOffset = new AxPoint;
 			shakeEffect = new AxCameraShakeEffect;
 			fadeEffect = new AxCameraFadeEffect;
 
 			calculateZoomMatrix();
 			calculateProjectionMatrix(baseProjection, 1);
-			
+		}
+		
+		/**
+		 * Handles initialization that requires the camera to be in place.
+		 */
+		public function initialize():void {
 			sprite = new AxSprite().create(Ax.viewWidth, Ax.viewHeight, 0xffffffff);
 			sprite.alpha = 0;
 		}
@@ -125,8 +136,8 @@ package org.axgl.camera {
 				}
 			}
 			
-			x = AxU.clamp(x, bounds.x, bounds.width - Ax.viewWidth);
-			y = AxU.clamp(y, bounds.y, bounds.height - Ax.viewHeight);
+			x = bounds.width - Ax.viewWidth < bounds.x ? bounds.x : AxU.clamp(x, bounds.x, bounds.width - Ax.viewWidth);
+			y = bounds.height - Ax.viewHeight < bounds.y ? bounds.y : AxU.clamp(y, bounds.y, bounds.height - Ax.viewHeight);
 			
 			if (shakeEffect.active) {
 				shakeEffect.update(this);
@@ -135,8 +146,10 @@ package org.axgl.camera {
 				fadeEffect.update(this);
 			}
 			
-			position.x = x + offset.x + shakeEffect.x;
-			position.y = y + offset.y + shakeEffect.y;
+			position.x = x + offset.x;
+			position.y = y + offset.y;
+			effectOffset.x = shakeEffect.x;
+			effectOffset.y = shakeEffect.y;
 		}
 		
 		/**
@@ -144,8 +157,8 @@ package org.axgl.camera {
 		 */
 		override public function draw():void {
 			if (sprite.alpha > 0) {
-				sprite.x = position.x;
-				sprite.y = position.y;
+				sprite.x = position.x + effectOffset.x;
+				sprite.y = position.y + effectOffset.y;
 				sprite.draw();
 			}
 		}
@@ -159,7 +172,7 @@ package org.axgl.camera {
 		 * @param ease Whether or not to ease the effect out upon completion (the shake gets smaller as it completes).
 		 * @param axes The axes to shake (AxCamera.HORIZONTAL, AxCamera.VERTICAL, or AxCamera.BOTH_AXES).
 		 */		
-		public function shake(duration:Number, intensity:Number, callback:Function = null, ease:Boolean = false, axes:uint = BOTH_AXES):void {
+		public function shake(duration:Number = 0.5, intensity:Number = 3, callback:Function = null, ease:Boolean = false, axes:uint = BOTH_AXES):void {
 			shakeEffect.shake(duration, intensity, callback, ease, axes);
 		}
 		
@@ -211,6 +224,12 @@ package org.axgl.camera {
 		 */	
 		public function fadeIn(duration:Number = 1, callback:Function = null):void {
 			fade(duration, sprite.color.hex & 0xffffff, callback);
+		}
+		
+		public function flash(duration:Number = 1, color:uint = 0xffffffff, callback:Function = null):void {
+			fadeOut(0, color, function():void {
+				fadeIn(duration, callback);
+			});
 		}
 		
 		/**

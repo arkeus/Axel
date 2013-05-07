@@ -76,5 +76,13 @@ package org.axgl {
 			return this;
 		}
 		
+		/**
+		 * Provides a more useful string representation when printing this object.
+		 * 
+		 * @return The string in the format (x,y,a)
+		 */
+		public function toString():String {
+			return "(" + x + "," + y + "," + a + ")";
+		}
 	}
 }

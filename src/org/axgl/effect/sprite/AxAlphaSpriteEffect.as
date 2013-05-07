@@ -1,6 +1,5 @@
 package org.axgl.effect.sprite {
 	import org.axgl.Ax;
-	import org.axgl.AxU;
 
 	public class AxAlphaSpriteEffect extends AxSpriteEffect {
 		/** The target alpha we're fading to. */

@@ -8,7 +8,6 @@ package org.axgl {
 	import flash.display3D.Context3DCompareMode;
 	import flash.display3D.Context3DRenderMode;
 	import flash.display3D.Context3DTriangleFace;
-	import flash.display3D.Program3D;
 	import flash.events.ErrorEvent;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
@@ -28,11 +27,13 @@ package org.axgl {
 	import org.axgl.input.AxMouse;
 	import org.axgl.render.AxColor;
 	import org.axgl.render.AxShader;
+	import org.axgl.resource.AxResource;
 	import org.axgl.sound.AxMusic;
 	import org.axgl.sound.AxSound;
 	import org.axgl.tilemap.AxTilemap;
-	import org.axgl.util.AxDebugger;
+	import org.axgl.util.AxLogger;
 	import org.axgl.util.AxPauseState;
+	import org.axgl.util.debug.AxDebugger;
 
 	/**
 	 * The general game class that your base class should extends. Contains all the properties of the game,
@@ -40,7 +41,7 @@ package org.axgl {
 	 */
 	public class Ax extends Sprite {
 		public static const LIBRARY_NAME:String = "Axel";
-		public static const LIBRARY_VERSION:String = "0.9.3 r1";
+		public static const LIBRARY_VERSION:String = "0.9.3 r2";
 		
 		/**
 		 * Whether or not the game is running is debug mode.
@@ -269,6 +270,10 @@ package org.axgl {
 		 * The current shader currently being used for drawing.
 		 */
 		public static var shader:AxShader;
+		/**
+		 * A logger that sends messages both to the flash console and to the browser console when embedded in a webpage.
+		 */
+		public static var logger:AxLogger;
 
 		/**
 		 * Creates the game engine.
@@ -291,7 +296,7 @@ package org.axgl {
 			Ax.states = new Vector.<AxState>;
 			Ax.worldZoom = zoom;
 			Ax.unfocusedFramerate = 20;
-			Ax.background = new AxColor(1, 1, 1);
+			Ax.background = new AxColor(0.5, 0.5, 0.5);
 			Ax.destroyedStates = new Vector.<AxState>;
 
 			Ax.sounds = new AxGroup;
@@ -307,6 +312,7 @@ package org.axgl {
 			Ax.pauseState = AxPauseState;
 			Ax.initialized = false;
 			Ax.paused = false;
+			Ax.logger = new AxLogger;
 
 			addEventListener(Event.ADDED_TO_STAGE, onStageInitialized);
 		}
@@ -460,9 +466,6 @@ package org.axgl {
 			// Initialize the game based on requested parameters
 			initialize();
 			
-			// Handle game initialization
-			create();
-			
 			addEventListener(Event.ENTER_FRAME, onEnterFrame);
 		}
 		
@@ -498,8 +501,15 @@ package org.axgl {
 			context.configureBackBuffer(Ax.width, Ax.height, 0, false);
 			context.enableErrorChecking = true;
 			
+			AxResource.initialize();
 			camera = new AxCamera;
+			camera.initialize();
 			debugger = new AxDebugger;
+			logger.log(LIBRARY_NAME + " " + LIBRARY_VERSION + " successfully loaded");
+			logger.console = true;
+			
+			// Handle game initialization
+			create();
 			
 			pushState(new requestedState());
 			initialized = true;
@@ -575,7 +585,7 @@ package org.axgl {
 
 			frames++;
 			if (now - frameStart >= 1000) {
-				fps = frames;
+				fps = Math.min(requestedFramerate, frames);
 				frames = 0;
 				frameStart = now;
 			}

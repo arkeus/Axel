@@ -11,11 +11,19 @@ package org.axgl.tilemap {
 		 */
 		public var map:AxTilemap;
 		/**
-		 * The possible collision directions for this tile.
-		 * TODO: Currently if you set it to NONE it is not solid, anything else is fully solid. Must support partially solid
-		 * in the future.
+		 * The possible collision directions for this tile. Setting it to ANY means that the
+		 * tile is completely solid and will collide on all sides. You can set sides to be
+		 * solid by setting this to directions such as UP or UP | RIGHT.
 		 */
 		public var collision:uint;
+		/**
+		 * Whether or not the collision sides are one way or not. If you set a tile to be one
+		 * way and the collision is set to UP, then something can land on top the tile as the
+		 * tile will be solid on that side, but you can jump up through the tile from below.
+		 * If not one way, you can land on ton, but if you come from below, the top will also
+		 * be solid.
+		 */
+		public var oneWay:Boolean;
 		/**
 		 * The callback function that should be called if this tile is collided against.
 		 */
@@ -40,6 +48,7 @@ package org.axgl.tilemap {
 			this.width = width;
 			this.height = height;
 			this.collision = NONE;
+			this.oneWay = false;
 			this.callback = null;
 		}
 	}
