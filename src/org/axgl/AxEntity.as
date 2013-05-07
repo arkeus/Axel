@@ -181,8 +181,8 @@ package org.axgl {
 		 * @param x The initial x value of this entity.
 		 * @param y The initial y value of this entity.
 		 */
-		public function AxEntity(x:Number = 0, y:Number = 0) {
-			super(x, y);
+		public function AxEntity(x:Number = 0, y:Number = 0, width:Number = 0, height:Number = 0) {
+			super(x, y, width, height);
 
 			visible = true;
 			active = true;
