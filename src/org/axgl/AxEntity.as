@@ -531,5 +531,20 @@ package org.axgl {
 		override public function toString():String {
 			return getQualifiedClassName(this) + " @ " + super.toString();
 		}
+		
+		public function resetPosition( newX:Number, newY:Number ):void
+		{
+			x = newX;
+			y = newY;
+			
+			previous.x = newX;
+			previous.y = newY;
+			
+			velocity.x = 0;
+			velocity.y = 0;
+			
+			pvelocity.x = 0;
+			pvelocity.y = 0;
+		}
 	}
 }
