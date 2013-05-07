@@ -3,6 +3,7 @@ package org.axgl.particle {
 	
 	import org.axgl.AxEntity;
 	import org.axgl.AxGroup;
+	import org.axgl.AxU;
 
 	/**
 	 * A generic particle system to keep track of your particle effects, and allow you to create your effects
@@ -59,6 +60,16 @@ package org.axgl.particle {
 			var members:Vector.<AxEntity> = effects[name].members;
 			var cloud:AxParticleCloud = members[counter % members.length] as AxParticleCloud;
 			cloud.reset(x, y);
+			
+			if( cloud.effect.scramble )
+			{
+				if( ( counter % members.length ) == members.length - 1 )
+				{
+					// Now scramble the array for the next pass.
+					members = AxU.scrambleEntityVector( members );
+				}
+			}
+			
 			return cloud;
 		}
 	}

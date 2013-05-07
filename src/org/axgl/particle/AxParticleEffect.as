@@ -185,6 +185,11 @@ package org.axgl.particle {
 		 * @default 10 
 		 */
 		public var max:uint;
+		
+		/**
+		 * If true, the particles will be played more randomly, rather than in repeated sequences.
+		 */
+		public var scramble:Boolean = true;
 
 		/**
 		 * 
