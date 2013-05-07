@@ -53,6 +53,9 @@ package org.axgl {
 		 * @default 60
 		 */
 		public static var requestedFramerate:uint;
+		
+		public static var maxElapsedInOneFrame:Number = .033;
+		
 		/**
 		 * The framerate the game will be lowered to when your game loses focus, so when players are in
 		 * another window it doesn't use as many resources. Set this to the same value as the requested
@@ -117,6 +120,9 @@ package org.axgl {
 		 * If you set fixed framerate to true, this will always return 1/framerate.
 		 */
 		public static var dt:Number = 0;
+		
+		public static var timeScale:Number = 1;
+		
 		/**
 		 * Read-only. Counts the number of frames since the current "second" began in order to calculate fps.
 		 * @default
@@ -279,6 +285,7 @@ package org.axgl {
 			Ax.requestedWidth = width;
 			Ax.requestedHeight = height;
 			Ax.requestedFramerate = framerate;
+			Ax.maxElapsedInOneFrame = 2 / framerate;
 			Ax.fixedTimestep = fixedTimestep;
 			
 			Ax.states = new Vector.<AxState>;
@@ -557,8 +564,13 @@ package org.axgl {
 			then = now;
 			now = getTimer();
 			dt = then == 0 ? 0 : (now - then) / 1000;
+			dt *= timeScale;
 			if (fixedTimestep) {
 				dt = 1 / requestedFramerate;
+			}
+			else if( dt > maxElapsedInOneFrame )
+			{
+				dt = maxElapsedInOneFrame;
 			}
 
 			frames++;
