@@ -22,6 +22,8 @@ package org.axgl.util {
 		public var active:Boolean;
 		public var alive:Boolean;
 		
+		public var params:Object = {};
+		
 		/**
 		 * Creates a new AxTimer.
 		 * 

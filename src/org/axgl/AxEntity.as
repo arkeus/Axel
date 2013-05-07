@@ -237,7 +237,7 @@ package org.axgl {
 					while (timers[i].timer <= 0) {
 						timers[i].timer += timers[i].delay;
 						timers[i].repeat--;
-						timers[i].callback();
+						timers[i].callback( timers[i] );
 						if (timers[i].repeat <= 0) {
 							timers[i].stop();
 							break;
