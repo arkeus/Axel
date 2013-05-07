@@ -20,7 +20,13 @@ package org.axgl {
 		public static const NONE:uint = 0;
 		/** Constant value meaning all directions. */
 		public static const ANY:uint = LEFT | RIGHT | UP | DOWN;
-
+		
+		public static const TOUCH_DIRS_LEFT:uint = 		0;
+		public static const TOUCH_DIRS_RIGHT:uint = 	1;
+		public static const TOUCH_DIRS_TOP:uint = 		2;
+		public static const TOUCH_DIRS_BOTTOM:uint = 	3;
+		public static const TOUCH_DIRS_MAX:uint = 		4;
+		
 		/**
 		 * Determines whether or not this object should be drawn. If this is false, the draw method will
 		 * not be called.
@@ -147,6 +153,12 @@ package org.axgl {
 		 * @default NONE
 		 */
 		public var touched:uint;
+		
+		public var trackTouching:Boolean = false;
+		
+		public var touchingObjects:Vector.< Vector.<AxEntity> >;
+		public var touchedObjects:Vector.< Vector.<AxEntity> >;
+		
 		/**
 		 * For entities that should not move, set this to true in order to skip the calculations for movement. This can be a performance
 		 * gain if you have a lot of entities that do not move.
@@ -206,6 +218,21 @@ package org.axgl {
 			stationary = false;
 			worldBounds = null;
 			timers = null;
+			
+			if( trackTouching )
+			{
+				touchingObjects = new Vector.< Vector.<AxEntity> >( TOUCH_DIRS_MAX );
+				for( var iTouching:uint = 0; iTouching < TOUCH_DIRS_MAX; iTouching++ )
+				{
+					touchingObjects[ iTouching ] = new Vector.<AxEntity>();
+				}
+				
+				touchedObjects = new Vector.< Vector.<AxEntity> >( TOUCH_DIRS_MAX )
+				for( var iTouched:uint = 0; iTouched < TOUCH_DIRS_MAX; iTouched++ )
+				{
+					touchedObjects[ iTouched ] = new Vector.<AxEntity>();
+				}
+			}
 		}
 
 		/**
@@ -259,6 +286,17 @@ package org.axgl {
 			
 			touched = touching;
 			touching = NONE;
+			
+			if( trackTouching )
+			{
+				var tmpTouchedVec:Vector.< Vector.<AxEntity> > = touchedObjects;
+				touchedObjects = touchingObjects;
+				touchingObjects = tmpTouchedVec;	// Reuse this vector...
+				for( var iTouch:uint = 0; iTouch < TOUCH_DIRS_MAX; iTouch++ )			// ...but clear it out. Now we've saved an allocation yay.
+				{
+					touchingObjects[ iTouch ].length = 0;
+				}
+			}
 			
 			previous.x = x;
 			previous.y = y;

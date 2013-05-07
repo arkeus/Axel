@@ -160,11 +160,31 @@ package org.axgl.collision {
 					overlap = source.x + source.width - target.x;
 					source.touching |= AxEntity.RIGHT;
 					target.touching |= AxEntity.LEFT;
+					
+					if( source.trackTouching )
+					{
+						source.touchingObjects[ AxEntity.TOUCH_DIRS_RIGHT ].push( target );
+					}
+					
+					if( target.trackTouching )
+					{
+						target.touchingObjects[ AxEntity.TOUCH_DIRS_LEFT ].push( source );
+					}
 				}
 				if (sfx < tfx) {
 					overlap = source.x - target.width - target.x;
 					target.touching |= AxEntity.RIGHT;
 					source.touching |= AxEntity.LEFT;
+					
+					if( target.trackTouching )
+					{
+						target.touchingObjects[ AxEntity.TOUCH_DIRS_RIGHT ].push( source );
+					}
+					
+					if( source.trackTouching )
+					{
+						source.touchingObjects[ AxEntity.TOUCH_DIRS_LEFT ].push( target );
+					}
 				}
 			}
 
@@ -213,11 +233,31 @@ package org.axgl.collision {
 					overlap = source.y + source.height - target.y;
 					source.touching |= AxEntity.DOWN;
 					target.touching |= AxEntity.UP;
+					
+					if( source.trackTouching )				
+					{
+						source.touchingObjects[ AxEntity.TOUCH_DIRS_BOTTOM ].push( target );
+					}
+					
+					if( target.trackTouching )
+					{
+						target.touchingObjects[ AxEntity.TOUCH_DIRS_TOP ].push( source );
+					}
 				}
 				if (sfy < tfy) {
 					overlap = source.y - target.height - target.y;
 					target.touching |= AxEntity.DOWN;
 					source.touching |= AxEntity.UP;
+					
+					if( source.trackTouching )				
+					{
+						source.touchingObjects[ AxEntity.TOUCH_DIRS_TOP ].push( target );
+					}
+					
+					if( target.trackTouching )
+					{
+						target.touchingObjects[ AxEntity.TOUCH_DIRS_BOTTOM ].push( source );
+					}
 				}
 			}
 
