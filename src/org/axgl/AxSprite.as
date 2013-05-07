@@ -59,6 +59,8 @@ package org.axgl {
 		public var frameWidth:Number;
 		/** The height of the frame for this entity. Used for animation. */
 		public var frameHeight:Number;
+		/** The number of frames for this entity, assuming its spritesheet uses every possible frame. Used for animation. */
+		private var _numFrames:uint;
 
 		/**
 		 * The direction this sprite is facing. If <code>facing</code> is equal to <code>flip</code>, the sprite
@@ -137,6 +139,8 @@ package org.axgl {
 			width = this.frameWidth;
 			height = this.frameHeight;
 			framesPerRow = Math.max(1, Math.floor(texture.rawWidth / width));
+			var numRows:int = Math.max(1, Math.floor(texture.rawHeight / height));
+			_numFrames = framesPerRow * numRows;	// Note that this doesn't account for not-fully-packed sprites.
 			pivot.x = width / 2;
 			pivot.y = height / 2;
 			quad = new AxQuad(this.frameWidth, this.frameHeight, this.frameWidth / texture.width, this.frameHeight / texture.height);
@@ -582,7 +586,11 @@ package org.axgl {
 			color = null;
 			super.dispose();
 		}
-
+		
+		public function getNumFrames():int
+		{
+			return _numFrames;
+		}
 		/**
 		 * The vertex shader for this sprite.
 		 */
