@@ -155,5 +155,20 @@ package org.axgl {
 		public static function distanceToMouse(sourceX:Number, sourceY:Number):Number {
 			return Math.sqrt((Ax.mouse.x - sourceX) * (Ax.mouse.x - sourceX) + (Ax.mouse.y - sourceY) * (Ax.mouse.y - sourceY));
 		}
+		
+		/**
+		 * Calculate the distance between two points.
+		 * 
+		 * @param Point1	A <code>AxPoint</code> object referring to the first location.
+		 * @param Point2	A <code>AxPoint</code> object referring to the second location.
+		 * 
+		 * @return	The distance between the two points as a floating point <code>Number</code> object.
+		 */
+		static public function getDistance( Point1:AxPoint, Point2:AxPoint ):Number
+		{
+			var dx:Number = Point1.x - Point2.x;
+			var dy:Number = Point1.y - Point2.y;
+			return Math.sqrt(dx * dx + dy * dy);
+		}
 	}
 }
