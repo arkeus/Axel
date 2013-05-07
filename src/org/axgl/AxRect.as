@@ -129,5 +129,33 @@ package org.axgl {
 		override public function toString():String {
 			return "(" + x + "," + y + "," + width + "," + height + ")";
 		}
+		
+		public function makeRect( x:Number, y:Number, width:Number, height:Number ):AxPoint
+		{
+			this.x = x;
+			this.y = y;
+			this.width = width;
+			this.height = height;
+			
+			return this;
+		}
+		
+		public function getMidpoint( reusePoint:AxPoint = null ):AxPoint
+		{
+			if( reusePoint == null )
+			{
+				reusePoint = new AxPoint();
+			}
+			
+			return reusePoint.make( 
+				x + width * .5,
+				y + height * .5
+			);
+		}
+		
+		public function overlapsPoint( pt:AxPoint ):Boolean
+		{
+			return ( pt.x >= x && pt.x <= x + width && pt.y >= y && pt.y <= y + height );
+		}
 	}
 }
