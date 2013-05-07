@@ -518,6 +518,10 @@ package org.axgl {
 			return this;
 		}
 		
+		public function isFlickering():Boolean {
+			return flickerEffect != null && flickerEffect.active;
+		}
+		
 		public function fadeOut(duration:Number = 1, targetAlpha:Number = 0, callback:Function = null):AxSprite {
 			if (fadeEffect != null && fadeEffect.active) {
 				fadeEffect.destroy();
