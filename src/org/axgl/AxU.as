@@ -170,5 +170,16 @@ package org.axgl {
 			var dy:Number = Point1.y - Point2.y;
 			return Math.sqrt(dx * dx + dy * dy);
 		}
+		
+		static public function scrambleEntityVector( inVec:Vector.<AxEntity> ):Vector.<AxEntity>
+		{
+			return inVec.sort( shuffleEntities );
+		}
+		
+		public static function shuffleEntities( a:AxEntity, b:AxEntity ):int 
+		{
+			return int( Math.round( Math.random() * 2 ) - 1 );
+		}
+		
 	}
 }
