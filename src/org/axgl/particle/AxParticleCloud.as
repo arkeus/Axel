@@ -62,7 +62,7 @@ package org.axgl.particle {
 		 */
 		public function build():AxParticleCloud {
 			if (texture == null) {
-				texture = AxCache.texture(effect.resource);
+				generateTexture();
 			}
 
 			indexData = new Vector.<uint>;
@@ -130,6 +130,27 @@ package org.axgl.particle {
 			return this;
 		}
 
+		
+		private function generateTexture():void
+		{
+			var resource:Class = null;
+			
+			var animatedEffect:AxParticleEffectAnimated = effect as AxParticleEffectAnimated;
+			if (animatedEffect != null)
+			{
+				resource = animatedEffect.getCurrentResource( time );
+			}
+			else
+			{
+				resource = effect.resource;
+			}
+			
+			if( resource != null )
+			{
+				texture = AxCache.texture( resource );
+			}
+		}
+		
 		override public function update():void {
 			if (time > effect.lifetime.max) {
 				destroy();
@@ -171,7 +192,14 @@ package org.axgl.particle {
 				Ax.shader = shader;
 			}
 			
-			Ax.context.setTextureAt(0, texture.texture);
+			var theTexture:Texture = texture.texture;
+			var animEffect:AxParticleEffectAnimated = effect as AxParticleEffectAnimated;
+			if( animEffect != null )
+			{
+				generateTexture();
+			}
+			
+			Ax.context.setTextureAt(0, theTexture);
 			Ax.context.setBlendFactors(effect.blend.source, effect.blend.destination);
 			Ax.context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, matrix, true);
 
