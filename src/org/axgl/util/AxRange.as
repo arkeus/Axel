@@ -52,5 +52,12 @@ package org.axgl.util {
 		public function randomNumber():Number {
 			return AxU.rand(min * 1000, max * 1000) / 1000;
 		}
+		
+		public function make( min:Number, max:Number ):void
+		{
+			this.min = min;
+			this.max = max;
+		}
+		
 	}
 }
