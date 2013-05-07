@@ -80,7 +80,7 @@ package org.axgl {
 		 * @return This group.
 		 */
 		public function remove(entity:AxEntity, unlinkParent:Boolean = true):AxGroup {
-			var index:uint = members.indexOf(entity);
+			var index:int = members.indexOf(entity);
 			if (index >= 0) {
 				if (unlinkParent) {
 					(members[index] as AxEntity).removeParent();
