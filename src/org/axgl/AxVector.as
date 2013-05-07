@@ -1,4 +1,5 @@
 package org.axgl {
+	import flash.geom.Point;
 
 	/**
 	 * A generic vector class consisting of an "x" component, "y" component, and "a" component. The
@@ -33,5 +34,47 @@ package org.axgl {
 			this.y = y;
 			this.a = a;
 		}
+		
+		public function make( x:Number, y:Number, a:Number = 0 ):void
+		{
+			this.x = x;
+			this.y = y;
+			this.a = a;
+		}
+		
+		/**
+		 * Creates a new <code>flash.geom.Point</code> class with the values in this AxPoint and returns it.
+		 *
+		 * @param point The point to fill the values in for; will create a new instance of a Point if null.
+		 * 
+		 * @return The instance of the flash Point.
+		 * 
+		 * @see flash.geom.Point
+		 */
+		public function toPoint(point:Point = null):Point {
+			if (point == null) {
+				point = new Point(x, y);
+			} else {
+				point.x = x;
+				point.y = y;
+			}
+			return point;
+		}
+		
+		/**
+		 * Copies the contents of the passed <code>flash.geom.Point</code> class into this AxPoint.
+		 *
+		 * @param point The <code>flash.geom.Point</code> to copy the values from.
+		 *
+		 * @return The AxPoint.
+		 * 
+		 * @see flash.geom.Point
+		 */
+		public function fromPoint(point:Point):AxVector {
+			x = point.x;
+			y = point.y;
+			return this;
+		}
+		
 	}
 }
