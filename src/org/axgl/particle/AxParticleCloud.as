@@ -1,6 +1,7 @@
 package org.axgl.particle {
 	import flash.display3D.Context3DProgramType;
 	import flash.display3D.Context3DVertexBufferFormat;
+	import flash.display3D.textures.Texture;
 	import flash.geom.Matrix3D;
 	import flash.geom.Vector3D;
 	
@@ -18,7 +19,7 @@ package org.axgl.particle {
 		/**
 		 * The effect containing all the settings for this particle cloud.
 		 */
-		protected var effect:AxParticleEffect;
+		protected var _effect:AxParticleEffect;
 		/**
 		 * A temporary vector used to upload constants to the shaders without needing to create a new
 		 * vector object every frame.
@@ -37,13 +38,21 @@ package org.axgl.particle {
 		 */
 		public function AxParticleCloud(effect:AxParticleEffect) {
 			super(0, 0, VERTEX_SHADER, FRAGMENT_SHADER, 19);
-			this.effect = effect;
+			_effect = effect;
 			matrix = new Matrix3D;
 			tempVector = new Vector.<Number>(4, true);
 			time = 0;
 			active = false;
 			visible = false;
 			scroll = effect.scroll;
+		}
+
+		/**
+		 * The effect containing all the settings for this particle cloud.
+		 */
+		public function get effect():AxParticleEffect
+		{
+			return _effect;
 		}
 
 		/**
