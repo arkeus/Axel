@@ -43,10 +43,10 @@ package org.axgl.camera.effect {
 		 * @inheritDoc
 		 */
 		override public function update(camera:AxCamera):void {
-			if (axes & AxCamera.HORIZONTAL > 0) {
+			if ( ( axes & AxCamera.HORIZONTAL ) > 0) {
 				x = AxU.randf(-intensity, intensity) * (ease ? remaining / duration : 1);
 			}
-			if (axes & AxCamera.VERTICAL > 0) {
+			if ( ( axes & AxCamera.VERTICAL ) > 0) {
 				y = AxU.randf(-intensity, intensity) * (ease ? remaining / duration : 1);
 			}
 			
