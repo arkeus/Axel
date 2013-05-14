@@ -1,6 +1,8 @@
 package org.axgl {
 	import flash.net.URLRequest;
 	import flash.net.navigateToURL;
+	import flash.utils.getDefinitionByName;
+	import flash.utils.getQualifiedClassName;
 
 	/**
 	 * The Ax Utility class, containing various utility functions to make your life easier. Some of these
@@ -177,6 +179,54 @@ package org.axgl {
 		public static function shuffleEntities( a:AxEntity, b:AxEntity ):int 
 		{
 			return int( Math.round( Math.random() * 2 ) - 1 );
+		}
+		
+		/**
+		 * Get the <code>String</code> name of any <code>Object</code>.
+		 * 
+		 * @param	Obj		The <code>Object</code> object in question.
+		 * @param	Simple	Returns only the class name, not the package or packages.
+		 * 
+		 * @return	The name of the <code>Class</code> as a <code>String</code> object.
+		 */
+		static public function getClassName(Obj:Object,Simple:Boolean=false):String
+		{
+			var string:String = getQualifiedClassName(Obj);
+			string = string.replace("::",".");
+			if(Simple)
+				string = string.substr(string.lastIndexOf(".")+1);
+			return string;
+		}
+		
+		
+		/**
+		 * Check to see if two objects have the same class name.
+		 * 
+		 * @param	Object1		The first object you want to check.
+		 * @param	Object2		The second object you want to check.
+		 * 
+		 * @return	Whether they have the same class name or not.
+		 */
+		static public function compareClassNames(Object1:Object,Object2:Object):Boolean
+		{
+			return getQualifiedClassName( Object1 ) == getQualifiedClassName( Object2 );
+		}
+		
+		/**
+		 * Look up a <code>Class</code> object by its string name.
+		 * 
+		 * @param	Name	The <code>String</code> name of the <code>Class</code> you are interested in.
+		 * 
+		 * @return	A <code>Class</code> object.
+		 */
+		static public function getClass(Name:String):Class
+		{
+			return getDefinitionByName( Name ) as Class;
+		}
+		
+		public static function getClassForObject( obj:Object ):Class
+		{
+			return getClass( getClassName( obj ) );
 		}
 		
 	}
