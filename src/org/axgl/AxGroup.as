@@ -51,6 +51,12 @@ package org.axgl {
 				throw new ArgumentError("Cannot add a null object to a group.");
 			}
 			
+			if( members.indexOf( entity ) != -1 )
+			{
+				// Already added, no need to do anything.
+				return this;
+			}
+			
 			members.push(entity);
 			if (linkParent) {
 				entity.setParent(this);
