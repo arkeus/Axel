@@ -84,5 +84,10 @@ package org.axgl {
 		public function toString():String {
 			return "(" + x + "," + y + "," + a + ")";
 		}
+		
+		public function copyFrom( fromPt:AxVector ):void
+		{
+			make( fromPt.x, fromPt.y, fromPt.a );
+		}
 	}
 }

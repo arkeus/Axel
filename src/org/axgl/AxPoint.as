@@ -79,5 +79,11 @@ package org.axgl {
 		public function toString():String {
 			return "(" + x + "," + y + ")";
 		}
+		
+		public function copyFrom( fromPt:AxPoint ):void
+		{
+			x = fromPt.x;
+			y = fromPt.y;
+		}
 	}
 }
