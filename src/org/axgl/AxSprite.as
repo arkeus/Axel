@@ -418,7 +418,7 @@ package org.axgl {
 			var cy:Number = Ax.camera.position.y * scroll.y + Ax.camera.effectOffset.y;
 			if (facing == flip) {
 				matrix.appendScale(scalex * -1, scaley, 1);
-				matrix.appendTranslation(Math.round(sx - cx + AxU.EPSILON + frameWidth), Math.round(sy - cy + AxU.EPSILON), 0);
+				matrix.appendTranslation( Math.round(sx - cx + AxU.EPSILON + width + offset.x * 2), Math.round(sy - cy + AxU.EPSILON), 0 );
 			} else if (scalex != 1 || scaley != 1) {
 				matrix.appendTranslation(-origin.x, -origin.y, 0);
 				matrix.appendScale(scalex, scaley, 1);
