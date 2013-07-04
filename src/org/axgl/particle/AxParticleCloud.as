@@ -158,6 +158,10 @@ package org.axgl.particle {
 			}
 			super.update();
 			time += Ax.dt;
+			if( time < 0 )
+			{
+				time = 0;
+			}
 		}
 
 		/**
