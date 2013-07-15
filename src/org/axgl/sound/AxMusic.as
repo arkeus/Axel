@@ -22,7 +22,7 @@ package org.axgl.sound {
 		 */
 		override protected function updateVolume():void {
 			soundTransform.volume = Ax.musicMuted ? 0 : volume * Ax.musicVolume;
-			soundChannel.soundTransform = soundTransform;
+			_soundChannel.soundTransform = soundTransform;
 		}
 	}
 }

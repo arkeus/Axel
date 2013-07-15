@@ -15,8 +15,7 @@ package org.axgl.sound {
 	public class AxSound extends AxEntity {
 		/** The internal flash sound object. */
 		private var sound:Sound;
-		/** The internal flash sound channel. */
-		protected var soundChannel:SoundChannel;
+		protected var _soundChannel:SoundChannel;
 		/** The internal flash sound transform. */
 		protected var soundTransform:SoundTransform;
 
@@ -51,14 +50,20 @@ package org.axgl.sound {
 			this.soundTransform = new SoundTransform(volume);
 		}
 
+		/** The internal flash sound channel. */
+		public function get soundChannel():SoundChannel
+		{
+			return _soundChannel;
+		}
+
 		/**
 		 * Plays the sound. If loop is true, will repeat once it reaches the end.
 		 *
 		 * @return
 		 */
 		public function play():AxSound {
-			soundChannel = sound.play(start, loop ? int.MAX_VALUE : 0, soundTransform);
-			soundChannel.addEventListener(Event.SOUND_COMPLETE, onSoundComplete);
+			_soundChannel = sound.play(start, loop ? int.MAX_VALUE : 0, soundTransform);
+			_soundChannel.addEventListener(Event.SOUND_COMPLETE, onSoundComplete);
 			return this;
 		}
 		
@@ -75,9 +80,13 @@ package org.axgl.sound {
 		 * Destroys the sound, freeing up resources used.
 		 */
 		override public function destroy():void {
-			soundChannel.removeEventListener(Event.SOUND_COMPLETE, destroy);
+			if( _soundChannel != null )
+			{
+				_soundChannel.stop();
+				_soundChannel.removeEventListener(Event.SOUND_COMPLETE, destroy);
+			}
 			sound = null;
-			soundChannel = null;
+			_soundChannel = null;
 			soundTransform = null;
 			Ax.sounds.remove(this);
 			super.destroy();
@@ -95,7 +104,7 @@ package org.axgl.sound {
 		 */
 		protected function updateVolume():void {
 			soundTransform.volume = Ax.soundMuted ? 0 : volume * Ax.soundVolume;
-			soundChannel.soundTransform = soundTransform;
+			_soundChannel.soundTransform = soundTransform;
 		}
 	}
 }
