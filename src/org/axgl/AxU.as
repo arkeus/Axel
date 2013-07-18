@@ -178,7 +178,7 @@ package org.axgl {
 		
 		public static function shuffleEntities( a:AxEntity, b:AxEntity ):int 
 		{
-			return int( Math.round( Math.random() * 2 ) - 1 );
+			return rand( -1, 1 );
 		}
 		
 		/**
