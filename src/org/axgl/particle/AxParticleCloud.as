@@ -97,6 +97,18 @@ package org.axgl.particle {
 				var ceb:Number = effect.endColorBlue.randomNumber();
 				var cea:Number = effect.endAlpha.randomNumber();
 				
+				if( effect.randomlyFlipScale && AxU.randf( 0, 1 ) > .5 )
+				{
+					ssc *= -1;
+					esc *= -1;
+					vx *= -1;
+					vy *= -1;
+					ax *= -1;
+					ay *= -1;
+					tx -= frameWidth;
+					ty -= frameHeight;
+				}
+				
 				var frame:uint;
 				if (effect.frameRange.min < 0 || effect.frameRange.max < 0) {
 					frame = AxU.rand(0, lastFrameIndex); 

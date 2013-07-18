@@ -71,6 +71,9 @@ package org.axgl.particle {
 		 * @default (1, 1) 
 		 */
 		public var endScale:AxRange;
+		
+		public var randomlyFlipScale:Boolean = false;
+		
 		/**
 		 * The minimum and maximum alpha value that each particle will start with.
 		 * 
