@@ -157,5 +157,22 @@ package org.axgl {
 		{
 			return ( pt.x >= x && pt.x <= x + width && pt.y >= y && pt.y <= y + height );
 		}
+		
+		public function copyRectFrom( rect:AxRect ):AxRect
+		{
+			resetRect( rect.x, rect.y, rect.width, rect.height );
+			
+			return this;
+		}
+		
+		public function resetRect( x:Number, y:Number, width:Number, height:Number ):AxRect
+		{
+			this.x = x;
+			this.y = y;
+			this.width = width;
+			this.height = height;
+			
+			return this;
+		}
 	}
 }
