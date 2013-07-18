@@ -709,7 +709,7 @@ package org.axgl {
 			if (worldZoom <= 0) {
 				throw new Error("Zoom level must be greater than 0");
 			}
-			Ax.worldZoom = Math.ceil(worldZoom);
+			Ax.worldZoom = worldZoom;
 			camera.calculateZoomMatrix();
 		}
 
