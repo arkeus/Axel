@@ -104,7 +104,10 @@ package org.axgl.sound {
 		 */
 		protected function updateVolume():void {
 			soundTransform.volume = Ax.soundMuted ? 0 : volume * Ax.soundVolume;
-			_soundChannel.soundTransform = soundTransform;
+			if( _soundChannel != null )
+			{
+				_soundChannel.soundTransform = soundTransform;
+			}
 		}
 	}
 }
