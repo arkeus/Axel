@@ -63,7 +63,10 @@ package org.axgl.sound {
 		 */
 		public function play():AxSound {
 			_soundChannel = sound.play(start, loop ? int.MAX_VALUE : 0, soundTransform);
-			_soundChannel.addEventListener(Event.SOUND_COMPLETE, onSoundComplete);
+			if( _soundChannel != null )
+			{
+				_soundChannel.addEventListener(Event.SOUND_COMPLETE, onSoundComplete);
+			}
 			return this;
 		}
 		
