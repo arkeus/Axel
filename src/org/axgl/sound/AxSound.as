@@ -67,6 +67,7 @@ package org.axgl.sound {
 			{
 				_soundChannel.addEventListener(Event.SOUND_COMPLETE, onSoundComplete);
 			}
+			updateVolume();
 			return this;
 		}
 		
