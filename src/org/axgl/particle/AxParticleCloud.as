@@ -7,7 +7,9 @@ package org.axgl.particle {
 	
 	import org.axgl.Ax;
 	import org.axgl.AxModel;
+	import org.axgl.AxRect;
 	import org.axgl.AxU;
+	import org.axgl.camera.AxCamera;
 	import org.axgl.util.AxCache;
 
 	/**
@@ -193,6 +195,21 @@ package org.axgl.particle {
 		}
 
 		override public function draw():void {
+			
+			var cam:AxRect = Ax.camera.bounds;
+			
+			if (	(	x > cam.x + cam.width || 
+						y > cam.y + cam.height || 
+						x + width < cam.x || 
+						y + height < cam.y 
+					) || 
+				scale.x == 0 || 
+				scale.y == 0 
+			) 
+			{
+				return;
+			}
+			
 			colorTransform[RED] = color.red;
 			colorTransform[GREEN] = color.green;
 			colorTransform[BLUE] = color.blue;
