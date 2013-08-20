@@ -202,6 +202,8 @@ package org.axgl.particle {
 			matrix.appendRotation(angle, Vector3D.Z_AXIS, pivot);
 			matrix.appendTranslation(x - Ax.camera.position.x * scroll.x - Ax.camera.effectOffset.x, y - Ax.camera.position.y * scroll.y - Ax.camera.effectOffset.y, 0);
 			matrix.append(zooms ? Ax.camera.projection : Ax.camera.baseProjection);
+			
+			matrix.appendScale( scale.x, scale.y, 1 );
 
 			if (shader != Ax.shader) {
 				Ax.context.setProgram(shader.program);
