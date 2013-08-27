@@ -159,7 +159,7 @@ package org.axgl.tilemap {
 			this.bufferOffsets = new Vector.<int>;
 			
 			this.uvWidth = 1 / (texture.width / tileWidth);
-			this.uvHeight = 1 / (texture.height / tileWidth);
+			this.uvHeight = 1 / (texture.height / tileHeight);
 
 			indexData = new Vector.<uint>;
 			vertexData = new Vector.<Number>;
