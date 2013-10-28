@@ -1,8 +1,87 @@
-## 0.9.3 / 2012-??-??
+## 0.9.3 / 2013-10-27
+* AxTilemaps are now split into segments, and you should be able to create arbitrarily big tilemaps now
+* Added a flash() camera effect (implemented using the fade effect)
+* Added a debug console, all messages via Ax.logger.(info/warn/error) are placed there
+* Added three debug console layouts that you can use
+* Added a resize() method to AxText to resize the text without creating a new one (TODO: make it a setter for width?)
+* The create() method of your main state is now called before your first state is initialized
+* Camera effect offset is now stored separately from position
+* AxClouds are now properly affected by the scroll attribute
+* Added a second optional parameter to AxGroup.add to allow you not to inherit the scroll factor
+* General logger added, you can now log to Ax.logger.log/warn/error which will log to browser console in addition to trace, when available
+* The default background color is now gray rather than white
+* Added a reset method to AxCache
+* You can now pass an array of arrays to AxTilemap.build in addition to passing a CSV
+* Added the ability to define a text limit strategy to limit the number of lines that are drawn in a text
+* Added an AxTilemap.getTileIndexAt to get the tile id at a given position without having to go through AxTile
+* Removed statically initialized variables for better mobile support
+* Added ability to reset the AxCache
+* Added helper method to center the origin of a sprite
+* Added ability to optionally skip callbacks when clearing effects
+* Added a flash sprite effect to flash a sprite a specific color for a period of time
+* Added setBounds helper function to the camera
+* Added the ability to set and retrieve arbitrary properties on an AxTile
+* Fixed an issue where the shake screen effect was being affected by the scroll attribute
+* Fixed an issue where scaled sprites could be rendering 1 pixel off
+* Fixed an issue where the screen attribute of an AxSprite wasn't set until the first update after creation
+* Fixed an issue where removing an entity that doesn't belong to an AxGroup was incorrect
+* Fixed an issue where setTile wouldn't update the tiles array when changing an existing tile
+* Fixed an issue where fps was greater than requested fps in the debugger display (cosmetic change)
+* Fixed an issue where the external logger could prevent the game from loading
+* Fixed a text width issue that could cause text to be slightly longer than the requested width
+* Fixed an issue where if you bounded the camera to an area smaller than the screen the screen would flicker
+* Fixed AxParallaxSprite not working correctly in the vertical direction
+* Fixed an issue when a callback of an animation modifies the animation
+* Fixed issue where offset was not being taken into account in determining view culling of sprites
+* Fixed issue where clearEffects would fail if there were no effects
+* Fixed AxText issues regarding positioning and scaling
+* Fixed an issue with tilemaps not working with non-square tiles
+* Fixed an issue with one way collisions not being accurate
+* Fixed an issue with grabbing the final row of tiles via getTileAt
+* Made the fade effect more accurate
+
+## 0.9.3 beta / 2013-01-22
+* Entities now have a simple parenting system. When adding to groups, its parent will be set and position based off of the parent
+* To support parenting, entities now have setParent and removeParent functionality (note: collision does not support parent offsets yet)
+* Positions on entities with parents are now relative to the parent, to support this, globalX and globalY setters have been added to AxEntity
+* When the game loses focus it now switched to a default pause screen. This can be changed via Ax.pauseState
+* You can now define a callback for animations that is called when (and every time) the animation completes
+* AxClouds now update their position based on acceleration, velocity, and drag, affecting all children positions
 * Simple animation set has been added to AxSprite, accessible via addEffect() and clearEffects()
 * AxSprites now implement the following effects:
 ** sprite.startFlicker() and sprite.stopFlicker()
 ** sprite.fadeIn() and sprite.fadeOut()
+** sprite.grow() for scaling up and down over time
+* AxClouds now have freeze() and unfreeze() methods to alias settings actions to NONE and ALL, respectively
+* AxClouds and AxGroups now have a clear() method that will clear the group of all members, optionally disposing them 
+* AxEntitys now have a revive() function that mirrors the destroy() functionality by setting exists to true
+* AxParallaxSprite is a new type of sprite that repeats itself as it scrolls with the camera, useful for parallax backgrounds
+* You can now set the blend mode of AxSprites, AxTexts, and AxClouds using the blend property
+* All entities now have an addTimer functionality for creating events that are delayed, or events that repeat every X seconds
+* You can now set the scroll on an AxGroup and have it affect all entities current and future (with some caveats, see documentation)
+* Added helper functions noScroll() to AxGroup and AxModel to cover the common use case of setting scroll.x and scroll.y to 0
+* AxStates now include an onPause() and onResume() that fire when they lose/gain focus from adding/popping states
+* AxEntity now have a stop() function that sets horizontal, vertical, and angular components of velocity to 0
+* When setting a color using @[] notation in AxText, you can use html codes as rrggbb or aarrggbb (eg. @[ff0000] instead of @[255,0,0] for red)
+* You can now pass a vertical offset for the label when calling text() on an AxButton
+* You can now set the offset property of the camera to offset the camera by a fixed amount
+* The camera now has the following effects available:
+** Ax.camera.shake - shakes the camera
+** Ax.camera.fade/fadeOut/fadeIn - fades the camera in/out to a color
+* AxGroup constructor no longer takes a width and height
+* The debugger menu now displays the size of the state stack in brackets on the bottom right
+* Fixed an issue with AxSprite when you do not load a resource
+* Fixed an issue where the center of sprites were not being updated if you moved manually rather than using velocity
+* Fixed an issue where screen coordinates were incorrect at non-default scroll values
+* Fixed incorrect positions of AxText objects with scale != 1 when alignment was "center" or "right"
+* Fixed an issue with AxText not properly getting width and height set
+* Fixed an issue where the screen coordinates of the mouse weren't correctly taking into account the zoom level
+* Fixed an issue where releaseAll on an input would cause everything to be justReleased rather than resetting the input
+* Fixed an AxText width issue where the width is equal to the greatest width since creation
+* Fixed an issue where destroy events on sounds/music were attached to the wrong object
+* Fixed an issue where the sounds group would never be cleaned up, using unnecessary memory
+* Fixed an issue where the centers of objects weren't being updated for stationary objects
+* Fixed an issue where the center of an object recently affected by a world bound check would be incorrect
 
 ## 0.9.2 / 2012-06-30
 * You can now dynamically change tiles in a tilemap dynamically via AxTilemap.setTileAt()
