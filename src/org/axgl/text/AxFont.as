@@ -104,7 +104,7 @@ package org.axgl.text {
 
 			af.texture = AxCache.texture(resource);
 			af.width = width;
-			af.height = height == 0 ? bitmap.height : height;
+			af.height = height == 0 ? bitmap.height - 1 : height;
 			af.alphabet = alphabet;
 			af.spacing = new AxPoint(hspacing, vspacing);
 			height = af.height;
@@ -119,25 +119,18 @@ package org.axgl.text {
 			var u:Number, v:Number, char:String;
 
 			if (width == 0) { // variable width
-				for (y = 1; y < bitmap.height; y += height) {
-					for (x = 0; x < bitmap.width; x++) {
-						if (x == 0 && y == 1) {
-							offset.x = 1;
-							continue;
-						}
-						var pixel:uint = bitmap.getPixel(x, y - 1);
-						if (pixel == separator) {
-							char = characterArray.shift();
-							characterWidthPixels = x - offset.x;
-							characterWidth = characterWidthPixels / af.texture.width;
-							u = offset.x / af.texture.width;
-							v = offset.y / af.texture.height;
-							af.characters[char] = new AxCharacter(characterWidthPixels, characterHeightPixels, new AxRect(u, v, characterWidth, characterHeight));
-							offset.x = x + 1;
-						}
+				offset.y = y = 1; // Top row is delimeters
+				for (x = 1; x < bitmap.width; x++) {
+					var pixel:uint = bitmap.getPixel(x, y - 1);
+					if (pixel == separator) {
+						char = characterArray.shift();
+						characterWidthPixels = x - offset.x + 1;
+						characterWidth = characterWidthPixels / af.texture.width;
+						u = offset.x / af.texture.width;
+						v = offset.y / af.texture.height;
+						af.characters[char] = new AxCharacter(characterWidthPixels, characterHeightPixels, new AxRect(u, v, characterWidth, characterHeight));
+						offset.x = x + 1;
 					}
-					offset.y += height + 1;
-					offset.x = 0;
 				}
 			} else { // fixed width
 				characterWidthPixels = width;
@@ -154,8 +147,7 @@ package org.axgl.text {
 			}
 
 			if (characterArray.length > 0) {
-				// FIXME
-				//throw new Error("Invalid bitmap font image. Number of characters in image doesn't match alphabet. Remaining characters: " + characterArray.join(" "));
+				throw new Error("Invalid bitmap font image. Number of characters in image doesn't match alphabet. Remaining characters: " + characterArray.join(" "));
 			}
 
 			return af;
