@@ -42,7 +42,7 @@ package org.axgl {
 	 */
 	public class Ax extends Sprite {
 		public static const LIBRARY_NAME:String = "Axel";
-		public static const LIBRARY_VERSION:String = "0.9.3 r2";
+		public static const LIBRARY_VERSION:String = "0.9.4 r1";
 		
 		/**
 		 * Whether or not the game is running is debug mode.
