@@ -4,6 +4,7 @@ package org.axgl {
 	import flash.geom.Matrix3D;
 	import flash.geom.Vector3D;
 	
+	import org.axgl.render.AxBlendMode;
 	import org.axgl.render.AxColor;
 	import org.axgl.render.AxShader;
 	import org.axgl.render.AxTexture;
@@ -28,9 +29,9 @@ package org.axgl {
 		/** The vertex buffer used to draw this model. */
 		protected var vertexBuffer:VertexBuffer3D;
 		/** The shader (containing the Program3D) used to draw this model. */
-		protected var shader:AxShader;
+		public var shader:AxShader;
 		/** The number of triangles contained in this model's mesh. */
-		protected var triangles:uint;
+		public var triangles:uint;
 		/** A matrix containing a generic transformation to apply to this model. */
 		protected var matrix:Matrix3D;
 		/** A vector containing the red, green, blue, and alpha values to transform this model. */
@@ -39,6 +40,8 @@ package org.axgl {
 		public var color:AxColor;
 		/** The texture used to draw this model. */
 		public var texture:AxTexture;
+		/** The blend mode used for drawing this model. */
+		public var blend:AxBlendMode;
 		
 		/** Whether or not to count the tris of this model for display in the debugger */
 		public var countTris:Boolean;
@@ -135,7 +138,7 @@ package org.axgl {
 		 * 
 		 * @param opacity The alpha value, between 0 and 1.
 		 */
-		public function set alpha(opacity:Number):void {
+		override public function set alpha(opacity:Number):void {
 			color.alpha = AxU.clamp(opacity, 0, 1);
 		}
 		
@@ -145,17 +148,37 @@ package org.axgl {
 		 * 
 		 * @return The alpha value, between 0 and 1.
 		 */
-		public function get alpha():Number {
+		override public function get alpha():Number {
 			return color.alpha;
+		}
+		
+		/**
+		 * Alias to set this object's scroll factor in both directions to be 0.
+		 * 
+		 * @return This object.
+		 */
+		public function noScroll():AxModel {
+			scroll.x = scroll.y = 0;
+			return this;
+		}
+		
+		/**
+		 * Alias to set this object's origin (used for scaling) the center of the model.
+		 * 
+		 * @return This object.
+		 */
+		public function centerOrigin():AxModel {
+			origin.x = width / 2;
+			origin.y = height / 2;
+			return this;
 		}
 		
 		/**
 		 * @inheritDoc
 		 */
 		override public function hover():Boolean {
-			return contains(Ax.mouse.x - Ax.camera.x * (1 - scroll.x), Ax.mouse.y - Ax.camera.y * (1 - scroll.y));
+			return contains(Ax.mouse.x - (Ax.camera.x + Ax.camera.offset.x) * (1 - scroll.x), Ax.mouse.y - (Ax.camera.y + Ax.camera.offset.y) * (1 - scroll.y));
 		}
-		
 		
 		override public function dispose():void {
 			vertexShader = null;

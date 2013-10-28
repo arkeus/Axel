@@ -1,5 +1,4 @@
 package org.axgl {
-	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display3D.Context3DBlendFactor;
 	import flash.display3D.Context3DProgramType;
@@ -8,11 +7,17 @@ package org.axgl {
 	import flash.geom.Matrix3D;
 	import flash.geom.Vector3D;
 	
+	import org.axgl.effect.sprite.AxAlphaSpriteEffect;
+	import org.axgl.effect.sprite.AxFlashSpriteEffect;
+	import org.axgl.effect.sprite.AxFlickerSpriteEffect;
+	import org.axgl.effect.sprite.AxScaleSpriteEffect;
+	import org.axgl.effect.sprite.AxSpriteEffect;
 	import org.axgl.render.AxQuad;
+	import org.axgl.render.AxTexture;
 	import org.axgl.resource.AxResource;
 	import org.axgl.util.AxAnimation;
 	import org.axgl.util.AxCache;
-	
+
 	/**
 	 * An <code>AxSprite</code> is the entity that makes up most game objects. You can load an image, rotate it, change
 	 * the color, move it, and more. Game objects that will be visible on screen should extend this class.
@@ -35,7 +40,7 @@ package org.axgl {
 		 * TODO: Implement debug drawing
 		 */
 		protected var debugColor:Vector.<Number>;
-		
+
 		/** The current animation this sprite is playing. */
 		public var animation:AxAnimation;
 		/** All registered animations of this sprite. This is a map from animation name to animation. */
@@ -44,7 +49,7 @@ package org.axgl {
 		protected var animationDelay:Number;
 		/** Read-only. The timer for playing the current animation. */
 		protected var animationTimer:Number;
-		
+
 		/** The current frame of the animation. If an animation is not currently playing, the currently showing frame. */
 		public var frame:uint = 0;
 		/** The number of frames per row in the loaded texture. */
@@ -53,7 +58,7 @@ package org.axgl {
 		public var frameWidth:Number;
 		/** The height of the frame for this entity. Used for animation. */
 		public var frameHeight:Number;
-		
+
 		/**
 		 * The direction this sprite is facing. If <code>facing</code> is equal to <code>flip</code>, the sprite
 		 * will be flipped horizontally. Set <code>flip</code> to <code>NONE</code> to disable this behavior. If
@@ -72,6 +77,17 @@ package org.axgl {
 		 */
 		public var flip:uint = LEFT;
 		
+		/** The list of effects currently active for this sprite. Will be null if no effects have been added. */
+		public var effects:Vector.<AxSpriteEffect>;
+		/** The internal flicker effect used for the startFlicker and stopFlicker functions. */
+		private var flickerEffect:AxFlickerSpriteEffect;
+		/** The internal alpha effect used for the fadeIn and fadeOut functions. */
+		private var fadeEffect:AxAlphaSpriteEffect;
+		/** The internal scale effect used for the grow function. */
+		private var growEffect:AxScaleSpriteEffect;
+		/** The internal flash effect used for the flash function. */
+		private var flashEffect:AxFlashSpriteEffect;
+
 		/**
 		 * Creates a new sprite at the given position. Loads the image in graphic using the given frameWidth and frameHeight. If
 		 * frameWidth or frameHeight are 0, then the entire image is treated as a single frame. If you do not pass a graphic here,
@@ -83,28 +99,32 @@ package org.axgl {
 		 * @param frameWidth The width of each frame in the embedded graphic.
 		 * @param frameHeight The height of each frame in the embedded graphic.
 		 */
-		public function AxSprite(x:Number, y:Number, graphic:Class = null, frameWidth:uint = 0, frameHeight:uint = 0) {
+		public function AxSprite(x:Number = 0, y:Number = 0, graphic:Class = null, frameWidth:uint = 0, frameHeight:uint = 0) {
 			super(x, y, VERTEX_SHADER, FRAGMENT_SHADER, 4, "AxSprite");
-			
+
 			matrix = new Matrix3D;
 			scale = new AxPoint(1, 1);
 			debugColor = Vector.<Number>([1, 0, 0, 1]);
 			colorTransform.fixed = true;
 			uvOffset = new Vector.<Number>(4, true);
-			screen = new AxPoint;
-			
+			screen = new AxPoint(x - (Ax.camera.x + Ax.camera.offset.x) * scroll.x, y - (Ax.camera.y + Ax.camera.offset.y) * scroll.y);
+
 			quad = null;
 			dirty = true;
-			
+
 			animations = new Object;
 			
+			effects = null;
+			flickerEffect = null;
+
 			if (graphic != null) {
 				load(graphic, frameWidth, frameHeight);
 			}
 		}
-		
+
 		/**
-		 * Loads a new graphic for this sprite with the specified frame width and height.
+		 * Loads a new graphic for this sprite with the specified frame width and height. The graphic can be one of:
+		 * class (embedded graphic), an instance of BitmapData, or an AxTexture.
 		 * 
 		 * @param graphic The graphic to load for this sprite.
 		 * @param frameWidth The width of each frame in the graphic.
@@ -137,11 +157,11 @@ package org.axgl {
 		 *
 		 * @return The sprite instance.
 		 */
-		public function create(width:uint, height:uint, color:uint):AxSprite {
+		public function create(width:uint, height:uint, color:uint = 0xff000000):AxSprite {
 			var bitmap:BitmapData = new BitmapData(width, height, true, color);
 			return load(bitmap, width, height);
 		}
-		
+
 		/**
 		 * TODO: Implement
 		 * 
@@ -158,7 +178,7 @@ package org.axgl {
 				debugColor[ALPHA] = alpha;
 			}
 		}
-		
+
 		/**
 		 * TODO: Implement
 		 */
@@ -175,7 +195,7 @@ package org.axgl {
 				debugColor[ALPHA] = 1;
 			}
 		}
-		
+
 		/**
 		 * Sets the bounding box for this sprite. This is a helpfer method to set the width, height, and offset values
 		 * all at once.
@@ -198,21 +218,14 @@ package org.axgl {
 			this.offset.y = offsetY;
 			return this;
 		}
-		
-		/**
-		 * Calculates the vertex buffer for this sprite, using the cached version if another identical vertex buffer exists.
-		 */
-		private function calculateVertexBuffer():void {
-			vertexBuffer = AxCache.vertexBuffer(frameWidth, frameHeight, 1, 1);
-		}
-		
+
 		/**
 		 * Calculates the debug vertex buffer for this sprite, using the cached version if another identical vertex buffer exists.
 		 */
 		private function calculateDebugVertexBuffer():void {
 			//debugVertexBuffer = AxCache.debugVertexBuffer(width, height, 1, 1);//uvSize.x, uvSize.y);
 		}
-		
+
 		/**
 		 * Calculates the texture for the passed graphic. If the same graphic was used to create a texture, pulls it from the
 		 * cache. Otherwise, creates a new texture and uploads it to the GPU. Note that that performance reasons, you should
@@ -222,13 +235,13 @@ package org.axgl {
 		 * @param graphic The graphic to create the texture from.
 		 */
 		private function calculateTexture(graphic:*):void {
-			texture = AxCache.texture(graphic);
+			texture = graphic is AxTexture ? graphic : AxCache.texture(graphic);
 			if (frameWidth == 0 || frameHeight == 0) {
 				frameWidth = texture.rawWidth;
 				frameHeight = texture.rawHeight;
 			}
 		}
-		
+
 		/**
 		 * Adds a new animation to this sprite. The <code>name</code> of the animation is what you will use to access it via the <code>animate</code>
 		 * function. The <code>frames</code> is an array that lists the frames of the animation in the order they will play. <code>Framerate</code> is
@@ -243,22 +256,23 @@ package org.axgl {
 		 *
 		 * @return The sprite instance.
 		 */
-		public function addAnimation(name:String, frames:Array, framerate:uint = 15, looped:Boolean = true):AxSprite {
-			animations[name] = new AxAnimation(name, frames, framerate < 1 ? 15 : framerate, looped);
+		public function addAnimation(name:String, frames:Array, framerate:uint = 15, looped:Boolean = true, callback:Function = null):AxSprite {
+			animations[name] = new AxAnimation(name, frames, framerate < 1 ? 15 : framerate, looped, callback);
 			return this;
 		}
-		
+
 		/**
 		 * Tells this sprite to immediately start playing the animation that you passed. If that animation is already playing,
 		 * this call will do nothing. If you want to stop the animation and instead show a static frame, use the <code>show</code>
 		 * method instead.
 		 * 
 		 * @param name The name of the animation to play.
+		 * @param reset Whether or not to force reset the animation from scratch.
 		 *
 		 * @return The sprite instance.
 		 */
-		public function animate(name:String):AxSprite {
-			if ((animation == null || (animation != null && animation.name != name)) && animations[name] != null) {
+		public function animate(name:String, reset:Boolean = false):AxSprite {
+			if ((reset || animation == null || (animation != null && animation.name != name)) && animations[name] != null) {
 				animation = animations[name];
 				animationDelay = 1 / animation.framerate;
 				animationTimer = animationDelay;
@@ -280,7 +294,7 @@ package org.axgl {
 			this.frame = frame;
 			return this;
 		}
-		
+
 		/**
 		 * Calculates the helper variables required to draw the current frame of this sprite.
 		 */
@@ -294,52 +308,67 @@ package org.axgl {
 					}
 					uvOffset[0] = (animation.frames[frame] % framesPerRow) * quad.uvWidth;
 					uvOffset[1] = Math.floor(animation.frames[frame] / framesPerRow) * quad.uvHeight;
+					if (frame + 1 == animation.frames.length && animation.callback != null) {
+						animation.callback();
+					}
 				}
 			} else {
 				uvOffset[0] = (frame % framesPerRow) * quad.uvWidth;
 				uvOffset[1] = Math.floor(frame / framesPerRow) * quad.uvHeight;
 			}
 		}
-		
+
 		/**
 		 * @inheritDoc
 		 */
 		override public function get left():Number {
 			return x;
 		}
-		
+
 		/**
 		 * @inheritDoc
 		 */
 		override public function get top():Number {
 			return y;
 		}
-		
+
 		/**
 		 * @inheritDoc
 		 */
 		override public function get right():Number {
 			return x + width * scale.x;
 		}
-		
+
 		/**
 		 * @inheritDoc
 		 */
 		override public function get bottom():Number {
 			return y + height * scale.y;
 		}
-		
+
 		/**
 		 * @inheritDoc
 		 */
 		override public function update():void {
 			super.update();
+
+			screen.x = x - (Ax.camera.x + Ax.camera.offset.x) * scroll.x;
+			screen.y = y - (Ax.camera.y + Ax.camera.offset.y) * scroll.y;
 			
-			screen.x = (x - Ax.camera.x) * scroll.x;
-			screen.y = (y - Ax.camera.y) * scroll.y;
+			if (texture == null) {
+				load(AxResource.ICON);
+			}
 			calculateFrame();
+			
+			if (effects != null) {
+				for each(var effect:AxSpriteEffect in effects) {
+					if (effect.active) {
+						effect.update();
+					}
+				}
+			}
 		}
-		
+
 		/**
 		 * Builds a vertex buffer for the given quad.
 		 * 
@@ -347,70 +376,72 @@ package org.axgl {
 		 */
 		public function buildVertexBuffer(quad:AxQuad):void {
 			if (indexBuffer == null) {
+				if (SPRITE_INDEX_BUFFER == null) {
+					SPRITE_INDEX_BUFFER = Ax.context.createIndexBuffer(6);
+					SPRITE_INDEX_BUFFER.uploadFromVector(Vector.<uint>([0, 1, 2, 1, 2, 3]), 0, 6);
+				}
 				indexBuffer = SPRITE_INDEX_BUFFER;
 			}
-			
+
 			vertexBuffer = AxCache.vertexBuffer(quad.width, quad.height, quad.uvWidth, quad.uvHeight);
 			triangles = 2;
 		}
-		
+
 		/**
 		 * @inheritDoc
 		 */
 		override public function draw():void {
-			if (texture == null) {
-				load(AxResource.ICON);
-			}
-			
 			if (dirty) {
 				buildVertexBuffer(quad);
 				dirty = false;
 			}
-			
-			if (screen.x > Ax.width || screen.y > Ax.height || screen.x + frameWidth < 0 || screen.y + frameHeight < 0 || scale.x == 0 || scale.y == 0) {
+
+			if ((zooms && ((screen.x - offset.x) > Ax.viewWidth || (screen.y - offset.y) > Ax.viewHeight || screen.x + frameWidth < 0 || screen.y + frameHeight < 0)) || scale.x == 0 || scale.y == 0) {
 				return;
 			}
 			
 			colorTransform[RED] = color.red;
 			colorTransform[GREEN] = color.green;
 			colorTransform[BLUE] = color.blue;
-			colorTransform[ALPHA] = color.alpha;
-			
+			colorTransform[ALPHA] = color.alpha * parentEntityAlpha;
+
 			matrix.identity();
-			
+
 			if (angle != 0) {
 				matrix.appendRotation(angle, Vector3D.Z_AXIS, pivot);
 			}
-			
-			var sx:Number = x - offset.x;
-			var sy:Number = y - offset.y;
+
+			var sx:Number = x - offset.x + parentOffset.x;
+			var sy:Number = y - offset.y + parentOffset.y;
 			var scalex:Number = scale.x;
 			var scaley:Number = scale.y;
-			var cx:Number = Ax.camera.x * scroll.x;
-			var cy:Number = Ax.camera.y * scroll.y;
+			var cx:Number = Ax.camera.position.x * scroll.x + Ax.camera.effectOffset.x;
+			var cy:Number = Ax.camera.position.y * scroll.y + Ax.camera.effectOffset.y;
 			if (facing == flip) {
-				/*matrix.appendTranslation(-(center.x - x), -(center.y - y), 0);
-				matrix.appendScale(scalex * -1, scaley, 1);
-				matrix.appendTranslation(center.x - x + sx - cx, center.y - y + sy - cy, 0);*/
 				matrix.appendScale(scalex * -1, scaley, 1);
 				matrix.appendTranslation(Math.round(sx - cx + AxU.EPSILON + frameWidth), Math.round(sy - cy + AxU.EPSILON), 0);
 			} else if (scalex != 1 || scaley != 1) {
 				matrix.appendTranslation(-origin.x, -origin.y, 0);
 				matrix.appendScale(scalex, scaley, 1);
-				matrix.appendTranslation(origin.x + sx - cx, origin.y + sy - cy, 0);
+				matrix.appendTranslation(origin.x + Math.round(sx - cx + AxU.EPSILON), origin.y + Math.round(sy - cy + AxU.EPSILON), 0);
 			} else {
 				matrix.appendTranslation(Math.round(sx - cx + AxU.EPSILON), Math.round(sy - cy + AxU.EPSILON), 0);
 			}
 			
 			matrix.append(zooms ? Ax.camera.projection : Ax.camera.baseProjection);
-			
+
 			if (shader != Ax.shader) {
 				Ax.context.setProgram(shader.program);
 				Ax.shader = shader;
 			}
 			
+			if (blend == null) {
+				Ax.context.setBlendFactors(Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA);
+			} else {
+				Ax.context.setBlendFactors(blend.source, blend.destination);
+			}
+			
 			Ax.context.setTextureAt(0, texture.texture);
-			Ax.context.setBlendFactors(Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA);
 			Ax.context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, matrix, true);
 			Ax.context.setProgramConstantsFromVector(Context3DProgramType.VERTEX, 4, uvOffset);
 			Ax.context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 0, colorTransform);
@@ -424,33 +455,165 @@ package org.axgl {
 			if (countTris) {
 				Ax.debugger.tris += triangles;
 			}
-			
-			/*Ax.context.setProgram(AxRenderer.spriteShader);
-			Ax.context.setTextureAt(0, texture.texture);
-			Ax.context.setBlendFactors(Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA);
-			Ax.context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, matrix, true);
-			Ax.context.setProgramConstantsFromVector(Context3DProgramType.VERTEX, 4, uv);
-			Ax.context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 0, transform);
-			Ax.context.setVertexBufferAt(0, vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_3);
-			Ax.context.setVertexBufferAt(1, vertexBuffer, 3, Context3DVertexBufferFormat.FLOAT_2);
-			Ax.context.drawTriangles(AxRenderer.indexBuffer, 0, AxRenderer.indexData.length / 3);
-			
-			if (Ax.showBounds) {
-			if (debugVertexBuffer == null) {
-			calculateDebugVertexBuffer();
+		}
+		
+		/**
+		 * Manually adds an effect to this sprites effect list. Used to add custom effects. When using
+		 * built in effects, unless you know what you are doing, you typically want to use the
+		 * corresponding function such as startFlicker().
+		 * 
+		 * @param effect The effect to add to the sprite.
+		 * 
+		 * @return The sprite.
+		 */
+		public function addEffect(effect:AxSpriteEffect):AxSprite {
+			if (effects == null) {
+				effects = new Vector.<AxSpriteEffect>;
 			}
 			
-			matrix.prependTranslation(Math.round(bounds.x), Math.round(bounds.y), 0);
+			effect.setSprite(this);
+			effect.create();
+			effects.push(effect);
+			return this;
+		}
+		
+		/**
+		 * Clears all effects from this sprite (if there are any). If skipCallback is false, it will
+		 * trigger the callback that would typically finish when the effect completes.
+		 * 
+		 * @param skipCallback Whether to skip running the callback for each active effect or not.
+		 * 
+		 * @return The sprite.
+		 */
+		public function clearEffects(skipCallback:Boolean = false):AxSprite {
+			if (effects == null) {
+				return this;
+			}
 			
-			Ax.context.setProgram(AxRenderer.debugShader);
-			Ax.context.setTextureAt(0, null);
-			Ax.context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 5, matrix, true);
-			Ax.context.setVertexBufferAt(0, debugVertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_3);
-			Ax.context.setVertexBufferAt(1, null, 3, Context3DVertexBufferFormat.FLOAT_2);
-			Ax.context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 1, debugColor);
-			Ax.context.drawTriangles(AxRenderer.debugIndexBuffer, 0, AxRenderer.debugIndexData.length / 3);
-			resetDebugColor();
-			}*/
+			for each(var effect:AxSpriteEffect in effects) {
+				if (effect.active) {
+					if (skipCallback) {
+						effect.active = false;
+					} else {
+						effect.destroy();
+					}
+				}
+			}
+			effects.length = 0;
+			return this;
+		}
+		
+		/**
+		 * Starts flickering this sprite, and continues for <code>duration</code> seconds. When complete, if
+		 * <code>callback</code> is not null, it will run the callback function. <code>Rate</code> determines
+		 * how often the opacity changes (1 meaning once per frame, 2 meaning once every other frame, and so
+		 * on). Type should be either AxFlickerSpriteEffect.BLINK, which means the sprite should blink back
+		 * and forth from 0 to 1 opacity, or AxFlickerSpriteEffect.FLICKER, meaning the sprite will flicker
+		 * at random opacities between 0.25 and 0.75.
+		 * 
+		 * @param duration How long to flicker for, in seconds.
+		 * @param callback The callback to run when complete, if any.
+		 * @param rate How many frames in between changing the opacity of the sprite.
+		 * @param type Which type of flicker, either AxFlickerSpriteEffect.BLINK or AxFlickerSpriteEffect.FLICKER.
+		 * 
+		 * @return The sprite.
+		 */
+		public function startFlicker(duration:Number = 0, callback:Function = null, rate:uint = 1, type:uint = 0):AxSprite {
+			if (flickerEffect != null && flickerEffect.active) {
+				flickerEffect.destroy();
+			}
+			addEffect(flickerEffect = new AxFlickerSpriteEffect(duration, callback, rate, type));
+			return this;
+		}
+		
+		/**
+		 * Stops the sprite from flickering, if it is currently flickering.
+		 * 
+		 * @return The sprite.
+		 */
+		public function stopFlicker():AxSprite {
+			if (flickerEffect != null) {
+				flickerEffect.destroy();
+			}
+			return this;
+		}
+		
+		/**
+		 * Fades out the sprite to the specified opacity over the given duration. For example, if duration is 1
+		 * and targetAlpha is 0, the sprite will fade out to be invisible over the course of 1 second. If a
+		 * callback function is passed, it will be run on completion.
+		 * 
+		 * @param duration How long the fade effect should last, in seconds.
+		 * @param targetAlpha The target alpha to fade to, default 0.
+		 * @param callback The callback function to run when the fade is complete.
+		 * 
+		 * @return The sprite.
+		 */
+		public function fadeOut(duration:Number = 1, targetAlpha:Number = 0, callback:Function = null):AxSprite {
+			if (fadeEffect != null && fadeEffect.active) {
+				fadeEffect.destroy();
+			}
+			addEffect(fadeEffect = new AxAlphaSpriteEffect(duration, callback, targetAlpha));
+			return this;
+		}
+		
+		/**
+		 * Fades in the sprite to the specified opacity over the given duration. For example, if duration is 1
+		 * and targetAlpha is 1, the sprite will fade out to be complete visible over the course of 1 second. If a
+		 * callback function is passed, it will be run on completion.
+		 * 
+		 * @param duration How long the fade effect should last, in seconds.
+		 * @param targetAlpha The target alpha to fade to, default 1.
+		 * @param callback The callback function to run when the fade is complete.
+		 * 
+		 * @return The sprite.
+		 */
+		public function fadeIn(duration:Number = 1, targetAlpha:Number = 1, callback:Function = null):AxSprite {
+			// todo: should this just alias fadeOut?
+			if (fadeEffect != null && fadeEffect.active) {
+				fadeEffect.destroy();
+			}
+			addEffect(fadeEffect = new AxAlphaSpriteEffect(duration, callback, targetAlpha));
+			return this;
+		}
+		
+		/**
+		 * Scales the sprite over the passed duration. For example, if duration is 1 and target x and y scale are 2,
+		 * the sprite will grow to be twice the normal size over the course of 1 second. If a callback function is
+		 * passed, it will be run on completion.
+		 * 
+		 * @param duration How long the grow effect should last, in seconds.
+		 * @param targetXScale How big the x scale should be on completion of the effect.
+		 * @param targetYScale How big the y scale should be on completion of the effect.
+		 * @param callback The callback function to run when the grow is complete.
+		 * 
+		 * @return The sprite.
+		 */
+		public function grow(duration:Number = 1, targetXScale:Number = 2, targetYScale:Number = 2, callback:Function = null):AxSprite {
+			if (growEffect != null && growEffect.active) {
+				growEffect.destroy();
+			}
+			addEffect(growEffect = new AxScaleSpriteEffect(duration, callback, targetXScale, targetYScale));
+			return this;
+		}
+		
+		/**
+		 * Flashes the sprite to a given color for the passed duration. For example, if the duration is 1 and the color
+		 * is 0xffff0000, the sprite's color will be set to red for 1 second. Color is in 0xAARRGGBB format. If a callback
+		 * is passed, it will be run on completion.
+		 * 
+		 * @param duration How long the flash effect should last, in seconds.
+		 * @param color What color the sprite should flash, in 0xAARRGGBB format.
+		 * @param callback The callback function to run when the flash is complete.
+		 * 
+		 * @return The sprite.
+		 */
+		public function flash(duration:Number = 0.1, color:uint = 0xffff0000, callback:Function = null):AxSprite {
+			if (flashEffect != null && flashEffect.active) {
+				flashEffect.destroy();
+			}
+			addEffect(flashEffect = new AxFlashSpriteEffect(duration, callback, color));
+			return this;
 		}
 		
 		/**
@@ -470,7 +633,7 @@ package org.axgl {
 					}
 				}
 			} else if (other is AxCloud) {
-				var sprites:Vector.<AxSprite> = (other as AxCloud).members;
+				var sprites:Vector.<AxSprite> = (other as AxCloud).members as Vector.<AxSprite>;
 				for each (var s:AxSprite in sprites) {
 					if (s.exists && overlaps(s)) {
 						overlapFound = true;
@@ -482,6 +645,9 @@ package org.axgl {
 			return overlapFound;
 		}
 		
+		/**
+		 * @inheritDoc
+		 */
 		override public function dispose():void {
 			screen = null;
 			uvOffset = null;
@@ -494,32 +660,27 @@ package org.axgl {
 			color = null;
 			super.dispose();
 		}
-		
+
 		/**
 		 * The vertex shader for this sprite.
 		 */
 		private static const VERTEX_SHADER:Array = [
 			"m44 vt0, va0, vc0",
-			"add v1, va1, vc4",
+			"add v0, va1, vc4",
 			"mov op, vt0"
 		];
-		
+
 		/**
 		 * The fragment shader for this sprite.
 		 */
 		private static const FRAGMENT_SHADER:Array = [
-			"tex ft0, v1, fs0 <2d,nearest,mipnone>",
+			"tex ft0, v0, fs0 <2d,nearest,mipnone>",
 			"mul oc, fc0, ft0"
 		];
-		
+
 		/**
 		 * A static sprite index buffer that all AxSprites will use.
 		 */
 		public static var SPRITE_INDEX_BUFFER:IndexBuffer3D;
-		
-		{
-			SPRITE_INDEX_BUFFER = Ax.context.createIndexBuffer(6);
-			SPRITE_INDEX_BUFFER.uploadFromVector(Vector.<uint>([0, 1, 2, 1, 2, 3]), 0, 6);
-		}
 	}
 }

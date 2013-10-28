@@ -1,4 +1,8 @@
 package org.axgl {
+	import avmplus.getQualifiedClassName;
+	
+	import org.axgl.util.AxTimer;
+
 	/**
 	 * A basic game entity. AxEntities do not render on the screen, but they can have velocities, accelerations, etc.
 	 * Most classes extend this class, as only instances of this class can be collided and added to groups.
@@ -46,6 +50,30 @@ package org.axgl {
 		 * to false.
 		 */
 		public var exists:Boolean;
+		/**
+		 * The parents of this entity. An entity's position will be relative to its parent, unless it does not have a parent.
+		 * When adding an entity to a group, by default it's parent will be set to the group, and it's position will become
+		 * relative to that group. You can also manually set the parent on any entity to any other entity.
+		 * Important: This should not be used with collision. Parent offsets are not taken into account when colliding, so
+		 * if you are colliding objects, you should not change the position of their parents.
+		 */
+		public var parent:AxEntity;
+		/**
+		 * The position of the parent entity. Each frame this is propagated down by every entity setting it based on its
+		 * parents properties. This allows an entity to keep separate its own local position and the position it is relative
+		 * to.
+		 */
+		public var parentOffset:AxPoint;
+		/**
+		 * The alpha value of this entity. This value is used for parenting. Any objects whose parents is this object will
+		 * take into account the entityAlpha, as it will be propagated to all children.
+		 */
+		public var entityAlpha:Number;
+		/**
+		 * The entityAlpha value of the parent entity. Each frame this is propagated down by every entity setting it based on its
+		 * parents properties. This allows an entity to keep separate its own local alpha and the alpha it has inherited.
+		 */
+		public var parentEntityAlpha:Number;
 
 		/**
 		 * The velocity of this object. Contains the x, y, and angular velocities. Every frame, if this entity
@@ -142,6 +170,10 @@ package org.axgl {
 		public var countUpdate:Boolean = true;
 		/** Counter that allow you to disable counting this function's draw for the debugger */
 		public var countDraw:Boolean = true;
+		/** List of timers active on this entity. */
+		public var timers:Vector.<AxTimer>;
+		/** Temporary timer list used to clean up dead timers. */
+		public var timersTemp:Vector.<AxTimer>;
 
 		/**
 		 * Creates a new AxEntity at the position passed.
@@ -156,6 +188,10 @@ package org.axgl {
 			active = true;
 			solid = true;
 			exists = true;
+			parent = null;
+			parentOffset = new AxPoint;
+			entityAlpha = 1;
+			parentEntityAlpha = 1;
 			
 			center = new AxPoint(x + width / 2, y + height / 2);
 			previous = new AxPoint(x, y);
@@ -169,6 +205,7 @@ package org.axgl {
 			phased = false;
 			stationary = false;
 			worldBounds = null;
+			timers = null;
 		}
 
 		/**
@@ -179,6 +216,47 @@ package org.axgl {
 		 * update function.
 		 */
 		public function update():void {
+			var i:uint;
+			
+			if (parent != null) {
+				parentOffset.x = parent.x + parent.parentOffset.x;
+				parentOffset.y = parent.y + parent.parentOffset.y;
+				parentEntityAlpha = parent.entityAlpha * parent.parentEntityAlpha;
+			}
+			
+			if (timers != null) {
+				var deadTimers:uint = 0;
+				for (i = 0; i < timers.length; i++) {
+					if (!timers[i].alive) {
+						deadTimers++;
+						continue;
+					} else if (!timers[i].active) {
+						continue;
+					}
+					timers[i].timer -= Ax.dt;
+					while (timers[i].timer <= 0) {
+						timers[i].timer += timers[i].delay;
+						timers[i].repeat--;
+						timers[i].callback();
+						if (timers[i].repeat <= 0) {
+							timers[i].stop();
+							break;
+						}
+					}
+				}
+				if (deadTimers >= 5) {
+					var temp:Vector.<AxTimer> = timersTemp;
+					temp.length = 0;
+					for (i = 0; i < timers.length; i++) {
+						if (timers[i].alive) {
+							temp.push(timers[i]);
+						}
+					}
+					timersTemp = timers;
+					timers = temp;
+				}
+			}
+			
 			touched = touching;
 			touching = NONE;
 			
@@ -187,42 +265,40 @@ package org.axgl {
 			pvelocity.x = velocity.x;
 			pvelocity.y = velocity.y;
 			
-			if (stationary || (velocity.x == 0 && velocity.y == 0 && velocity.a == 0 && acceleration.x == 0 && acceleration.y == 0 && acceleration.a == 0)) {
-				return;
+			if (!(stationary || (velocity.x == 0 && velocity.y == 0 && velocity.a == 0 && acceleration.x == 0 && acceleration.y == 0 && acceleration.a == 0))) {
+				velocity.x = calculateVelocity(velocity.x, acceleration.x, drag.x, maxVelocity.x);
+				velocity.y = calculateVelocity(velocity.y, acceleration.y, drag.y, maxVelocity.y);
+				velocity.a = calculateVelocity(velocity.a, acceleration.a, drag.a, maxVelocity.a);
+				
+				x += (velocity.x * Ax.dt) + ((pvelocity.x - velocity.x) * Ax.dt / 2);
+				y += (velocity.y * Ax.dt) + ((pvelocity.y - velocity.y) * Ax.dt / 2);
+				angle += velocity.a * Ax.dt;
+				
+				if (worldBounds != null) {
+					if (x < worldBounds.x) {
+						velocity.x = 0;
+						acceleration.x = Math.max(0, acceleration.x);
+						x = worldBounds.x;
+					} else if (x + width > worldBounds.width) {
+						velocity.x = 0;
+						acceleration.x = Math.min(0, acceleration.x);
+						x = worldBounds.width - width;
+					}
+					
+					if (y < worldBounds.y) {
+						velocity.y = 0;
+						acceleration.y = Math.max(0, acceleration.y);
+						y = worldBounds.y;
+					} else if (y + height > worldBounds.height) {
+						velocity.y = 0;
+						acceleration.y = Math.min(0, acceleration.y);
+						y = worldBounds.height - height;
+					}
+				}
 			}
-			
-			velocity.x = calculateVelocity(velocity.x, acceleration.x, drag.x, maxVelocity.x);
-			velocity.y = calculateVelocity(velocity.y, acceleration.y, drag.y, maxVelocity.y);
-			velocity.a = calculateVelocity(velocity.a, acceleration.a, drag.a, maxVelocity.a);
-			
-			x += (velocity.x * Ax.dt) + ((pvelocity.x - velocity.x) * Ax.dt / 2);
-			y += (velocity.y * Ax.dt) + ((pvelocity.y - velocity.y) * Ax.dt / 2);
-			angle += velocity.a * Ax.dt;
 			
 			center.x = x + width / 2;
 			center.y = y + height / 2;
-			
-			if (worldBounds != null) {
-				if (x < worldBounds.x) {
-					velocity.x = 0;
-					acceleration.x = Math.max(0, acceleration.x);
-					x = worldBounds.x;
-				} else if (x + width > worldBounds.width) {
-					velocity.x = 0;
-					acceleration.x = Math.min(0, acceleration.x);
-					x = worldBounds.width - width;
-				}
-				
-				if (y < worldBounds.y) {
-					velocity.y = 0;
-					acceleration.y = Math.max(0, acceleration.y);
-					y = worldBounds.y;
-				} else if (y + height > worldBounds.height) {
-					velocity.y = 0;
-					acceleration.y = Math.min(0, acceleration.y);
-					y = worldBounds.height - height;
-				}
-			}
 		}
 
 		/**
@@ -273,6 +349,13 @@ package org.axgl {
 		public function destroy():void {
 			exists = false;
 		}
+		
+		/**
+		 * Revives this object, setting it to be updated and drawn.
+		 */
+		public function revive():void {
+			exists = true;
+		}
 
 		/**
 		 * Returns whether or not this object is touching a solid object in the direction(s) passed. You can test
@@ -305,11 +388,138 @@ package org.axgl {
 		/**
 		 * @inheritDoc
 		 */
+		override public function contains(x:Number, y:Number):Boolean {
+			return x >= this.x + parentOffset.x &&
+				   y >= this.y + parentOffset.y &&
+				   x <= this.right + parentOffset.x &&
+				   y <= this.bottom + parentOffset.y;
+		}
+		
+		/**
+		 * @inheritDoc
+		 */
 		override public function overlaps(other:AxRect):Boolean {
-			if (!exists || (other is AxEntity && !(other as AxEntity).exists)) {
+			var o:AxEntity = other as AxEntity;
+			if (!exists || !o.exists) {
 				return false;
 			}
-			return super.overlaps(other);
+			return x + parentOffset.x + AxU.EPSILON < o.x + o.width + o.parentOffset.x &&
+				   y + parentOffset.y + AxU.EPSILON < o.y + o.height + o.parentOffset.y &&
+				   x + width + parentOffset.x - AxU.EPSILON > o.x + o.parentOffset.x &&
+				   y + height + parentOffset.y - AxU.EPSILON > o.y + o.parentOffset.y;
+		}
+		
+		/**
+		 * Sets the parent of this entity to another entity.
+		 * 
+		 * @return This entity.
+		 */
+		public function setParent(parent:AxEntity):AxEntity {
+			this.parent = parent;
+			parentOffset.x = parent.x + parent.parentOffset.x;
+			parentOffset.y = parent.y + parent.parentOffset.y;
+			return this;
+		}
+		
+		/**
+		 * Unlinks this object from its parent. If the parent's position was non-zero, this will cause
+		 * the object to appear to move, as its position will no longer be relative to the parent.
+		 */
+		public function removeParent():AxEntity {
+			parent = null;
+			parentOffset.x = parentOffset.y = 0;
+			return this;
+		}
+		
+		/**
+		 * Returns the global x position of this entity. While the x value is relative to the parent
+		 * entity, the global x is where the entity will be drawn in world space.
+		 * 
+		 * @return The global x position of this entity.
+		 */
+		public function get globalX():Number {
+			return x + parentOffset.x;
+		}
+		
+		/**
+		 * Returns the global y position of this entity. While the y value is relative to the parent
+		 * entity, the global y is where the entity will be drawn in world space.
+		 * 
+		 * @return The global y position of this entity.
+		 */
+		public function get globalY():Number {
+			return y + parentOffset.y;
+		}
+		
+		/**
+		 * Sets the opacity value of this entity. A value of 0 means it is completely see through, while a value
+		 * of 1 means it is completely opaque.
+		 * 
+		 * @param opacity The alpha value, between 0 and 1.
+		 */
+		public function set alpha(opacity:Number):void {
+			entityAlpha = opacity;
+		}
+		
+		/**
+		 * Gets the opacity value of this entity. A value of 0 means it is completely see through, while a value
+		 * of 1 means it is completely opaque.
+		 * 
+		 * @return The alpha value, between 0 and 1.
+		 */
+		public function get alpha():Number {
+			return entityAlpha;
+		}
+		
+		/**
+		 * Helper method that sets horizontal, vertical, and angular velocity of this entity to 0.
+		 */
+		public function stop():void {
+			velocity.x = velocity.y = velocity.a = 0;
+		}
+		
+		/**
+		 * Timers are repeatable functions that can be bound to any AxEntity. Take, for example,
+		 * the following:
+		 * 
+		 * <code>sprite.addTimer(5, destroy);</code>
+		 * 
+		 * This would destroy the sprite after 5 seconds. You can also use timers to register repeating
+		 * events. For example:
+		 * 
+		 * <code>sprite.addTimer(1, function():void { sprite.visible = !sprite.visible; }, 5, 3);</code>
+		 * 
+		 * This would cause the sprite to flicker visible/invisible 5 times, once per second. The 3 indicates
+		 * that the first occurrence would not occur until after 3 seconds, and the following ones would be
+		 * spaced 1 second apart.
+		 * 
+		 * @param delay The delay before this fires, or the delay between firing if set to repeat.
+		 * @param callback The function called when the timer fires.
+		 * @param repeat The number of times to repeat the timer. 0 indiciates repeat forever.
+		 * @param start How long to delay the first execution if repeatable.
+		 */
+		public function addTimer(delay:Number, callback:Function, repeat:uint = 1, start:Number = -1):AxTimer {
+			if (timers == null) {
+				timers = new Vector.<AxTimer>;
+				timersTemp = new Vector.<AxTimer>;
+			}
+			
+			var timer:AxTimer = new AxTimer(delay, callback, repeat, start);
+			timers.push(timer);
+			return timer;
+		}
+		
+		/**
+		 * Removes all timers currently set on this object. Does not run the callbacks of any timers currently
+		 * in progress.
+		 */
+		public function clearTimers():void {
+			if (timers != null) {
+				timers.length = 0;
+			}
+			if (timersTemp != null) {
+				timersTemp.length = 0;
+			}
 		}
 		
 		/**
@@ -326,6 +536,13 @@ package org.axgl {
 			offset = null;
 			drag = null;
 			worldBounds = null;
+		}
+		
+		/**
+		 * @inheritDoc
+		 */
+		override public function toString():String {
+			return getQualifiedClassName(this) + " @ " + super.toString();
 		}
 	}
 }

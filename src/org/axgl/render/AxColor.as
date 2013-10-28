@@ -58,5 +58,12 @@ package org.axgl.render {
 			color.hex = value;
 			return color;
 		}
+		
+		/**
+		 * Converts string output to hex format.
+		 */
+		public function toString():String {
+			return hex.toString(16);
+		}
 	}
 }

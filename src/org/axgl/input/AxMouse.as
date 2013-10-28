@@ -63,10 +63,10 @@ package org.axgl.input {
 		 * @param y The y position in screen space.
 		 */
 		public function update(x:Number, y:Number):void {
-			screen.x = x;
-			screen.y = y;
-			this.x = screen.x / Ax.zoom + Ax.camera.x;
-			this.y = screen.y / Ax.zoom + Ax.camera.y;
+			screen.x = x / Ax.zoom;
+			screen.y = y / Ax.zoom;
+			this.x = screen.x + Ax.camera.position.x;
+			this.y = screen.y + Ax.camera.position.y;
 		}
 	}
 }

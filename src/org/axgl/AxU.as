@@ -1,8 +1,6 @@
 package org.axgl {
 	import flash.net.URLRequest;
 	import flash.net.navigateToURL;
-	import flash.utils.ByteArray;
-	import flash.utils.Endian;
 
 	/**
 	 * The Ax Utility class, containing various utility functions to make your life easier. Some of these
@@ -17,7 +15,7 @@ package org.axgl {
 		/**
 		 * Returns a random integer between min and max, inclusive.
 		 *
-		 * @example The follow code returns an integer between 3 and 7 (3, 4, 5, 6, or 7):
+		 * @example The following code returns an integer between 3 and 7 (3, 4, 5, 6, or 7):
 		 *
 		 * <listing version="3.0">
 		 * AxU.rand(3, 7);
@@ -36,7 +34,7 @@ package org.axgl {
 		 * Returns a random floating point number between min and max, inclusive. Use toPrecision() to round it
 		 * to a specific number of decimal places if needed.
 		 *
-		 * @example The follow code returns a Number between 3.5 and 7.165 (eg. 3.9, 5.4, 3.8, or 6.5):
+		 * @example The following code returns a Number between 3.5 and 7.165 (eg. 3.9, 5.4, 3.8, or 6.5):
 		 *
 		 * <listing version="3.0">
 		 * AxU.rand(3.5, 7.165);

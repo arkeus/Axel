@@ -8,7 +8,6 @@ package org.axgl {
 	import flash.display3D.Context3DCompareMode;
 	import flash.display3D.Context3DRenderMode;
 	import flash.display3D.Context3DTriangleFace;
-	import flash.display3D.Program3D;
 	import flash.events.ErrorEvent;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
@@ -19,6 +18,7 @@ package org.axgl {
 	import flash.ui.MultitouchInputMode;
 	import flash.utils.getTimer;
 	
+	import org.axgl.camera.AxCamera;
 	import org.axgl.collision.AxCollider;
 	import org.axgl.collision.AxCollisionGroup;
 	import org.axgl.collision.AxGrid;
@@ -27,11 +27,14 @@ package org.axgl {
 	import org.axgl.input.AxMouse;
 	import org.axgl.render.AxColor;
 	import org.axgl.render.AxShader;
+	import org.axgl.resource.AxResource;
 	import org.axgl.sound.AxMusic;
 	import org.axgl.sound.AxSound;
 	import org.axgl.tilemap.AxTilemap;
-	import org.axgl.util.AxCamera;
-	import org.axgl.util.AxDebugger;
+	import org.axgl.util.AxCache;
+	import org.axgl.util.AxLogger;
+	import org.axgl.util.AxPauseState;
+	import org.axgl.util.debug.AxDebugger;
 
 	/**
 	 * The general game class that your base class should extends. Contains all the properties of the game,
@@ -39,9 +42,7 @@ package org.axgl {
 	 */
 	public class Ax extends Sprite {
 		public static const LIBRARY_NAME:String = "Axel";
-		public static const LIBRARY_VERSION:String = "0.9.2";
-		
-		public static var shader:AxShader;
+		public static const LIBRARY_VERSION:String = "0.9.3 r2";
 		
 		/**
 		 * Whether or not the game is running is debug mode.
@@ -246,6 +247,32 @@ package org.axgl {
 		 * The height of the visible area on the screen, affected by zoom. If your height is 400, and zoom is 2x, this will be 200.
 		 */
 		public static var viewHeight:uint;
+		
+		/**
+		 * The state that the game pushes when paused (eg. when the game loses focus). If null, will not push any state. If you change
+		 * this, you should <strong>always</strong> set it to a class that extends org.axgl.util.AxPauseState.
+		 */
+		public static var pauseState:Class;
+		/**
+		 * Boolean indicating whether all library initialization has completed.
+		 */
+		public static var initialized:Boolean;
+		/**
+		 * Boolean indicating whether the game is currently paused.
+		 */
+		public static var paused:Boolean;
+		/**
+		 * The current shader currently being used for drawing.
+		 */
+		public static var shader:AxShader;
+		/**
+		 * A logger that sends messages both to the flash console and to the browser console when embedded in a webpage.
+		 */
+		public static var logger:AxLogger;
+		/**
+		 * A reference to the main game engine. You should rarely need access to this.
+		 */
+		public static var engine:Ax;
 
 		/**
 		 * Creates the game engine.
@@ -258,6 +285,8 @@ package org.axgl {
 				throw new Error("Flash does not support framerates above 60");
 			}
 			
+			Ax.engine = this;
+			
 			Ax.requestedState = initialState;
 			Ax.requestedWidth = width;
 			Ax.requestedHeight = height;
@@ -267,7 +296,7 @@ package org.axgl {
 			Ax.states = new Vector.<AxState>;
 			Ax.worldZoom = zoom;
 			Ax.unfocusedFramerate = 20;
-			Ax.background = new AxColor(1, 1, 1);
+			Ax.background = new AxColor(0.5, 0.5, 0.5);
 			Ax.destroyedStates = new Vector.<AxState>;
 
 			Ax.sounds = new AxGroup;
@@ -279,6 +308,11 @@ package org.axgl {
 			var debugStacktrace:String = new Error().getStackTrace();
 			Ax.debug = debugStacktrace != null && debugStacktrace.search(/:[0-9]+]$/m) > -1;
 			Ax.debuggerEnabled = Ax.debug;
+			
+			//Ax.pauseState = AxPauseState;
+			Ax.initialized = false;
+			Ax.paused = false;
+			Ax.logger = new AxLogger;
 
 			addEventListener(Event.ADDED_TO_STAGE, onStageInitialized);
 		}
@@ -386,6 +420,10 @@ package org.axgl {
 			keys.releaseAll();
 			mouse.releaseAll();
 			stage.frameRate = unfocusedFramerate;
+			if (initialized && pauseState != null && !paused) {
+				paused = true;
+				pushState(new pauseState);
+			}
 		}
 
 		/**
@@ -395,6 +433,10 @@ package org.axgl {
 		 */
 		protected function onFocusGained(event:Event):void {
 			stage.frameRate = requestedFramerate;
+			if (initialized && pauseState != null && paused && state is AxPauseState) {
+				paused = false;
+				popState();
+			}
 		}
 
 		/**
@@ -423,9 +465,6 @@ package org.axgl {
 			
 			// Initialize the game based on requested parameters
 			initialize();
-			
-			// Handle game initialization
-			create();
 			
 			addEventListener(Event.ENTER_FRAME, onEnterFrame);
 		}
@@ -460,12 +499,21 @@ package org.axgl {
 			Ax.height = requestedHeight == 0 ? stage.stageHeight : requestedHeight;
 			
 			context.configureBackBuffer(Ax.width, Ax.height, 0, false);
-			context.enableErrorChecking = false;
+			context.enableErrorChecking = true;
 			
+			AxCache.reset();
+			AxResource.initialize();
 			camera = new AxCamera;
+			camera.initialize();
 			debugger = new AxDebugger;
+			logger.log(LIBRARY_NAME + " " + LIBRARY_VERSION + " successfully loaded");
+			logger.console = true;
+			
+			// Handle game initialization
+			create();
 			
 			pushState(new requestedState());
+			initialized = true;
 		}
 
 		/**
@@ -533,7 +581,7 @@ package org.axgl {
 
 			frames++;
 			if (now - frameStart >= 1000) {
-				fps = frames;
+				fps = Math.min(requestedFramerate, frames);
 				frames = 0;
 				frameStart = now;
 			}
@@ -542,7 +590,7 @@ package org.axgl {
 		/**
 		 * Updates the active states, camera, mouse, and sounds.
 		 */
-		protected function update():void {
+		public function update():void {
 			for (var i:uint = 0; i < states.length; i++) {
 				var state:AxState = states[i];
 				if (i == states.length - 1 || state.persistantUpdate) {
@@ -562,7 +610,7 @@ package org.axgl {
 		/**
 		 * Draws the active states.
 		 */
-		protected function draw():void {
+		public function draw():void {
 			context.clear(background.red, background.green, background.blue);
 			context.setCulling(Context3DTriangleFace.NONE);
 			context.setDepthTest(false, Context3DCompareMode.ALWAYS);
@@ -573,6 +621,8 @@ package org.axgl {
 					state.draw();
 				}
 			}
+			
+			camera.draw();
 			
 			if (debugger.active) {
 				debugger.draw();
@@ -591,7 +641,13 @@ package org.axgl {
 		 * @return The newly pushed state.
 		 */
 		public static function pushState(state:AxState):AxState {
-			camera.reset();
+			if (states.length > 0) {
+				states[states.length - 1].onPause(Object(state).constructor);
+			}
+			//camera.reset();
+			keys.releaseAll();
+			mouse.releaseAll();
+			
 			states.push(state);
 			state.create();
 			return state;
@@ -601,8 +657,16 @@ package org.axgl {
 		 * Pops the current state off the top of the stack and disposes it.
 		 */
 		public static function popState():void {
-			camera.reset();
-			destroyedStates.push(states.pop());
+			//camera.reset();
+			keys.releaseAll();
+			mouse.releaseAll();
+			
+			var previousState:AxState = states.pop();
+			destroyedStates.push(previousState);
+			
+			if (states.length > 0) {
+				state.onResume(Object(previousState).constructor);
+			}
 		}
 
 		/**
@@ -746,7 +810,7 @@ package org.axgl {
 				if (source is AxTilemap || target is AxTilemap) {
 					collision = new AxCollider;
 				} else {
-					collision = new AxGrid(Ax.width, Ax.height) 
+					collision = new AxGrid(Ax.viewWidth, Ax.viewHeight) 
 				}
 			} else {
 				collision.reset();

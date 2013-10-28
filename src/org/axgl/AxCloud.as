@@ -2,8 +2,6 @@ package org.axgl {
 	import flash.display3D.Context3DBlendFactor;
 	import flash.display3D.Context3DProgramType;
 	import flash.display3D.Context3DVertexBufferFormat;
-	import flash.utils.getTimer;
-	
 	
 	/**
 	 * AxCloud is a group that allows you to draw many sprites that use the same texture efficiently. By changing the actions
@@ -101,10 +99,16 @@ package org.axgl {
 		 * Adds a new entity to this cloud. Sets the dirty flag to true and all members will be fully updated.
 		 *
 		 * @param entity The entity to add.
+		 * @param linkParent Whether or not to set the parent of the entity to this cloud.
+		 * @param prepend Whether or not to prepend the object to the start, rather than the end. Prepending is slower.
 		 *
 		 * @return This map.
 		 */
-		public function add(entity:AxSprite):AxCloud {
+		public function add(entity:AxSprite, linkParent:Boolean = true, prepend:Boolean = false):AxCloud {
+			if (entity == null) {
+				throw new ArgumentError("Cannot add a null object to a cloud.");
+			}
+			
 			if (members.length >= capacity) {
 				full = true;
 				return this;
@@ -114,8 +118,39 @@ package org.axgl {
 				texture = entity.texture;
 			}
 			
-			members.push(entity);
+			if (prepend) {
+				members.unshift(entity);
+			} else {
+				members.push(entity);
+			}
+			
+			if (linkParent) {
+				entity.setParent(this);
+			}
+			
 			dirty = true;
+			return this;
+		}
+		
+		/**
+		 * An alias for settings actions to AxCloud.NONE in order for this group to stop updating its members.
+		 * This increases the performance by orders of magnitude, and draws much more efficient if all of its
+		 * members are frozen.
+		 * 
+		 * @return This map.
+		 */
+		public function freeze():AxCloud {
+			actions = NONE;
+			return this;
+		}
+		
+		/**
+		 * Unfreezes this group and sets actions to AxCloud.ALL.
+		 * 
+		 * @return This map.
+		 */
+		public function unfreeze():AxCloud {
+			actions = ALL;
 			return this;
 		}
 		
@@ -280,6 +315,8 @@ package org.axgl {
 				return;
 			}
 			
+			super.update();
+			
 			for (var i:uint = 0; i < members.length; i++) {
 				var entity:AxSprite = members[i];
 				
@@ -310,8 +347,13 @@ package org.axgl {
 				return;
 			}
 			
+			colorTransform[RED] = color.red;
+			colorTransform[GREEN] = color.green;
+			colorTransform[BLUE] = color.blue;
+			colorTransform[ALPHA] = color.alpha * parentEntityAlpha;
+			
 			matrix.identity();
-			matrix.appendTranslation(x - Math.round(Ax.camera.x), y - Math.round(Ax.camera.y), 0);
+			matrix.appendTranslation(x - Math.round(Ax.camera.position.x * scroll.x + Ax.camera.effectOffset.x) + parentOffset.x, y - Math.round(Ax.camera.position.y * scroll.x + Ax.camera.effectOffset.y) + parentOffset.y, 0);
 			matrix.append(Ax.camera.projection);
 			
 			if (shader != Ax.shader) {
@@ -319,8 +361,13 @@ package org.axgl {
 				Ax.shader = shader;
 			}
 			
+			if (blend == null) {
+				Ax.context.setBlendFactors(Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA);
+			} else {
+				Ax.context.setBlendFactors(blend.source, blend.destination);
+			}
+			
 			Ax.context.setTextureAt(0, texture.texture);
-			Ax.context.setBlendFactors(Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA);
 			Ax.context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, matrix, true);
 			Ax.context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 0, colorTransform);
 			Ax.context.setVertexBufferAt(0, vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_2); // x, y
@@ -378,6 +425,24 @@ package org.axgl {
 			members = tempMembers;
 			tempMembers = temp;
 			tempMembers.length = 0;
+		}
+		
+		/**
+		 * Clears out all members of the group. If <code>disposeMembers</code> is set to true, will call dispose on each
+		 * member before removing all the members.
+		 * 
+		 * @param disposeMembers Whether or not to dispose all the members before removing them.
+		 */
+		public function clear(disposeMembers:Boolean = true):void {
+			if (disposeMembers) {
+				for (var i:uint = 0; i < members.length; i++) {
+					var entity:AxSprite = members[i];
+					entity.dispose();
+				}
+			}
+			tempMembers.length = 0;
+			members.length = 0;
+			dirty = true;
 		}
 		
 		/**

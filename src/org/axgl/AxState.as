@@ -50,5 +50,27 @@ package org.axgl {
 		public function create():void {
 			// Override as needed
 		}
+		
+		/**
+		 * This function is called whenever this state loses focus due to another state being pushed
+		 * on top of it. Override it to provide specific logic that fires just before the state is
+		 * switched away from.
+		 * 
+		 * @param sourceState The class of the state that was pushed on the stack that now has focus.
+		 */
+		public function onPause(sourceState:Class):void {
+			// Override as needed
+		}
+		
+		/**
+		 * This function is called whenever focus returns this to state due to another state being popped
+		 * off the stack. Override it to provide specific logic that fires immediately when this state
+		 * is switched to.
+		 * 
+		 * @param sourceState The class of the state that was popped off to reveal this state.
+		 */
+		public function onResume(sourceState:Class):void {
+			// Override as needed
+		}
 	}
 }

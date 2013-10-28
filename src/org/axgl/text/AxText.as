@@ -6,6 +6,7 @@ package org.axgl.text {
 	
 	import org.axgl.Ax;
 	import org.axgl.AxModel;
+	import org.axgl.AxU;
 	import org.axgl.render.AxColor;
 	import org.axgl.resource.AxResource;
 
@@ -26,6 +27,15 @@ package org.axgl.text {
 		 * @default left
 		 */
 		public var align:String;
+		/**
+		 * The width that was requested when this text was created. Read-only.
+		 */
+		public var requestedWidth:uint;
+		/**
+		 * A strategy for limiting the size of the text, by keeping only X lines from the start/end when the
+		 * text changes.
+		 */
+		public var limitStrategy:AxTextLimitStrategy;
 
 		/**
 		 * Creates a new text at the given position, using the given font. If width is 0, it will not wrap at all. If
@@ -44,8 +54,8 @@ package org.axgl.text {
 			super(x, y, VERTEX_SHADER, FRAGMENT_SHADER, 8);
 
 			this._text = text;
-			this.font = font ? font : AxResource.FONT;
-			this.width = width;
+			this.font = font ? font : AxResource.font;
+			this.width = this.requestedWidth = width;
 			this.align = align;
 
 			build();
@@ -60,9 +70,13 @@ package org.axgl.text {
 		 *
 		 * @return A vector of text lines.
 		 */
-		public static function split(text:String, font:AxFont, width:uint):Vector.<AxTextLine> {
+		public static function split(text:String, font:AxFont, width:uint, limitStrategy:AxTextLimitStrategy = null):Vector.<AxTextLine> {
 			var lines:Vector.<AxTextLine> = new Vector.<AxTextLine>;
 			var spaceWidth:int = font.characterWidth(" ");
+			
+			if (width == 0) {
+				width = uint.MAX_VALUE;
+			}
 
 			var lineArray:Array = text.split("\n");
 			var line:String = "";
@@ -98,13 +112,22 @@ package org.axgl.text {
 
 					if (!inTag) {
 						line += (line == "" ? "" : " ") + wordString;
-						lineWidth += wordWidth + font.spacing.x * 2 + spaceWidth;
+						lineWidth += wordWidth + font.spacing.x + spaceWidth + font.spacing.x;
 					}
 				}
 
 				lines.push(new AxTextLine(line, lineWidth));
 				lineWidth = 0;
 				line = "";
+			}
+			
+			if (limitStrategy != null && lines.length > limitStrategy.limit) {
+				switch (limitStrategy.keepType) {
+					case AxTextLimitStrategy.START:
+						return lines.slice(0, limitStrategy.limit);
+					case AxTextLimitStrategy.END:
+						return lines.slice(lines.length - limitStrategy.limit);
+				}
 			}
 
 			return lines;
@@ -122,18 +145,25 @@ package org.axgl.text {
 			indexData = new Vector.<uint>;
 			vertexData = new Vector.<Number>;
 
-			var lines:Vector.<AxTextLine> = width == 0 ? Vector.<AxTextLine>([new AxTextLine(_text, 0)]) : split(_text, font, width);
+			var lines:Vector.<AxTextLine> = split(_text, font, requestedWidth, limitStrategy);
+			if (limitStrategy != null) {
+				//_text = lines.map(function(line:AxTextLine):String { line.text }).join("\n");
+			}
 			var y:uint = 0;
 			var index:uint = 0;
 			var color:AxColor = new AxColor;
+			width = 0;
 			for each (var textLine:AxTextLine in lines) {
-				var x:uint = 0;
+				var x:int = 0;
 				if (align == "right") {
-					x = width - textLine.width;
+					x = requestedWidth - textLine.width;
 				} else if (align == "center") {
-					x = (width - textLine.width) / 2;
+					x = (requestedWidth - textLine.width) / 2;
 				}
-
+				
+				if (textLine.width > width) {
+					width = textLine.width;
+				}
 
 				var characters:Array = textLine.text.split("");
 				for (var i:uint = 0; i < characters.length; i++) {
@@ -145,7 +175,7 @@ package org.axgl.text {
 						var colorCode:String = textLine.text.substring(i + 2, closing);
 						if (colorCode == "") {
 							color.red = color.green = color.blue = color.alpha = 1;
-						} else {
+						} else if (colorCode.indexOf(",") != -1) {
 							var colorPieces:Array = colorCode.split(",");
 							color.red = parseInt(colorPieces[0]) / 255;
 							color.green = parseInt(colorPieces[1]) / 255;
@@ -155,6 +185,17 @@ package org.axgl.text {
 							} else {
 								color.alpha = 1;
 							}
+						} else if (colorCode.length == 6 || colorCode.length == 8) {
+							var offset:uint = 0;
+							if (colorCode.length == 8) {
+								color.alpha = uint("0x" + colorCode.substr(offset, 2)) / 255;
+								offset += 2;
+							}
+							color.red = uint("0x" + colorCode.substr(offset, 2)) / 255;
+							color.green = uint("0x" + colorCode.substr(offset + 2, 2)) / 255;
+							color.blue = uint("0x" + colorCode.substr(offset + 4, 2)) / 255;
+						} else {
+							throw new ArgumentError("Invalid color code in text: '" + colorCode + "'");
 						}
 						i = closing;
 						continue;
@@ -165,11 +206,9 @@ package org.axgl.text {
 						continue;
 					}
 					
-					//trace("building", c.width, c.height);
-					
 					indexData.push(index, index + 1, index + 2, index + 1, index + 2, index + 3);
 					vertexData.push(
-						//  x 			y				u						v
+						//  x 			y				u						v						r			g			b			a
 						x, 				y,				c.uv.x,					c.uv.y,					color.red, color.green, color.blue, color.alpha,
 						x + c.width,	y,				c.uv.x + c.uv.width,	c.uv.y,					color.red, color.green, color.blue, color.alpha,
 						x,				y + c.height,	c.uv.x,					c.uv.y + c.uv.height,	color.red, color.green, color.blue, color.alpha,
@@ -188,6 +227,7 @@ package org.axgl.text {
 			vertexBuffer = Ax.context.createVertexBuffer(vertexLength, shader.rowSize);
 			vertexBuffer.uploadFromVector(vertexData, 0, vertexLength);
 			triangles = indexData.length / 3;
+			height = y - font.spacing.y;
 		}
 
 		/**
@@ -201,6 +241,16 @@ package org.axgl.text {
 				return;
 			}
 			_text = str;
+			build();
+		}
+		
+		/**
+		 * Resizes the text to a new width and rebuilds and reflows the text to fit the newly requested width.
+		 * 
+		 * @param width The new width of the text.
+		 */
+		public function resize(width:uint):void {
+			this.requestedWidth = this.width = width;
 			build();
 		}
 		
@@ -219,14 +269,29 @@ package org.axgl.text {
 			colorTransform[RED] = color.red;
 			colorTransform[GREEN] = color.green;
 			colorTransform[BLUE] = color.blue;
-			colorTransform[ALPHA] = color.alpha;
+			colorTransform[ALPHA] = color.alpha * parentEntityAlpha;
 			
 			matrix.identity();
 			if (angle != 0) {
 				matrix.appendRotation(angle, Vector3D.Z_AXIS, pivot);
 			}
-			matrix.appendScale(scale.x, scale.y, 1);
-			matrix.appendTranslation(x - Ax.camera.x * scroll.x, y - Ax.camera.y * scroll.y, 0);
+			
+			var alignOffset:int = align == "right" ? (width * (scale.x - 1)) : (align == "center" ? (width / 2 * (scale.x - 1)) : 0);
+			
+			var sx:Number = x - offset.x + parentOffset.x;
+			var sy:Number = y - offset.y + parentOffset.y;
+			var scalex:Number = scale.x;
+			var scaley:Number = scale.y;
+			var cx:Number = Ax.camera.position.x * scroll.x + Ax.camera.effectOffset.x;
+			var cy:Number = Ax.camera.position.y * scroll.y + Ax.camera.effectOffset.y;
+			
+			if (scale.x != 1 || scale.y != 1) {
+				matrix.appendTranslation(-origin.x, -origin.y, 0);
+				matrix.appendScale(scale.x, scale.y, 1);
+				matrix.appendTranslation(origin.x + Math.round(sx - cx + AxU.EPSILON - alignOffset), origin.y + Math.round(sy - cy + AxU.EPSILON), 0);
+			} else {
+				matrix.appendTranslation(Math.round(sx - cx + AxU.EPSILON - alignOffset), Math.round(sy - cy + AxU.EPSILON), 0);
+			}
 			matrix.append(zooms ? Ax.camera.projection : Ax.camera.baseProjection);
 
 			if (shader != Ax.shader) {
@@ -234,8 +299,13 @@ package org.axgl.text {
 				Ax.shader = shader;
 			}
 			
+			if (blend == null) {
+				Ax.context.setBlendFactors(Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA);
+			} else {
+				Ax.context.setBlendFactors(blend.source, blend.destination);
+			}
+			
 			Ax.context.setTextureAt(0, font.texture.texture);
-			Ax.context.setBlendFactors(Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA);
 			Ax.context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, matrix, true);
 			Ax.context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 0, colorTransform);
 			Ax.context.setVertexBufferAt(0, vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_2);

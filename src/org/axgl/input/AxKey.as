@@ -3,6 +3,8 @@ package org.axgl.input {
 	 * All the constants you can use for checking keyboard events.
 	 */
 	public class AxKey {
+		public static const ANY:uint = 0;
+		
 		public static const LEFT:uint = 37;
 		public static const UP:uint = 38;
 		public static const RIGHT:uint = 39;

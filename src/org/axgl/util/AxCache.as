@@ -2,7 +2,6 @@ package org.axgl.util {
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display3D.Context3DTextureFormat;
-	import flash.display3D.Program3D;
 	import flash.display3D.VertexBuffer3D;
 	import flash.display3D.textures.Texture;
 	import flash.geom.Point;
@@ -10,7 +9,6 @@ package org.axgl.util {
 	import flash.utils.getQualifiedClassName;
 	
 	import org.axgl.Ax;
-	import org.axgl.AxSprite;
 	import org.axgl.render.AxShader;
 	import org.axgl.render.AxTexture;
 	
@@ -20,11 +18,15 @@ package org.axgl.util {
 		private static var textures:Object;
 		private static var shaders:Object;
 		
-		{
-			vertexBuffers = new Object;
-			debugVertexBuffers = new Object;
-			textures = new Object;
-			shaders = new Object;
+		/**
+		 * Resets the cache, causing all new objects to create new instances of their buffers, textures, and shaders.
+		 * Existing objects will continue to have their references to the old cached version.
+		 */
+		public static function reset():void {
+			vertexBuffers = {};
+			debugVertexBuffers = {};
+			textures = {};
+			shaders = {};
 		}
 		
 		public static function shader(shaderKey:*, vertex:Array, fragment:Array, rowSize:uint):AxShader {
@@ -92,6 +94,9 @@ package org.axgl.util {
 		}
 		
 		public static function texture(resource:*):AxTexture {
+			if (resource == null) {
+				throw new ArgumentError("Cannot create a texture from a null resource");
+			}
 			var rawBitmap:BitmapData;
 			if (resource is Class) {
 				if (textures[resource] != null) {
@@ -111,8 +116,8 @@ package org.axgl.util {
 			if (textureWidth == rawBitmap.width && textureHeight == rawBitmap.height) {
 				textureBitmap = rawBitmap;
 			} else {
-				textureBitmap = new BitmapData(textureWidth, textureHeight, true, 0x00ff00ff);
-				textureBitmap.copyPixels(rawBitmap, new Rectangle(0, 0, rawBitmap.width, rawBitmap.height), new Point(0, 0), null, null, true);
+				textureBitmap = new BitmapData(textureWidth, textureHeight, true, 0x0);
+				textureBitmap.copyPixels(rawBitmap, new Rectangle(0, 0, rawBitmap.width, rawBitmap.height), new Point(0, 0));
 			}
 			
 			var texture:Texture = Ax.context.createTexture(textureWidth, textureHeight, Context3DTextureFormat.BGRA, false);
@@ -122,7 +127,7 @@ package org.axgl.util {
 			return textures[resource];
 		}
 		
-		private static function nextPowerOfTwo(current:uint):uint {
+		public static function nextPowerOfTwo(current:uint):uint {
 			current--;
 			current = (current >> 1) | current;
 			current = (current >> 2) | current;

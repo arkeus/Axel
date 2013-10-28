@@ -1,6 +1,7 @@
 package org.axgl.text {
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
+	import flash.geom.ColorTransform;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
@@ -8,7 +9,8 @@ package org.axgl.text {
 	import flash.text.TextFieldAutoSize;
 	import flash.text.TextFormat;
 	import flash.utils.Dictionary;
-
+	
+	import org.axgl.Ax;
 	import org.axgl.AxPoint;
 	import org.axgl.AxRect;
 	import org.axgl.render.AxTexture;
@@ -152,7 +154,8 @@ package org.axgl.text {
 			}
 
 			if (characterArray.length > 0) {
-				throw new Error(characterArray.join(":") + "Invalid bitmap font image. Number of characters in image doesn't match alphabet.");
+				// FIXME
+				//throw new Error("Invalid bitmap font image. Number of characters in image doesn't match alphabet. Remaining characters: " + characterArray.join(" "));
 			}
 
 			return af;
@@ -197,6 +200,9 @@ package org.axgl.text {
 			tf.autoSize = TextFieldAutoSize.LEFT;
 			tf.border = false;
 			tf.embedFonts = embedded;
+			tf.antiAliasType = flash.text.AntiAliasType.NORMAL;
+			tf.background = false;
+			tf.selectable = false;
 
 			var bitmaps:Vector.<BitmapData> = new Vector.<BitmapData>;
 			var characters:Array = alphabet.split("");
@@ -205,13 +211,14 @@ package org.axgl.text {
 			var padding:uint = 2; // there has to be somewhere better to pull this from
 			var dpadding:uint = padding * 2;
 			var translationMatrix:Matrix = new Matrix(1, 0, 0, 1, -padding, -padding);
+			var colorTransform:ColorTransform = new ColorTransform(1, 1, 1, 1, 0, 0, 0, 0);
 
 			for each (var character:String in characters) {
 				tf.setTextFormat(format);
 				tf.text = character;
 				var characterBitmap:BitmapData = new BitmapData(tf.width - dpadding, tf.height - padding, true, 0x0);
 				af.characters[character] = new AxCharacter(characterBitmap.width, characterBitmap.height, new AxRect(bitmapWidth, 0, characterBitmap.width, characterBitmap.height));
-				characterBitmap.draw(tf, translationMatrix);
+				characterBitmap.draw(tf, translationMatrix, colorTransform);
 				bitmaps.push(characterBitmap);
 				bitmapWidth += characterBitmap.width;
 				bitmapHeight = characterBitmap.height > bitmapHeight ? characterBitmap.height : bitmapHeight;
@@ -259,11 +266,11 @@ package org.axgl.text {
 		 * @return The character's width, 0 if that character was not part of the font.
 		 */
 		internal function characterWidth(char:String):uint {
-			var character:AxCharacter = character(char);
-			if (character == null) {
+			var ch:AxCharacter = character(char);
+			if (ch == null) {
 				return 0;
 			}
-			return character.width;
+			return ch.width;
 		}
 	}
 }

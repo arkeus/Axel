@@ -28,7 +28,7 @@ package org.axgl.input {
 			if (event.keyCode >= NUM_INPUTS || keys[event.keyCode] > 0) {
 				return;
 			}
-			keys[event.keyCode] = Ax.now;
+			keys[AxKey.ANY] = keys[event.keyCode] = Ax.now;
 		}
 
 		/**
