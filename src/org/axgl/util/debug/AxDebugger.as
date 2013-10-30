@@ -49,32 +49,32 @@ package org.axgl.util.debug {
 			
 			var version:Array = Ax.LIBRARY_VERSION.split(".");
 			var debugMode:String = Ax.debug ? "@[255,90,90]Debug" : "@[200,200,200]Release";
-			libraryText = new AxText(4, 3, AxResource.font, Ax.LIBRARY_NAME + " @[160,160,160]Version @[150,150,255]" + version[0] + "@[10,255,255].@[180,180,255]" + version[1] + "@[255,255,255].@[210,210,255]" + version[2] + " " + debugMode);
+			libraryText = new AxText(4, 3, AxResource.FONT, Ax.LIBRARY_NAME + " @[160,160,160]Version @[150,150,255]" + version[0] + "@[10,255,255].@[180,180,255]" + version[1] + "@[255,255,255].@[210,210,255]" + version[2] + " " + debugMode);
 			libraryText.scroll.x = libraryText.scroll.y = 0;
 			libraryText.zooms = libraryText.countTris = false;
 			this.add(libraryText);
 			
-			fpsText = new AxText(4, Ax.height - HEIGHT + 3, AxResource.font, "FPS: 0/0");
+			fpsText = new AxText(4, Ax.height - HEIGHT + 3, AxResource.FONT, "FPS: 0/0");
 			fpsText.scroll.x = fpsText.scroll.y = 0;
 			fpsText.zooms = fpsText.countTris = false;
 			this.add(fpsText);
 			
-			memoryText = new AxText(70, Ax.height - HEIGHT + 3, AxResource.font, "Memory: 0MB");
+			memoryText = new AxText(70, Ax.height - HEIGHT + 3, AxResource.FONT, "Memory: 0MB");
 			memoryText.scroll.x = memoryText.scroll.y = 0;
 			memoryText.zooms = memoryText.countTris = false;
 			this.add(memoryText);
 			
-			modeText = new AxText(0, 3, AxResource.font, "---", Ax.width - 3, "right");
+			modeText = new AxText(0, 3, AxResource.FONT, "---", Ax.width - 3, "right");
 			modeText.scroll.x = modeText.scroll.y = 0;
 			modeText.zooms = modeText.countTris = false;
 			this.add(modeText);
 			
-			timeText = new AxText(0, Ax.height - HEIGHT + 3, AxResource.font, "---", Ax.width - 5, "right");
+			timeText = new AxText(0, Ax.height - HEIGHT + 3, AxResource.FONT, "---", Ax.width - 5, "right");
 			timeText.scroll.x = timeText.scroll.y = 0;
 			timeText.zooms = timeText.countTris = false;
 			this.add(timeText);
 			
-			titleText = new AxText(0, 3, AxResource.font, "", Ax.width, "center");
+			titleText = new AxText(0, 3, AxResource.FONT, "", Ax.width, "center");
 			titleText.scroll.x = titleText.scroll.y = 0;
 			titleText.zooms = titleText.countTris = false;
 			this.add(titleText);

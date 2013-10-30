@@ -8,3 +8,5 @@ docs
 .actionScriptProperties
 .project
 .git
+/.flexLibProperties
+/bin/Axel.swc
