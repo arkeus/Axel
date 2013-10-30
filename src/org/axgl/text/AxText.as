@@ -54,7 +54,7 @@ package org.axgl.text {
 			super(x, y, VERTEX_SHADER, FRAGMENT_SHADER, 8);
 
 			this._text = text;
-			this.font = font ? font : AxResource.font;
+			this.font = font ? font : AxResource.FONT;
 			this.width = this.requestedWidth = width;
 			this.align = align;
 
