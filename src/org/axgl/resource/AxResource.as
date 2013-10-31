@@ -6,13 +6,13 @@ package org.axgl.resource {
 	 */
 	public class AxResource {
 		/* The small axel icon */
-		[Embed(source = "./icon.png")] public static const ICON:Class;
+		[Embed(source = "icon.png")] public static const ICON:Class;
 		
 		/* Default AxButton background */
-		[Embed(source = "./button.png")] public static const BUTTON:Class;
+		[Embed(source = "button.png")] public static const BUTTON:Class;
 		
 		/* Build in Axel font */
-		[Embed(source = "./font.png")] public static const FONT_BITMAP:Class;
+		[Embed(source = "font.png")] public static const FONT_BITMAP:Class;
 		public static var FONT:AxFont;
 		
 		public static function initialize():void {
