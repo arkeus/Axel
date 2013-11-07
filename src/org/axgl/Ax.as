@@ -309,7 +309,7 @@ package org.axgl {
 			Ax.debug = debugStacktrace != null && debugStacktrace.search(/:[0-9]+]$/m) > -1;
 			Ax.debuggerEnabled = Ax.debug;
 			
-			//Ax.pauseState = AxPauseState;
+			Ax.pauseState = AxPauseState;
 			Ax.initialized = false;
 			Ax.paused = false;
 			Ax.logger = new AxLogger;
