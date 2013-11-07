@@ -1,4 +1,5 @@
 ## 0.9.4 r1
+* Ax.music and Ax.sound have been renamed Ax.playMusic and Ax.playSound
 * Calculation of line width using variable width fonts are now more accurate, causing better alignment when using 'center' or 'right'
 * Generation of bitmap fonts now correctly takes into account the separator row at the top and ignores it for positioning
 * Bitmap fonts no longer assume a separating column between glyphs, but simply require a seperator pixel in the upper right of each glyphs
