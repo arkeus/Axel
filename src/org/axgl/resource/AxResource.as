@@ -16,7 +16,7 @@ package org.axgl.resource {
 		public static var font:AxFont;
 		
 		public static function initialize():void {
-			font = AxFont.fromBitmap(FONT_BITMAP, 1, 0);
+			font = AxFont.fromBitmap(FONT_BITMAP, 0, 0);
 		}
 	}
 }

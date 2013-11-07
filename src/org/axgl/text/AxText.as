@@ -85,6 +85,8 @@ package org.axgl.text {
 
 			for each (var lineString:String in lineArray) {
 				var wordArray:Array = lineString.split(" ");
+				var linePadding:uint = 0;
+				
 				for each (var wordString:String in wordArray) {
 					var wordWidth:int = 0;
 					var characterArray:Array = wordString.split("");
@@ -105,14 +107,22 @@ package org.axgl.text {
 					wordWidth -= font.spacing.x;
 
 					if (lineWidth + wordWidth > width) {
-						lines.push(new AxTextLine(line, lineWidth));
+						lines.push(new AxTextLine(line, lineWidth - linePadding));
 						lineWidth = 0;
+						linePadding = 0;
 						line = "";
 					}
 
 					if (!inTag) {
-						line += (line == "" ? "" : " ") + wordString;
-						lineWidth += wordWidth + font.spacing.x + spaceWidth + font.spacing.x;
+						if (line == "") {
+							line += wordString;
+							linePadding = 0;
+							lineWidth += wordWidth + linePadding;
+						} else {
+							line += " " + wordString;
+							linePadding = font.spacing.x + spaceWidth + font.spacing.x;
+							lineWidth += wordWidth + linePadding;
+						}
 					}
 				}
 
