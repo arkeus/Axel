@@ -728,7 +728,7 @@ package org.axgl {
 		 *
 		 * @return The sound object.
 		 */
-		public static function sound(soundFile:Class, volume:Number = 1, loop:Boolean = false, start:Number = 0):AxSound {
+		public static function playSound(soundFile:Class, volume:Number = 1, loop:Boolean = false, start:Number = 0):AxSound {
 			var soundObject:AxSound = new AxSound(soundFile, Ax.soundMuted ? 0 : volume * Ax.soundVolume, loop, start);
 			soundObject.play();
 			sounds.add(soundObject);
@@ -745,7 +745,7 @@ package org.axgl {
 		 *
 		 * @return The sound object.
 		 */
-		public static function music(soundFile:Class, volume:Number = 1, loop:Boolean = true, start:Number = 0):AxSound {
+		public static function playMusic(soundFile:Class, volume:Number = 1, loop:Boolean = true, start:Number = 0):AxSound {
 			var soundObject:AxSound = new AxMusic(soundFile, Ax.musicMuted ? 0 : volume * Ax.musicVolume, loop, start);
 			soundObject.play();
 			sounds.add(soundObject);
