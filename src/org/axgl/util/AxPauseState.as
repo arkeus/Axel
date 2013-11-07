@@ -18,9 +18,9 @@ package org.axgl.util {
 			// Create tint and text
 			var tint:AxSprite = new AxSprite(0, 0).create(Ax.width, Ax.height, 0xbb000000);
 			var text:AxText = new AxText(0, Ax.height - 55, null, "@[255,255,255]P@[190,190,190]AUSED");
-			text.x = Ax.width - text.width * 4;
+			text.x = Ax.width - text.width * 4 - 4;
 			var focus:AxText = new AxText(0, Ax.height - 17, null, "CLICK TO FOCUS");
-			focus.x = Ax.width - focus.width - 48;
+			focus.x = Ax.width - focus.width - 32;
 			// Set properties
 			tint.scroll = text.scroll = focus.scroll = new AxPoint(0, 0);
 			text.zooms = focus.zooms = false;
