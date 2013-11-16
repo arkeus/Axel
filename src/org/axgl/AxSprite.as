@@ -260,6 +260,31 @@ package org.axgl {
 			animations[name] = new AxAnimation(name, frames, framerate < 1 ? 15 : framerate, looped, callback);
 			return this;
 		}
+		
+		/**
+		 * Adds a new animation to this sprite. The <code>name</code> of the animation is what you will use to access it via the <code>animate</code>
+		 * function. The <code>firstFrame</code> is first frame ID. The <code>frameNum</code> is total number of the frame. <code>Framerate</code> is
+		 * how fast the animation will play; it indicates how many frames will be played per second. If you have a 5 frame animation with a
+		 * framerate of 10, it will play the animation twice per second. The <code>looped</code> parameter indicates whether or not this
+		 * animation should stop at the end of the animation, or if it should loop repeatedly.
+		 * 
+		 * @param name The name of the animation.
+		 * @param firstFrame The firstFrame represents the first frame ID.
+		 * @param frameNum The frameNum represents the total number of frames.
+		 * @param framerate The framerate at which the animation should play.
+		 * @param looped Whether or not the animation should loop.
+		 *
+		 * @return The sprite instance.
+		 */		
+		public function addAnimationByFristFrame(name:String, firstFrame:uint, frameNum:uint = 1, framerate:uint = 15, looped:Boolean = true, callback:Function = null):AxSprite{
+			
+			var frames:Array = [];
+			var endFrame:int = firstFrame + frameNum;
+			for(var i:int = firstFrame; i < endFrame; i++){
+				frames.push(i);
+			}
+			return this.addAnimation(name,frames,framerate,looped,callback);
+		}
 
 		/**
 		 * Tells this sprite to immediately start playing the animation that you passed. If that animation is already playing,
@@ -300,15 +325,20 @@ package org.axgl {
 		 */
 		private function calculateFrame():void {
 			if (animation != null) {
+				
+				//cache value;
+				var nextFrame:uint = frame + 1;
+				var frameLen:uint = animation.frames.length;
+				
 				animationTimer += Ax.dt;
 				while (animationTimer >= animationDelay) {
 					animationTimer -= animationDelay;
-					if (frame + 1 < animation.frames.length || animation.looped) {
-						frame = (frame + 1) % animation.frames.length;
+					if (nextFrame < frameLen || animation.looped) {
+						frame = nextFrame % frameLen;
 					}
 					uvOffset[0] = (animation.frames[frame] % framesPerRow) * quad.uvWidth;
 					uvOffset[1] = Math.floor(animation.frames[frame] / framesPerRow) * quad.uvHeight;
-					if (frame + 1 == animation.frames.length && animation.callback != null) {
+					if (nextFrame == frameLen && animation.callback != null) {
 						animation.callback();
 					}
 				}
