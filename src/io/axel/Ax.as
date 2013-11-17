@@ -565,16 +565,18 @@ package io.axel {
 		 * Updates the timer and framerate.
 		 */
 		protected function updateTimer():void {
+			frames++;
 			then = now;
 			now = getTimer();
+			
 			dt = then == 0 ? 0 : (now - then) / 1000;
 			if (fixedTimestep) {
 				dt = 1 / requestedFramerate;
 			}
 
-			frames++;
-			if (now - frameStart >= 1000) {
-				fps = Math.min(requestedFramerate, frames);
+			var duration:uint = now - frameStart;
+			if (duration >= 1000) {
+				fps = Math.round(frames / duration * 1000);
 				frames = 0;
 				frameStart = now;
 			}
