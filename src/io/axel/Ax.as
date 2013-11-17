@@ -30,6 +30,7 @@ package io.axel {
 	import io.axel.resource.AxResource;
 	import io.axel.sound.AxMusic;
 	import io.axel.sound.AxSound;
+	import io.axel.state.AxStateStack;
 	import io.axel.tilemap.AxTilemap;
 	import io.axel.util.AxCache;
 	import io.axel.util.AxLogger;
@@ -68,7 +69,7 @@ package io.axel {
 		 * the top state will only be updated if persistantUpdate is true, and will only be drawn if
 		 * persistantDraw is true.
 		 */
-		public static var states:Vector.<AxState>;
+		public static var states:AxStateStack;
 		/**
 		 * Read-only. The root flash Stage object.
 		 */
@@ -233,11 +234,6 @@ package io.axel {
 		 * @default 0
 		 */
 		protected static var requestedHeight:uint;
-		/**
-		 * When you pop off states, this holds those states until the end of the frame so that it can dispose of them cleanly
-		 * without affecting any currently executing code.
-		 */
-		protected static var destroyedStates:Vector.<AxState>;
 		
 		/**
 		 * The width of the visible area on the screen, affected by zoom. If your width is 400, and zoom is 2x, this will be 200.
@@ -293,11 +289,10 @@ package io.axel {
 			Ax.requestedFramerate = framerate;
 			Ax.fixedTimestep = fixedTimestep;
 			
-			Ax.states = new Vector.<AxState>;
+			Ax.states = new AxStateStack;
 			Ax.worldZoom = zoom;
 			Ax.unfocusedFramerate = 20;
 			Ax.background = new AxColor(0.5, 0.5, 0.5);
-			Ax.destroyedStates = new Vector.<AxState>;
 
 			Ax.sounds = new AxGroup;
 			Ax.musicVolume = 1;
@@ -422,7 +417,7 @@ package io.axel {
 			stage.frameRate = unfocusedFramerate;
 			if (initialized && pauseState != null && !paused) {
 				paused = true;
-				pushState(new pauseState);
+				states.push(new pauseState);
 			}
 		}
 
@@ -433,9 +428,9 @@ package io.axel {
 		 */
 		protected function onFocusGained(event:Event):void {
 			stage.frameRate = requestedFramerate;
-			if (initialized && pauseState != null && paused && state is AxPauseState) {
+			if (initialized && pauseState != null && paused && states.current is AxPauseState) {
 				paused = false;
-				popState();
+				states.pop();
 			}
 		}
 
@@ -512,7 +507,7 @@ package io.axel {
 			// Handle game initialization
 			create();
 			
-			pushState(new requestedState());
+			states.push(new requestedState());
 			initialized = true;
 		}
 
@@ -545,9 +540,7 @@ package io.axel {
 			draw();	
 			debugger.setDrawTime(getTimer() - timer);
 			
-			for (var i:uint = 0; i < destroyedStates.length; i++) {
-				destroyedStates.pop().dispose();
-			}
+			states.disposeDestroyedStates();
 			
 			heartbeatTimer -= dt;
 			if (heartbeatTimer <= 0) {
@@ -591,17 +584,11 @@ package io.axel {
 		 * Updates the active states, camera, mouse, and sounds.
 		 */
 		public function update():void {
-			for (var i:uint = 0; i < states.length; i++) {
-				var state:AxState = states[i];
-				if (i == states.length - 1 || state.persistantUpdate) {
-					state.update();
-				}
-			}
-
 			if (debugger.active) {
 				debugger.update();
 			}
 			
+			states.update();
 			camera.update();
 			mouse.update(mouseX, mouseY);
 			sounds.update();
@@ -615,13 +602,7 @@ package io.axel {
 			context.setCulling(Context3DTriangleFace.NONE);
 			context.setDepthTest(false, Context3DCompareMode.ALWAYS);
 
-			for (var i:uint = 0; i < states.length; i++) {
-				var state:AxState = states[i];
-				if (i == states.length - 1 || state.persistantDraw) {
-					state.draw();
-				}
-			}
-			
+			states.draw();
 			camera.draw();
 			
 			if (debugger.active) {
@@ -629,70 +610,6 @@ package io.axel {
 			}
 			
 			context.present();
-		}
-
-		/**
-		 * Pushes a state on top of the state stack. This does not destroy the previous state. If you'd
-		 * like to return to the previous state, you can call popState to pop the new state off the top
-		 * of the stack.
-		 *
-		 * @param state The state you want to push onto the stack.
-		 *
-		 * @return The newly pushed state.
-		 */
-		public static function pushState(state:AxState):AxState {
-			if (states.length > 0) {
-				states[states.length - 1].onPause(Object(state).constructor);
-			}
-			//camera.reset();
-			keys.releaseAll();
-			mouse.releaseAll();
-			
-			states.push(state);
-			state.create();
-			return state;
-		}
-
-		/**
-		 * Pops the current state off the top of the stack and disposes it.
-		 */
-		public static function popState():void {
-			//camera.reset();
-			keys.releaseAll();
-			mouse.releaseAll();
-			
-			var previousState:AxState = states.pop();
-			destroyedStates.push(previousState);
-			
-			if (states.length > 0) {
-				state.onResume(Object(previousState).constructor);
-			}
-		}
-
-		/**
-		 * Switches between two states. This will destroy the previous state, and replace it with the new
-		 * state. If you'd like to keep the current state allow in order to return to it later, use
-		 * <code>pushState</code> instead.
-		 *
-		 * @param state The new state to switch to.
-		 *
-		 * @return The new state.
-		 */
-		public static function switchState(state:AxState):AxState {
-			popState();
-			return pushState(state);
-		}
-		
-		/**
-		 * Returns the current state in the game.
-		 * 
-		 * @return The current state.
-		 */
-		public static function get state():AxState {
-			if (states.length <= 0) {
-				throw new Error("There are no states on the stack");
-			}
-			return states[states.length - 1];
 		}
 
 		/**

@@ -4,7 +4,7 @@ package io.axel.util {
 	import io.axel.Ax;
 	import io.axel.AxPoint;
 	import io.axel.AxSprite;
-	import io.axel.AxState;
+	import io.axel.state.AxState;
 	import io.axel.text.AxText;
 
 	/**
