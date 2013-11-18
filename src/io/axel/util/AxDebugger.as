@@ -3,7 +3,7 @@ package io.axel.util {
 	
 	import io.axel.Ax;
 	import io.axel.AxGroup;
-	import io.axel.AxSprite;
+	import io.axel.sprite.AxSprite;
 	import io.axel.resource.AxResource;
 	import io.axel.text.AxText;
 

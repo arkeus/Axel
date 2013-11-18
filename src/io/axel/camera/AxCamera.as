@@ -7,7 +7,7 @@ package io.axel.camera {
 	import io.axel.AxEntity;
 	import io.axel.AxPoint;
 	import io.axel.AxRect;
-	import io.axel.AxSprite;
+	import io.axel.sprite.AxSprite;
 	import io.axel.AxU;
 	import io.axel.camera.effect.AxCameraFadeEffect;
 	import io.axel.camera.effect.AxCameraShakeEffect;

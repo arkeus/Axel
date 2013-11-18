@@ -2,6 +2,7 @@ package io.axel {
 	import flash.display3D.Context3DBlendFactor;
 	import flash.display3D.Context3DProgramType;
 	import flash.display3D.Context3DVertexBufferFormat;
+	import io.axel.sprite.AxSprite;
 	
 	/**
 	 * AxCloud is a group that allows you to draw many sprites that use the same texture efficiently. By changing the actions
@@ -192,14 +193,14 @@ package io.axel {
 					vertexData[ri0 + 0 ] = sprite.x;
 					vertexData[ri0 + 1 ] = sprite.y;
 					
-					vertexData[ri1 + 0 ] = sprite.x + sprite.frameWidth;
+					vertexData[ri1 + 0 ] = sprite.x + sprite.animations.frameWidth;
 					vertexData[ri1 + 1 ] = sprite.y;
 					
 					vertexData[ri2 + 0 ] = sprite.x;
-					vertexData[ri2 + 1 ] = sprite.y + sprite.frameHeight;
+					vertexData[ri2 + 1 ] = sprite.y + sprite.animations.frameHeight;
 					
-					vertexData[ri3 + 0 ] = sprite.x + sprite.frameWidth;
-					vertexData[ri3 + 1 ] = sprite.y + sprite.frameHeight;
+					vertexData[ri3 + 0 ] = sprite.x + sprite.animations.frameWidth;
+					vertexData[ri3 + 1 ] = sprite.y + sprite.animations.frameHeight;
 				}
 				
 				if (colors) {
@@ -262,10 +263,10 @@ package io.axel {
 				}
 				
 				if (animates) {
-					var uvWidth:Number = sprite.frameWidth / sprite.texture.width;
-					var uvHeight:Number = sprite.frameHeight / sprite.texture.height;
-					var u:Number = (sprite.frame % sprite.framesPerRow) * uvWidth;
-					var v:Number = Math.floor(sprite.frame / sprite.framesPerRow) * uvHeight;
+					var uvWidth:Number = sprite.animations.frameWidth / sprite.texture.width;
+					var uvHeight:Number = sprite.animations.frameHeight / sprite.texture.height;
+					var u:Number = (sprite.animations.frame % sprite.animations.framesPerRow) * uvWidth;
+					var v:Number = Math.floor(sprite.animations.frame / sprite.animations.framesPerRow) * uvHeight;
 					
 					vertexData[ri0 + 2 ] = u;
 					vertexData[ri0 + 3 ] = v;

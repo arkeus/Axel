@@ -1,6 +1,6 @@
-package io.axel.effect.sprite {
+package io.axel.sprite.effect {
 	import io.axel.Ax;
-	import io.axel.AxSprite;
+	import io.axel.sprite.AxSprite;
 
 	/**
 	 * A general class for holding common logic between sprite effects.

@@ -1,4 +1,4 @@
-package io.axel.effect.sprite {
+package io.axel.sprite.effect {
 	public class AxFlashSpriteEffect extends AxSpriteEffect {
 		/** The target color we're flashing the sprite as. */
 		private var color:uint;

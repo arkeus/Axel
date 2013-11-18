@@ -2,6 +2,7 @@ package io.axel {
 	import io.axel.resource.AxResource;
 	import io.axel.text.AxFont;
 	import io.axel.text.AxText;
+	import io.axel.sprite.AxSprite;
 
 	/**
 	 * A simple button class. This provides you with a simple button that has frames for idle,

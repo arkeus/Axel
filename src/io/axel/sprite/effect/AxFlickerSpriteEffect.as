@@ -1,4 +1,4 @@
-package io.axel.effect.sprite {
+package io.axel.sprite.effect {
 	public class AxFlickerSpriteEffect extends AxSpriteEffect {
 		/** A blink effect that causes the sprite to swap between 0 and 1 alpha. */
 		public static const BLINK:uint = 0;

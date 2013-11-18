@@ -3,7 +3,7 @@ package io.axel.util {
 	
 	import io.axel.Ax;
 	import io.axel.AxPoint;
-	import io.axel.AxSprite;
+	import io.axel.sprite.AxSprite;
 	import io.axel.state.AxState;
 	import io.axel.text.AxText;
 
@@ -27,7 +27,7 @@ package io.axel.util {
 			text.scale.x = text.scale.y = 4;
 			tint.alpha = 0;
 			// Fade the tint in
-			tint.fadeIn(0.5);
+			tint.effects.fadeIn(0.5);
 			// Add to state
 			this.add(tint).add(text).add(focus);
 			// Garbade collect as an added bonus

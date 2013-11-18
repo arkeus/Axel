@@ -1,4 +1,4 @@
-package io.axel.util {
+package io.axel.sprite {
 
 	/**
 	 * A class representing a sprite's animation.

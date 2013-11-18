@@ -1,4 +1,4 @@
-package io.axel {
+package io.axel.sprite {
 	import flash.display3D.Context3DBlendFactor;
 	import flash.display3D.Context3DProgramType;
 	import flash.display3D.Context3DVertexBufferFormat;
@@ -7,6 +7,9 @@ package io.axel {
 	
 	import io.axel.render.AxQuad;
 	import io.axel.util.AxCache;
+	import io.axel.Ax;
+	import io.axel.AxModel;
+	import io.axel.AxU;
 
 	public class AxParallaxSprite extends AxModel {
 		public static const NONE:uint = 0;

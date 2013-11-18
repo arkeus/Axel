@@ -2,7 +2,7 @@ package io.axel.collision {
 	import io.axel.AxCloud;
 	import io.axel.AxEntity;
 	import io.axel.AxGroup;
-	import io.axel.AxSprite;
+	import io.axel.sprite.AxSprite;
 	import io.axel.tilemap.AxTilemap;
 
 	/**

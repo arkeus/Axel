@@ -1,4 +1,8 @@
 ## 0.9.4 r1
+* The org.axgl package has been replaced with io.axel
+* State logic is now contained in AxStateStack. Interaction with states is done through Ax.states.push, Ax.states.pop, etc
+* Animation logic is now contained in AxAnimationSet. animation() and show() still exist but addAnimation() is now animations.add()
+* Sprite effect logic is now contained in AxSpriteEffectSet, and the APIs should be called from sprite.effect.X rather than sprite.X
 * Ax.music and Ax.sound have been renamed Ax.playMusic and Ax.playSound
 * Calculation of line width using variable width fonts are now more accurate, causing better alignment when using 'center' or 'right'
 * Generation of bitmap fonts now correctly takes into account the separator row at the top and ignores it for positioning

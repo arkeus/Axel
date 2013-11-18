@@ -1,4 +1,4 @@
-package io.axel.effect.sprite {
+package io.axel.sprite.effect {
 	import io.axel.Ax;
 
 	public class AxAlphaSpriteEffect extends AxSpriteEffect {
