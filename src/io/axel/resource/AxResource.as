@@ -11,7 +11,7 @@ package io.axel.resource {
 		/* Default AxButton background */
 		[Embed(source = "button.png")] public static const BUTTON:Class;
 		
-		/* Build in Axel font */
+		/* Built in Axel font */
 		[Embed(source = "font.png")] public static const FONT_BITMAP:Class;
 		public static var font:AxFont;
 		
