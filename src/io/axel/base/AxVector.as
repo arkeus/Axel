@@ -35,6 +35,22 @@ package io.axel.base {
 		}
 		
 		/**
+		 * Zeroes out this vector by setting all components to zero.
+		 */
+		public function zero():void {
+			x = y = a = 0;
+		}
+		
+		/**
+		 * Returns whether or not all components for this vector are zero.
+		 * 
+		 * @return If this vector is zero or not.
+		 */
+		public function isZero():Boolean {
+			return x == 0 && y == 0 && a == 0; 
+		}
+		
+		/**
 		 * Provides a more useful string representation when printing this object.
 		 * 
 		 * @return The string in the format (x,y,a)
