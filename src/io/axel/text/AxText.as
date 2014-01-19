@@ -5,7 +5,7 @@ package io.axel.text {
 	import flash.geom.Vector3D;
 	
 	import io.axel.Ax;
-	import io.axel.AxModel;
+	import io.axel.base.AxModel;
 	import io.axel.AxU;
 	import io.axel.render.AxColor;
 	import io.axel.resource.AxResource;

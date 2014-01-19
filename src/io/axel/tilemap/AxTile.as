@@ -1,5 +1,5 @@
 package io.axel.tilemap {
-	import io.axel.AxEntity;
+	import io.axel.base.AxEntity;
 
 	/**
 	 * A class describing a single tile in a tilemap. Each tilemap will have one of these for each different

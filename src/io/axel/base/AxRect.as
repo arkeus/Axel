@@ -1,5 +1,7 @@
-package io.axel {
+package io.axel.base {
 	import io.axel.input.AxMouseButton;
+	import io.axel.Ax;
+	import io.axel.AxU;
 
 	/**
 	 * Stores the x and y values, along with the width and height, of a rectangle object.

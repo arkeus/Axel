@@ -1,4 +1,4 @@
-package io.axel {
+package io.axel.base {
 	import io.axel.resource.AxResource;
 	import io.axel.text.AxFont;
 	import io.axel.text.AxText;

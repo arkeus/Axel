@@ -1,8 +1,9 @@
-package io.axel {
+package io.axel.base {
 	import flash.display3D.Context3DBlendFactor;
 	import flash.display3D.Context3DProgramType;
 	import flash.display3D.Context3DVertexBufferFormat;
 	import io.axel.sprite.AxSprite;
+	import io.axel.Ax;
 	
 	/**
 	 * AxCloud is a group that allows you to draw many sprites that use the same texture efficiently. By changing the actions

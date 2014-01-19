@@ -1,4 +1,4 @@
-package io.axel {
+package io.axel.base {
 	import flash.geom.Point;
 
 	/**

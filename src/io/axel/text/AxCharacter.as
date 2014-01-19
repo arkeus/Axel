@@ -1,5 +1,5 @@
 package io.axel.text {
-	import io.axel.AxRect;
+	import io.axel.base.AxRect;
 
 	/**
 	 * A class representing the needed variables for each character in an AxFont, including the size of

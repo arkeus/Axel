@@ -1,5 +1,5 @@
 package io.axel.collision {
-	import io.axel.AxEntity;
+	import io.axel.base.AxEntity;
 	import io.axel.tilemap.AxTilemap;
 
 	/**

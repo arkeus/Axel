@@ -8,12 +8,12 @@ package io.axel.sprite {
 	import flash.geom.Vector3D;
 	
 	import io.axel.Ax;
-	import io.axel.AxCloud;
-	import io.axel.AxEntity;
-	import io.axel.AxGroup;
-	import io.axel.AxModel;
-	import io.axel.AxPoint;
-	import io.axel.AxRect;
+	import io.axel.base.AxCloud;
+	import io.axel.base.AxEntity;
+	import io.axel.base.AxGroup;
+	import io.axel.base.AxModel;
+	import io.axel.base.AxPoint;
+	import io.axel.base.AxRect;
 	import io.axel.AxU;
 	import io.axel.render.AxTexture;
 	import io.axel.resource.AxResource;

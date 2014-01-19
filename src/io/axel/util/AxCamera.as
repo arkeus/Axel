@@ -4,8 +4,8 @@ package io.axel.util {
 	import flash.geom.Matrix3D;
 
 	import io.axel.Ax;
-	import io.axel.AxEntity;
-	import io.axel.AxRect;
+	import io.axel.base.AxEntity;
+	import io.axel.base.AxRect;
 	import io.axel.AxU;
 
 	/**

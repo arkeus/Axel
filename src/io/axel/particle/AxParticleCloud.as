@@ -5,7 +5,7 @@ package io.axel.particle {
 	import flash.geom.Vector3D;
 	
 	import io.axel.Ax;
-	import io.axel.AxModel;
+	import io.axel.base.AxModel;
 	import io.axel.AxU;
 	import io.axel.util.AxCache;
 

@@ -1,4 +1,4 @@
-package io.axel {
+package io.axel.base {
 	import flash.display3D.IndexBuffer3D;
 	import flash.display3D.VertexBuffer3D;
 	import flash.geom.Matrix3D;
@@ -9,6 +9,8 @@ package io.axel {
 	import io.axel.render.AxShader;
 	import io.axel.render.AxTexture;
 	import io.axel.util.AxCache;
+	import io.axel.Ax;
+	import io.axel.AxU;
 
 	/**
 	 * An <code>AxModel</code> is an entity that is expected to be drawn on the scene. It does not implement any drawing, but defines

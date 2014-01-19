@@ -36,6 +36,8 @@ package io.axel {
 	import io.axel.util.AxLogger;
 	import io.axel.util.AxPauseState;
 	import io.axel.util.debug.AxDebugger;
+	import io.axel.base.AxEntity;
+	import io.axel.base.AxGroup;
 
 	/**
 	 * The general game class that your base class should extends. Contains all the properties of the game,

@@ -4,9 +4,9 @@ package io.axel.camera {
 	import flash.geom.Matrix3D;
 	
 	import io.axel.Ax;
-	import io.axel.AxEntity;
-	import io.axel.AxPoint;
-	import io.axel.AxRect;
+	import io.axel.base.AxEntity;
+	import io.axel.base.AxPoint;
+	import io.axel.base.AxRect;
 	import io.axel.sprite.AxSprite;
 	import io.axel.AxU;
 	import io.axel.camera.effect.AxCameraFadeEffect;

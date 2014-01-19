@@ -1,5 +1,5 @@
 package io.axel.particle {
-	import io.axel.AxPoint;
+	import io.axel.base.AxPoint;
 	import io.axel.render.AxBlendMode;
 	import io.axel.render.AxColor;
 	import io.axel.util.AxRange;

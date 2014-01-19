@@ -1,8 +1,8 @@
 package io.axel.collision {
-	import io.axel.AxCloud;
-	import io.axel.AxEntity;
-	import io.axel.AxGroup;
-	import io.axel.AxRect;
+	import io.axel.base.AxCloud;
+	import io.axel.base.AxEntity;
+	import io.axel.base.AxGroup;
+	import io.axel.base.AxRect;
 	import io.axel.sprite.AxSprite;
 	import io.axel.AxU;
 	import io.axel.tilemap.AxTilemap;

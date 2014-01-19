@@ -1,4 +1,4 @@
-package io.axel {
+package io.axel.base {
 
 	/**
 	 * A generic vector class consisting of an "x" component, "y" component, and "a" component. The

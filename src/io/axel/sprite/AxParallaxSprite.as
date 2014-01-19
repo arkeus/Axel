@@ -8,7 +8,7 @@ package io.axel.sprite {
 	import io.axel.render.AxQuad;
 	import io.axel.util.AxCache;
 	import io.axel.Ax;
-	import io.axel.AxModel;
+	import io.axel.base.AxModel;
 	import io.axel.AxU;
 
 	public class AxParallaxSprite extends AxModel {

@@ -1,4 +1,5 @@
-package io.axel {
+package io.axel.base {
+	import io.axel.Ax;
 
 	/**
 	 * AxGroup is the basic container object. When building a world, you'll often want to group objects

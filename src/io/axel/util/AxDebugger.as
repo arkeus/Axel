@@ -2,7 +2,7 @@ package io.axel.util {
 	import flash.system.System;
 	
 	import io.axel.Ax;
-	import io.axel.AxGroup;
+	import io.axel.base.AxGroup;
 	import io.axel.sprite.AxSprite;
 	import io.axel.resource.AxResource;
 	import io.axel.text.AxText;

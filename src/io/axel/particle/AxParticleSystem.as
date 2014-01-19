@@ -1,8 +1,8 @@
 package io.axel.particle {
 	import flash.utils.Dictionary;
 	
-	import io.axel.AxEntity;
-	import io.axel.AxGroup;
+	import io.axel.base.AxEntity;
+	import io.axel.base.AxGroup;
 
 	/**
 	 * A generic particle system to keep track of your particle effects, and allow you to create your effects

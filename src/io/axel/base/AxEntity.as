@@ -1,7 +1,9 @@
-package io.axel {
+package io.axel.base {
 	import avmplus.getQualifiedClassName;
 	
 	import io.axel.util.AxTimer;
+	import io.axel.Ax;
+	import io.axel.AxU;
 
 	/**
 	 * A basic game entity. AxEntities do not render on the screen, but they can have velocities, accelerations, etc.

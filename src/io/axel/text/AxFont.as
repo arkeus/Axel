@@ -11,8 +11,8 @@ package io.axel.text {
 	import flash.utils.Dictionary;
 	
 	import io.axel.Ax;
-	import io.axel.AxPoint;
-	import io.axel.AxRect;
+	import io.axel.base.AxPoint;
+	import io.axel.base.AxRect;
 	import io.axel.render.AxTexture;
 	import io.axel.util.AxCache;
 

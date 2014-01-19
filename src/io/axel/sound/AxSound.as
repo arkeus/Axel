@@ -5,7 +5,7 @@ package io.axel.sound {
 	import flash.media.SoundTransform;
 	
 	import io.axel.Ax;
-	import io.axel.AxEntity;
+	import io.axel.base.AxEntity;
 
 	/**
 	 * A sound object. For simple use cases, this class will be completely managed by Axel. However,

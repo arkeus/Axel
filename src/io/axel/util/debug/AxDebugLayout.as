@@ -1,5 +1,5 @@
 package io.axel.util.debug {
-	import io.axel.AxRect;
+	import io.axel.base.AxRect;
 
 	/**
 	 * Base class for debug layouts. Extend this for creating your own console layout.

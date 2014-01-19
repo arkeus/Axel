@@ -1,5 +1,5 @@
 package io.axel.state {
-	import io.axel.AxGroup;
+	import io.axel.base.AxGroup;
 
 	/**
 	 * A class representing a game state. Each state in your game should be a subclass extending

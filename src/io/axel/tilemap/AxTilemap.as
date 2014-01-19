@@ -3,9 +3,9 @@ package io.axel.tilemap {
 	import flash.display3D.Context3DProgramType;
 	
 	import io.axel.Ax;
-	import io.axel.AxEntity;
-	import io.axel.AxModel;
-	import io.axel.AxRect;
+	import io.axel.base.AxEntity;
+	import io.axel.base.AxModel;
+	import io.axel.base.AxRect;
 	import io.axel.AxU;
 	import io.axel.util.AxCache;
 

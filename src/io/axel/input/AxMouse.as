@@ -2,7 +2,7 @@ package io.axel.input {
 	import flash.events.MouseEvent;
 	
 	import io.axel.Ax;
-	import io.axel.AxPoint;
+	import io.axel.base.AxPoint;
 
 	
 	/**

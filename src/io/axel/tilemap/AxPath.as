@@ -1,5 +1,5 @@
 package io.axel.tilemap {
-	import io.axel.AxPoint;
+	import io.axel.base.AxPoint;
 
 	/**
 	 * A class to represent a path through a tilemap. It consists of a series of points, where

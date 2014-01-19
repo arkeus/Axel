@@ -2,7 +2,7 @@ package io.axel.util {
 	import flash.system.System;
 	
 	import io.axel.Ax;
-	import io.axel.AxPoint;
+	import io.axel.base.AxPoint;
 	import io.axel.sprite.AxSprite;
 	import io.axel.state.AxState;
 	import io.axel.text.AxText;
