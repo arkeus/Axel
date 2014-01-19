@@ -12,7 +12,7 @@ package io.axel.collision {
 	 * grouped up in a small area of the map, this is a very efficient method of collision. The default arguments
 	 * are to use a 10 x 10 grid, but you can play with those numbers to see which gives you the best performance.
 	 */
-	public class AxGridCollider extends AxGroupCollider {
+	public class AxGridCollider extends AxCollider {
 		/**
 		 * The source list containing all the source entities.
 		 */

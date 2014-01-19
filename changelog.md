@@ -7,6 +7,10 @@
 * Calculation of line width using variable width fonts are now more accurate, causing better alignment when using 'center' or 'right'
 * Generation of bitmap fonts now correctly takes into account the separator row at the top and ignores it for positioning
 * Bitmap fonts no longer assume a separating column between glyphs, but simply require a seperator pixel in the upper right of each glyphs
+* Base classes have been moved into a new base package
+* AxGrid has been renamed AxGridCollider
+* AxCollisionGroup has been renamed AxGroupCollider
+* Timer logic is now contained in AxTimerSet. Interation with timers is done through sprite.timers.add, sprite.timers.clear, etc
 
 ## 0.9.3 / 2013-10-27
 * AxTilemaps are now split into segments, and you should be able to create arbitrarily big tilemaps now
