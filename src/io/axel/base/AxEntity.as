@@ -1,9 +1,10 @@
 package io.axel.base {
-	import avmplus.getQualifiedClassName;
+	import flash.utils.getQualifiedClassName;
 	
-	import io.axel.util.AxTimer;
 	import io.axel.Ax;
 	import io.axel.AxU;
+	import io.axel.base.timer.AxTimer;
+	import io.axel.base.timer.AxTimerSet;
 
 	/**
 	 * A basic game entity. AxEntities do not render on the screen, but they can have velocities, accelerations, etc.
@@ -168,14 +169,15 @@ package io.axel.base {
 		 * The bounds limiting where this entity can move. If null, there are no bounds.
 		 */
 		public var worldBounds:AxRect;
+		/**
+		 * The timer set containing all the timers for this entity. Use timers to easily create delayed callbacks or repeated callbacks.
+		 */
+		public var timers:AxTimerSet;
+		
 		/** Counter that allow you to disable counting this function's update for the debugger */
 		public var countUpdate:Boolean = true;
 		/** Counter that allow you to disable counting this function's draw for the debugger */
 		public var countDraw:Boolean = true;
-		/** List of timers active on this entity. */
-		public var timers:Vector.<AxTimer>;
-		/** Temporary timer list used to clean up dead timers. */
-		public var timersTemp:Vector.<AxTimer>;
 
 		/**
 		 * Creates a new AxEntity at the position passed.
@@ -207,7 +209,7 @@ package io.axel.base {
 			phased = false;
 			stationary = false;
 			worldBounds = null;
-			timers = null;
+			timers = new AxTimerSet;
 		}
 
 		/**
@@ -218,46 +220,13 @@ package io.axel.base {
 		 * update function.
 		 */
 		public function update():void {
-			var i:uint;
-			
 			if (parent != null) {
 				parentOffset.x = parent.x + parent.parentOffset.x;
 				parentOffset.y = parent.y + parent.parentOffset.y;
 				parentEntityAlpha = parent.entityAlpha * parent.parentEntityAlpha;
 			}
 			
-			if (timers != null) {
-				var deadTimers:uint = 0;
-				for (i = 0; i < timers.length; i++) {
-					if (!timers[i].alive) {
-						deadTimers++;
-						continue;
-					} else if (!timers[i].active) {
-						continue;
-					}
-					timers[i].timer -= Ax.dt;
-					while (timers[i].timer <= 0) {
-						timers[i].timer += timers[i].delay;
-						timers[i].repeat--;
-						timers[i].callback();
-						if (timers[i].repeat <= 0) {
-							timers[i].stop();
-							break;
-						}
-					}
-				}
-				if (deadTimers >= 5) {
-					var temp:Vector.<AxTimer> = timersTemp;
-					temp.length = 0;
-					for (i = 0; i < timers.length; i++) {
-						if (timers[i].alive) {
-							temp.push(timers[i]);
-						}
-					}
-					timersTemp = timers;
-					timers = temp;
-				}
-			}
+			timers.update(Ax.dt);
 			
 			touched = touching;
 			touching = NONE;
@@ -478,50 +447,6 @@ package io.axel.base {
 		 */
 		public function stop():void {
 			velocity.x = velocity.y = velocity.a = 0;
-		}
-		
-		/**
-		 * Timers are repeatable functions that can be bound to any AxEntity. Take, for example,
-		 * the following:
-		 * 
-		 * <code>sprite.addTimer(5, destroy);</code>
-		 * 
-		 * This would destroy the sprite after 5 seconds. You can also use timers to register repeating
-		 * events. For example:
-		 * 
-		 * <code>sprite.addTimer(1, function():void { sprite.visible = !sprite.visible; }, 5, 3);</code>
-		 * 
-		 * This would cause the sprite to flicker visible/invisible 5 times, once per second. The 3 indicates
-		 * that the first occurrence would not occur until after 3 seconds, and the following ones would be
-		 * spaced 1 second apart.
-		 * 
-		 * @param delay The delay before this fires, or the delay between firing if set to repeat.
-		 * @param callback The function called when the timer fires.
-		 * @param repeat The number of times to repeat the timer. 0 indiciates repeat forever.
-		 * @param start How long to delay the first execution if repeatable.
-		 */
-		public function addTimer(delay:Number, callback:Function, repeat:uint = 1, start:Number = -1):AxTimer {
-			if (timers == null) {
-				timers = new Vector.<AxTimer>;
-				timersTemp = new Vector.<AxTimer>;
-			}
-			
-			var timer:AxTimer = new AxTimer(delay, callback, repeat, start);
-			timers.push(timer);
-			return timer;
-		}
-		
-		/**
-		 * Removes all timers currently set on this object. Does not run the callbacks of any timers currently
-		 * in progress.
-		 */
-		public function clearTimers():void {
-			if (timers != null) {
-				timers.length = 0;
-			}
-			if (timersTemp != null) {
-				timersTemp.length = 0;
-			}
 		}
 		
 		/**
