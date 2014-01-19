@@ -16,12 +16,12 @@ Once you've got yourself set up, the [tutorials](http://axel.io/tutorials.php) w
 
 If you get stuck, feel free to head over to the [forums](http://axel.io/forums/) and ask for help!
 
-Samples
--------
+Sample Games
+------------
 
 The following are a few examples of games written in Axel.
 
-![Same Game Screenshots](/samples.png)
+![Sample Game Screenshots](/samples.png)
 
 Quick Links
 -----------------------------------
