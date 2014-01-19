@@ -12,7 +12,7 @@ package io.axel.collision {
 	 * grouped up in a small area of the map, this is a very efficient method of collision. The default arguments
 	 * are to use a 10 x 10 grid, but you can play with those numbers to see which gives you the best performance.
 	 */
-	public class AxGrid extends AxCollisionGroup {
+	public class AxGridCollider extends AxGroupCollider {
 		/**
 		 * The source list containing all the source entities.
 		 */
@@ -46,7 +46,7 @@ package io.axel.collision {
 		 * @param columns Number of columns in the grid.
 		 * @param rows Number of rows in the grid.
 		 */
-		public function AxGrid(worldWidth:uint, worldHeight:uint, columns:uint = 10, rows:uint = 10) {
+		public function AxGridCollider(worldWidth:uint, worldHeight:uint, columns:uint = 10, rows:uint = 10) {
 			if (worldWidth == 0 || worldHeight == 0) {
 				throw new Error("World width and height cannot be 0.");
 			}

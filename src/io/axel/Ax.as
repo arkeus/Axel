@@ -20,8 +20,8 @@ package io.axel {
 	
 	import io.axel.camera.AxCamera;
 	import io.axel.collision.AxCollider;
-	import io.axel.collision.AxCollisionGroup;
-	import io.axel.collision.AxGrid;
+	import io.axel.collision.AxGroupCollider;
+	import io.axel.collision.AxGridCollider;
 	import io.axel.input.AxKey;
 	import io.axel.input.AxKeyboard;
 	import io.axel.input.AxMouse;
@@ -694,7 +694,7 @@ package io.axel {
 		 *
 		 * @return Whether or not any pair of entities overlapped.
 		 */
-		public static function overlap(source:AxEntity, target:AxEntity, callback:Function = null, collision:AxCollisionGroup = null):Boolean {
+		public static function overlap(source:AxEntity, target:AxEntity, callback:Function = null, collision:AxGroupCollider = null):Boolean {
 			return overlapOrCollide(source, target, callback, collision, false);
 		}
 		
@@ -722,16 +722,16 @@ package io.axel {
 		 *
 		 * @return Whether or not any pair of entities overlapped.
 		 */
-		public static function collide(source:AxEntity, target:AxEntity, callback:Function = null, collision:AxCollisionGroup = null):Boolean {
+		public static function collide(source:AxEntity, target:AxEntity, callback:Function = null, collision:AxGroupCollider = null):Boolean {
 			return overlapOrCollide(source, target, callback, collision, true);
 		}
 		
-		protected static function overlapOrCollide(source:AxEntity, target:AxEntity, callback:Function, collision:AxCollisionGroup, collide:Boolean):Boolean {
+		protected static function overlapOrCollide(source:AxEntity, target:AxEntity, callback:Function, collision:AxGroupCollider, collide:Boolean):Boolean {
 			if (collision == null) {
 				if (source is AxTilemap || target is AxTilemap) {
 					collision = new AxCollider;
 				} else {
-					collision = new AxGrid(Ax.viewWidth, Ax.viewHeight) 
+					collision = new AxGridCollider(Ax.viewWidth, Ax.viewHeight) 
 				}
 			} else {
 				collision.reset();

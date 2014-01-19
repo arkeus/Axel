@@ -10,7 +10,7 @@ package io.axel.collision {
 	 * or a small set of objects against a small set of objects (such as 3 objects against 10 objects), then
 	 * using this implementation is the most efficient method.
 	 */
-	public class AxCollider extends AxCollisionGroup {
+	public class AxCollider extends AxGroupCollider {
 		/**
 		 * The list of all source entities.
 		 */

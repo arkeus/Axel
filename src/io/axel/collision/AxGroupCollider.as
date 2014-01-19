@@ -11,7 +11,7 @@ package io.axel.collision {
 	 * A collision group that defines how two AxEntities should collide. This is an abtract class that shouldn't be used
 	 * itself, instead you should use one of its implementing subclasses.
 	 */
-	public class AxCollisionGroup {
+	public class AxGroupCollider {
 		/**
 		 * The frame of the source object used to detect collisions.
 		 */
@@ -41,7 +41,7 @@ package io.axel.collision {
 		 * Sets up the basic variables used for the collision group upon instantiation. You should not use this constructor
 		 * directly, but rather one of the subclasses's constructors.
 		 */
-		public function AxCollisionGroup() {
+		public function AxGroupCollider() {
 			this.sourceFrame = new AxRect;
 			this.targetFrame = new AxRect;
 			this.sourceAxisFrame = new AxRect;
