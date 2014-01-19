@@ -1,10 +1,10 @@
 Axel
 ====
-Axel is a free AS3 game framework for building flash games. It uses stage3d rendering to provide extremely fast rendering that is easily portable to phones and tablets. For full information and documentation, check out the [official website](http://axel.io).
+Axel is a free AS3 game framework for building flash games. It uses Stage3d rendering to provide extremely fast rendering that is easily portable to phones and tablets. For full information and documentation, check out the [official website](http://axel.io).
 
 About
 -----
-Axel is an **as3 library** that makes **flash game development** as easy as possible. Axel takes advantage of Flash Player 11's **Stage3D** in order to offload all the rendering to the GPU in order to gain huge performance boosts over the typical flash display list. As of Adobe Air 3.2, Stage3D is also supported when building your games for **mobile devices**. This means exporting your flash games to iOS and Android has never been easier!
+Axel is an **AS3 library** that makes **flash game development** as easy as possible. Axel takes advantage of Flash Player 11's **Stage3D** in order to offload all the rendering to the GPU in order to gain huge performance boosts over the typical flash display list. As of Adobe Air 3.2, Stage3D is also supported when building your games for **mobile devices**. This means exporting your flash games to iOS and Android has never been easier!
 
 Axel is completely free, so download it and start making games today! Axel is released under the MIT license, so you don't have to worry about being restricted about what you can do with your games!
 
@@ -29,3 +29,10 @@ Quick Links
 * [Tutorials](http://axel.io/tutorials.php)
 * [Documentation](http://axel.io/docs/)
 * [Forums](http://axel.io/forums/)
+
+License
+-------
+
+[MIT](/LICENSE.md)
+
+TLDR: Include the LICENSE.md file in the axel folder in any project you open source. Don't worry about including the license in actual game releases where the source is not included (such as when uploading an SWF). Credit in games is appreciated, but not at all required!
